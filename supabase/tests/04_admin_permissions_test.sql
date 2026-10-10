@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-create function pg_temp.login(p_id uuid, p_email text, p_provider text default 'google')
+create function pg_temp.login(p_id uuid, p_email text, p_method text default 'oauth', p_provider text default 'google')
 returns void
 language sql
 as $$
@@ -11,7 +11,8 @@ as $$
       'sub', p_id,
       'email', p_email,
       'role', 'authenticated',
-      'app_metadata', json_build_object('provider', p_provider)
+      'app_metadata', json_build_object('provider', p_provider),
+      'amr', json_build_array(json_build_object('method', p_method, 'timestamp', extract(epoch from now())::bigint))
     )::text,
     true
   );
@@ -26,6 +27,8 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'organizer@example.test', '{"full_name": "Organizer"}'),
   ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'reviewer@example.test', '{"full_name": "Reviewer"}');
 
+delete from public.admin_allowlist;
+
 insert into public.admin_allowlist (email, level) values
   ('owner@example.test', 'owner'),
   ('organizer@example.test', 'organizer'),
@@ -39,7 +42,7 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
   ('f0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', 'volunteer', 'Volunteer', 'published', now() + interval '1 day', now() + interval '2 days'),
   ('f0000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', 'judge', 'Judge', 'draft', null, null);
 
-select plan(28);
+select plan(31);
 
 insert into public.events (id, slug, name, starts_at) values
   ('e0000000-0000-0000-0000-000000000002', 'pgtap-event-2', 'pgTAP Event 2', now() + interval '60 days');
@@ -67,8 +70,20 @@ select lives_ok(
 );
 reset role;
 
-select pg_temp.login('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'owner@example.test', 'email');
-select is(public.current_admin_level(), null::public.admin_level, 'allowlisted email without Google sign-in has no admin level');
+select pg_temp.login('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'owner@example.test', 'oauth');
+select is(public.current_admin_level(), 'owner'::public.admin_level, 'allowlisted email with an OAuth session is admin');
+reset role;
+
+select pg_temp.login('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'owner@example.test', 'oauth', 'email');
+select is(public.current_admin_level(), 'owner'::public.admin_level, 'allowlisted email first signed up via OTP is admin in an OAuth session');
+reset role;
+
+select pg_temp.login('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'owner@example.test', 'otp', 'google');
+select is(public.current_admin_level(), null::public.admin_level, 'allowlisted email with an OTP session has no admin level');
+reset role;
+
+select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test', 'oauth');
+select is(public.current_admin_level(), null::public.admin_level, 'non-allowlisted email with an OAuth session has no admin level');
 reset role;
 
 select pg_temp.login('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'organizer@example.test');
