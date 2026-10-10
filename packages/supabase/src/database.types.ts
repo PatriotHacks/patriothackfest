@@ -256,7 +256,7 @@ export type Database = {
           id: string
           name: string
           slug: string
-          starts_at: string
+          starts_at: string | null
         }
         ComputedFields: never
         Insert: {
@@ -265,7 +265,7 @@ export type Database = {
           id?: string
           name: string
           slug: string
-          starts_at: string
+          starts_at?: string | null
         }
         Update: {
           created_at?: string
@@ -273,7 +273,7 @@ export type Database = {
           id?: string
           name?: string
           slug?: string
-          starts_at?: string
+          starts_at?: string | null
         }
         Relationships: []
       }

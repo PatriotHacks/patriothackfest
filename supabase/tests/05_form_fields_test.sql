@@ -117,5 +117,5 @@ select is(
   'reviewer cannot edit fields'
 );
 
-select * from finish();
+select * from finish(true);
 rollback;

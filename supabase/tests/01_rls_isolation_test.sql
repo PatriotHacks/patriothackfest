@@ -39,7 +39,7 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
   ('f0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', 'volunteer', 'Volunteer', 'published', now() + interval '1 day', now() + interval '2 days'),
   ('f0000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', 'judge', 'Judge', 'draft', null, null);
 
-select plan(15);
+select plan(17);
 
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
 select public.start_application('f0000000-0000-0000-0000-000000000001');
@@ -111,5 +111,16 @@ select pg_temp.login('cccccccc-cccc-cccc-cccc-cccccccccccc', 'reviewer@example.t
 select is((select count(*) from public.applications), 2::bigint, 'reviewer sees all applications');
 reset role;
 
-select * from finish();
+select lives_ok(
+  $$insert into public.events (slug, name) values ('pgtap-undated', 'Undated')$$,
+  'events can be created without dates'
+);
+select throws_ok(
+  $$insert into public.events (slug, name, ends_at) values ('pgtap-end-only', 'End only', now())$$,
+  '23514',
+  null,
+  'ends_at requires starts_at'
+);
+
+select * from finish(true);
 rollback;

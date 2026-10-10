@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "gen:types": "dotenv -e ../../.env -- sh -c 'supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" --schema public > src/database.types.ts'"
+    "gen:types": "dotenv -e ../../.env -- sh -c 'supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" --schema public > src/database.types.ts' && prettier --write src/database.types.ts"
   },
   "exports": {
     "./client": "./src/client.ts",

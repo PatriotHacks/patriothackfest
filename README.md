@@ -18,6 +18,8 @@ supabase/
   migrations/         schema, RLS policies, RPCs, storage bucket
   tests/              pgTAP tests (each file runs in a transaction and rolls back)
   seed.sql            the two events (idempotent upsert on slug)
+scripts/
+  db-test.mjs         pgTAP runner used by `pnpm db:test`
 ```
 
 ## Prerequisites
@@ -38,12 +40,12 @@ cp apps/app/.env.example apps/app/.env.local
 cp apps/admin/.env.example apps/admin/.env.local
 ```
 
-| Variable | File | Value |
-| --- | --- | --- |
-| `SUPABASE_DB_URL` | `.env` | Postgres connection string from the Supabase dashboard (Connect > Direct connection or Session pooler). The password must be percent-encoded. |
-| `NEXT_PUBLIC_SUPABASE_URL` | `apps/app`, `apps/admin` | Project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `apps/app`, `apps/admin` | Publishable key (`sb_publishable_...`) |
-| `NEXT_PUBLIC_APP_URL` | `apps/web` | Applicant portal URL, e.g. `http://localhost:3001` |
+| Variable                               | File                     | Value                                                                                                                                         |
+| -------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_DB_URL`                      | `.env`                   | Postgres connection string from the Supabase dashboard (Connect > Direct connection or Session pooler). The password must be percent-encoded. |
+| `NEXT_PUBLIC_SUPABASE_URL`             | `apps/app`, `apps/admin` | Project URL                                                                                                                                   |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `apps/app`, `apps/admin` | Publishable key (`sb_publishable_...`)                                                                                                        |
+| `NEXT_PUBLIC_APP_URL`                  | `apps/web`               | Applicant portal URL, e.g. `http://localhost:3001`                                                                                            |
 
 ## Database
 
@@ -51,10 +53,14 @@ All database scripts target the project in `SUPABASE_DB_URL`.
 
 ```sh
 pnpm db:push     # apply migrations
-pnpm db:seed     # upsert the two events
+pnpm db:seed     # upsert the two events (safe to re-run)
 pnpm gen:types   # regenerate packages/supabase/src/database.types.ts
 pnpm db:test     # run pgTAP tests in supabase/tests
 ```
+
+`pnpm db:test` does not use Docker or `supabase test db`. `scripts/db-test.mjs` runs each `supabase/tests/*_test.sql` file against `SUPABASE_DB_URL` over a direct `pg` connection (the Supabase CLI's `db query` cannot run multi-statement files). Each file wraps its work in `begin ... rollback` and ends with `select * from finish(true)`, so a failed assertion raises an error; the runner also fails on a plan/count mismatch and exits non-zero if any file fails.
+
+Event dates (`events.starts_at`, `events.ends_at`) are nullable until they are announced; `ends_at` requires `starts_at`. The seed only sets slug and name, so re-running it never clears dates set later.
 
 Commit the regenerated `database.types.ts` after every migration.
 

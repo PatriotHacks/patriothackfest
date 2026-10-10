@@ -11,13 +11,14 @@
     "format": "turbo format",
     "db:push": "dotenv -e .env -- sh -c 'supabase db push --db-url \"$SUPABASE_DB_URL\"'",
     "db:seed": "dotenv -e .env -- sh -c 'supabase db query --db-url \"$SUPABASE_DB_URL\" -f supabase/seed.sql'",
-    "db:test": "dotenv -e .env -- sh -c 'supabase test db --db-url \"$SUPABASE_DB_URL\"'",
+    "db:test": "dotenv -e .env -- node scripts/db-test.mjs",
     "gen:types": "pnpm --filter @workspace/supabase gen:types"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "dotenv-cli": "^11",
+    "pg": "^8.23.1",
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "supabase": "^2.120.0",

@@ -135,5 +135,5 @@ select pg_temp.login('22222222-2222-2222-2222-222222222222', 'bob@example.test')
 select is((select decision from public.application_decisions), 'rejected'::public.decision, 'released decision is visible to its applicant');
 reset role;
 
-select * from finish();
+select * from finish(true);
 rollback;

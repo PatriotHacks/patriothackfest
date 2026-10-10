@@ -175,5 +175,5 @@ select is(
   'decision is removed'
 );
 
-select * from finish();
+select * from finish(true);
 rollback;
