@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-create function pg_temp.login(p_id uuid, p_email text, p_provider text default 'google')
+create function pg_temp.login(p_id uuid, p_email text, p_method text default 'oauth', p_provider text default 'google')
 returns void
 language sql
 as $$
@@ -11,7 +11,8 @@ as $$
       'sub', p_id,
       'email', p_email,
       'role', 'authenticated',
-      'app_metadata', json_build_object('provider', p_provider)
+      'app_metadata', json_build_object('provider', p_provider),
+      'amr', json_build_array(json_build_object('method', p_method, 'timestamp', extract(epoch from now())::bigint))
     )::text,
     true
   );
