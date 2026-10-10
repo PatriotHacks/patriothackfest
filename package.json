@@ -1,0 +1,31 @@
+{
+  "name": "patriothackfest",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "pnpm db:test",
+    "format": "turbo format",
+    "db:push": "dotenv -e .env -- sh -c 'supabase db push --db-url \"$SUPABASE_DB_URL\"'",
+    "db:seed": "dotenv -e .env -- sh -c 'supabase db query --db-url \"$SUPABASE_DB_URL\" -f supabase/seed.sql'",
+    "db:test": "dotenv -e .env -- sh -c 'supabase test db --db-url \"$SUPABASE_DB_URL\"'",
+    "gen:types": "pnpm --filter @workspace/supabase gen:types"
+  },
+  "devDependencies": {
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "dotenv-cli": "^11",
+    "prettier": "^3.9.9",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "supabase": "^2.120.0",
+    "turbo": "^2.11.7",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24 <25"
+  }
+}
