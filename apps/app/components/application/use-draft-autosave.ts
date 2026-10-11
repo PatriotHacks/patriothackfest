@@ -18,8 +18,13 @@ export function useDraftAutosave(
   const [status, setStatus] = useState<SaveStatus>("saved")
   const [error, setError] = useState<string | null>(null)
 
-  const run = useCallback(() => {
+  const clearTimer = useCallback(() => {
     clearTimeout(timer.current)
+    timer.current = undefined
+  }, [])
+
+  const run = useCallback(() => {
+    clearTimer()
     const answers = queued.current
     if (!answers) return chain.current
     queued.current = null
@@ -33,33 +38,31 @@ export function useDraftAutosave(
       if (!timer.current || error) setStatus(error ? "error" : "saved")
     })
     return chain.current
-  }, [save])
+  }, [save, clearTimer])
 
   const schedule = useCallback(
     (answers: Answers) => {
       queued.current = answers
       setStatus("saving")
-      clearTimeout(timer.current)
-      timer.current = setTimeout(() => {
-        timer.current = undefined
-        void run()
+      clearTimer()
+      const handle = setTimeout(() => {
+        if (timer.current === handle) void run()
       }, delay)
+      timer.current = handle
     },
-    [delay, run]
+    [delay, run, clearTimer]
   )
 
   const flush = useCallback(async () => {
-    timer.current = undefined
     if (queued.current) setStatus("saving")
     await run()
     return !failed.current
   }, [run])
 
   const cancel = useCallback(() => {
-    clearTimeout(timer.current)
-    timer.current = undefined
+    clearTimer()
     queued.current = null
-  }, [])
+  }, [clearTimer])
 
   useEffect(() => {
     if (status === "saved") return
