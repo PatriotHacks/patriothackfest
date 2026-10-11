@@ -46,6 +46,7 @@ export function isConditionSourceType(type: FieldType) {
 
 export const DEFAULT_FILE_ACCEPT = ["application/pdf"]
 export const DEFAULT_FILE_MAX_SIZE_MB = 10
+export const MAX_FILE_SIZE_MB = 10
 
 export const textValidationSchema = z.object({
   min_length: z.int().nonnegative().optional(),
@@ -64,8 +65,15 @@ export const dateValidationSchema = z.object({
 })
 
 export const fileValidationSchema = z.object({
-  accept: z.array(z.string().min(1)).min(1).optional(),
-  max_size_mb: z.number().positive().optional(),
+  accept: z
+    .array(
+      z.string().refine((type) => DEFAULT_FILE_ACCEPT.includes(type), {
+        message: "Only PDF uploads are supported",
+      })
+    )
+    .min(1)
+    .optional(),
+  max_size_mb: z.number().positive().max(MAX_FILE_SIZE_MB).optional(),
 })
 
 export type TextValidation = z.infer<typeof textValidationSchema>

@@ -2,10 +2,11 @@ import { Button } from "@workspace/ui/components/button"
 import { createClient } from "@workspace/supabase/server"
 import { redirect } from "next/navigation"
 
+import { AUTH_COOKIE } from "@/lib/auth-cookie"
 import { signOut } from "@/lib/auth-actions"
 
 export default async function AccessDeniedPage() {
-  const supabase = await createClient()
+  const supabase = await createClient(AUTH_COOKIE)
   const { data } = await supabase.auth.getClaims()
   if (!data?.claims) redirect("/login")
 

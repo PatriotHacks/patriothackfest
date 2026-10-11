@@ -1,8 +1,8 @@
 import * as z from "zod"
 
+import { fileMaxSizeMb } from "./files"
 import {
   DEFAULT_FILE_ACCEPT,
-  DEFAULT_FILE_MAX_SIZE_MB,
   fileAnswerSchema,
   type Answers,
   type Field,
@@ -30,7 +30,7 @@ function validateValue(field: Field, value: unknown): string | null {
     case "long_text": {
       if (typeof value !== "string") return "Enter text"
       const { min_length, max_length } = field.validation ?? {}
-      const length = value.trim().length
+      const length = [...value.trim()].length
       if (min_length !== undefined && length < min_length)
         return `Enter at least ${min_length} characters`
       if (max_length !== undefined && length > max_length)
@@ -80,8 +80,7 @@ function validateValue(field: Field, value: unknown): string | null {
       const parsed = fileAnswerSchema.safeParse(value)
       if (!parsed.success) return "Upload a file"
       const accept = field.validation?.accept ?? DEFAULT_FILE_ACCEPT
-      const maxSizeMb =
-        field.validation?.max_size_mb ?? DEFAULT_FILE_MAX_SIZE_MB
+      const maxSizeMb = fileMaxSizeMb(field)
       if (!accept.includes(parsed.data.type))
         return "This file type is not allowed"
       if (parsed.data.size > maxSizeMb * 1024 * 1024)

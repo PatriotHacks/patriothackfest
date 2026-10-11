@@ -4,12 +4,13 @@ import { createClient, type ServerClient } from "@workspace/supabase/server"
 import { redirect } from "next/navigation"
 import { cache } from "react"
 
+import { AUTH_COOKIE } from "./auth-cookie"
 import { hasLevel, type AdminLevel } from "./levels"
 
 type Admin = { supabase: ServerClient; email: string; level: AdminLevel }
 
 export const getAdmin = cache(async (): Promise<Admin> => {
-  const supabase = await createClient()
+  const supabase = await createClient(AUTH_COOKIE)
   const { data } = await supabase.auth.getClaims()
   if (!data?.claims) redirect("/login")
 

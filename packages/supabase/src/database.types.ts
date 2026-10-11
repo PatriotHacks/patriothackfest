@@ -146,6 +146,7 @@ export type Database = {
         Row: {
           answers: NonNullable<Json>
           created_at: string
+          declined_at: string | null
           event_id: string
           form_id: string
           id: string
@@ -160,6 +161,7 @@ export type Database = {
         Insert: {
           answers?: NonNullable<Json>
           created_at?: string
+          declined_at?: string | null
           event_id: string
           form_id: string
           id?: string
@@ -173,6 +175,7 @@ export type Database = {
         Update: {
           answers?: NonNullable<Json>
           created_at?: string
+          declined_at?: string | null
           event_id?: string
           form_id?: string
           id?: string
@@ -440,9 +443,19 @@ export type Database = {
         Args: { p_field_ids: string[]; p_form_id: string }
         Returns: undefined
       }
+      application_answer_errors: {
+        Args: { p_answers: Json; p_application_id: string; p_schema: Json }
+        Returns: Json
+      }
+      application_file_deletable: { Args: { p_name: string }; Returns: boolean }
+      application_file_writable: { Args: { p_name: string }; Returns: boolean }
       current_admin_level: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["admin_level"]
+      }
+      decline_application_offer: {
+        Args: { p_application_id: string }
+        Returns: undefined
       }
       form_answered_field_ids: {
         Args: { p_form_id: string }
@@ -452,18 +465,36 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: boolean
       }
+      form_field_visible: {
+        Args: {
+          p_answers: Json
+          p_field_id: string
+          p_schema: Json
+          p_seen?: string[]
+        }
+        Returns: boolean
+      }
       has_admin_level: {
         Args: { min_level: Database["public"]["Enums"]["admin_level"] }
         Returns: boolean
       }
+      js_trim: { Args: { p_value: string }; Returns: string }
+      prune_application_answers: {
+        Args: { p_answers: Json; p_schema: Json }
+        Returns: Json
+      }
       save_application_answers: {
         Args: { p_answers: Json; p_application_id: string }
-        Returns: undefined
+        Returns: string
       }
       start_application: { Args: { p_form_id: string }; Returns: string }
       submit_application: {
         Args: { p_application_id: string }
         Returns: undefined
+      }
+      validated_application_answers: {
+        Args: { p_answers: Json; p_application_id: string; p_schema: Json }
+        Returns: Json
       }
       withdraw_application: {
         Args: { p_application_id: string }

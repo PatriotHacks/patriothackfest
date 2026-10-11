@@ -1,4 +1,5 @@
 export * from "./answers"
+export * from "./files"
 export * from "./publish"
 export * from "./schema"
 export * from "./visibility"

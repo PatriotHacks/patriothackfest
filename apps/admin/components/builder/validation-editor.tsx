@@ -1,14 +1,14 @@
 "use client"
 
 import {
-  DEFAULT_FILE_ACCEPT,
   DEFAULT_FILE_MAX_SIZE_MB,
+  MAX_FILE_SIZE_MB,
   type Field,
 } from "@workspace/forms"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { Switch } from "@workspace/ui/components/switch"
-import { useId } from "react"
+import { useId, useState } from "react"
 
 function compact<T extends Record<string, unknown>>(value: T): T | null {
   const entries = Object.entries(value).filter(([, v]) => v !== undefined)
@@ -39,6 +39,53 @@ function NumberSetting({
         value={value ?? ""}
         onChange={(e) => onChange(toNumber(e.target.value))}
       />
+    </div>
+  )
+}
+
+function isValidFileSize(size: number) {
+  return size > 0 && size <= MAX_FILE_SIZE_MB
+}
+
+function FileSizeSetting({
+  value,
+  onChange,
+}: {
+  value: number | undefined
+  onChange: (value: number | undefined) => void
+}) {
+  const id = useId()
+  const [draft, setDraft] = useState(value?.toString() ?? "")
+  const [invalid, setInvalid] = useState(false)
+
+  function commit() {
+    const ok = draft === "" || isValidFileSize(Number(draft))
+    setInvalid(!ok)
+    if (ok) onChange(draft === "" ? undefined : Number(draft))
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <Label htmlFor={id}>
+        Max size in MB (default {DEFAULT_FILE_MAX_SIZE_MB})
+      </Label>
+      <Input
+        id={id}
+        type="number"
+        min={0}
+        max={MAX_FILE_SIZE_MB}
+        step="any"
+        className="w-32"
+        value={draft}
+        aria-invalid={invalid}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+      />
+      {invalid && (
+        <p className="text-xs text-destructive">
+          Enter a size greater than 0 and at most {MAX_FILE_SIZE_MB} MB
+        </p>
+      )}
     </div>
   )
 }
@@ -157,31 +204,12 @@ export function ValidationEditor({
     case "file": {
       const v = field.validation ?? {}
       return (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-start gap-3">
           <div className="flex flex-col gap-1">
-            <Label htmlFor={id}>Accepted MIME types</Label>
-            <Input
-              id={id}
-              className="w-72"
-              placeholder={DEFAULT_FILE_ACCEPT.join(", ")}
-              value={v.accept?.join(", ") ?? ""}
-              onChange={(e) => {
-                const accept = e.target.value
-                  .split(",")
-                  .map((s) => s.trim())
-                  .filter(Boolean)
-                onChange({
-                  ...field,
-                  validation: compact({
-                    ...v,
-                    accept: accept.length > 0 ? accept : undefined,
-                  }),
-                })
-              }}
-            />
+            <span className="text-sm font-medium">Accepted file type</span>
+            <span className="text-sm text-muted-foreground">PDF only</span>
           </div>
-          <NumberSetting
-            label={`Max size in MB (default ${DEFAULT_FILE_MAX_SIZE_MB})`}
+          <FileSizeSetting
             value={v.max_size_mb}
             onChange={(max_size_mb) =>
               onChange({ ...field, validation: compact({ ...v, max_size_mb }) })

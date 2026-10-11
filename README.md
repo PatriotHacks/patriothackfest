@@ -74,7 +74,7 @@ Applicants on `apps/app` sign in with an emailed 6-digit code (Supabase email OT
 ### Email OTP (app)
 
 1. Authentication > Emails > SMTP Settings: enable custom SMTP with host `smtp.gmail.com`, port `587`, username = the Google Workspace sending account (2-Step Verification on, password = an app password), sender email = that same address. Publish SPF and DKIM records for `patriothackfest.com`.
-2. Authentication > Emails > Templates > Magic Link: include `{{ .Token }}` so the email shows the 6-digit code.
+2. Authentication > Emails > Templates: edit both **Magic Link** (returning users) and **Confirm signup** (first sign-in creates the user) to show `{{ .Token }}`, the 6-digit code. The app has no callback route, so the templates should not rely on `{{ .ConfirmationURL }}`.
 3. Authentication > Rate Limits: raise the email sending limit.
 4. Authentication > Sign In / Providers > Email: disable email+password signups.
 
@@ -83,6 +83,12 @@ Applicants on `apps/app` sign in with an emailed 6-digit code (Supabase email OT
 1. In Google Cloud Console, create an OAuth client (Web application) with `https://<project-ref>.supabase.co/auth/v1/callback` as an authorized redirect URI.
 2. Authentication > Sign In / Providers > Google: enable it and paste the client ID and secret.
 3. Authentication > URL Configuration: add `http://localhost:3001/**`, `http://localhost:3002/**`, `https://app.patriothackfest.com/**`, and `https://admin.patriothackfest.com/**`.
+
+### Sessions
+
+Each app stores its Supabase session in its own cookie: `phf-app-auth` for `apps/app` and `phf-admin-auth` for `apps/admin`. Cookies on `localhost` are shared across ports, so a shared name would let the two dev servers overwrite each other's session. No cookie domain is set, so production cookies stay scoped to each subdomain.
+
+The applicant app only accepts sessions established by email OTP (the JWT `amr` claim includes `otp`); any other session is signed out and sent to `/login?error=session`. Applicant sign-out uses local scope, so it does not end the user's admin session.
 
 Admin access requires an allowlisted email and a session signed in via OAuth (the JWT `amr` claim includes `oauth`). An OTP session for the same allowlisted user is not an admin session.
 
@@ -105,6 +111,18 @@ Levels are `owner` (allowlist and everything else), `organizer` (forms, deadline
 - **Publish / Save** calls `admin_publish_form`, which validates the working copy and snapshots it into `forms.published_schema`, the only form content applicants can read. Edits after publishing show an "Unpublished changes" badge until the next save.
 - **Admins** (owners only): add, re-level, and remove allowlist entries. The database rejects any change that would leave no owner.
 - Reviewers see forms and the builder read-only.
+
+## Applicant portal
+
+- Sign in with an emailed code at `/login`. Applicants without a name on their profile are sent to `/welcome` before anything else.
+- **Dashboard** (`/`): the applicant's applications with status and deadlines (shown in America/New_York), plus events with a published form that is still open (before `submissions_close_at`).
+- **Role selection** (`/apply/<event-slug>`): lists roles whose form is published and open. Starting an application calls `start_application`; the role is locked and each applicant gets one application per event.
+- **Application** (`/applications/<id>`) renders the form's `published_schema` with live conditional visibility. Drafts autosave the whole answers object (1 s debounce, on blur, and before submit). If another tab saved more recently, a warning offers a reload.
+- **Files** upload from the browser straight to the private `application-files` bucket at `<user>/<application>/<field>/<uuid>.pdf` (PDF only, up to the field limit, max 10 MB). Replacing or removing a file uploads the new one, saves the answers, then deletes the old object.
+- **Submit** validates in the browser, then `submit_application` validates again; field errors from the database (`PT422`) are shown on their questions. After submitting, answers can be changed with **Save changes** until `edits_lock_at`, then become read-only.
+- **Withdraw** is available only until decisions are released for the form, and is final; the applicant cannot reapply to that event.
+- **Decline**: after release, accepted and waitlisted applicants can decline their spot or leave the waitlist from the dashboard or application page (`decline_application_offer` sets `applications.declined_at`). There is no RSVP; accepted applicants count as attending unless they decline. Declining is final: organizers can no longer change that decision or the application's role.
+- Status: Draft, Submitted, or Not submitted (closed draft) until decisions are released; then Accepted, Waitlisted, Not accepted, or Under review (no decision yet). Withdrawn overrides any decision; a declined offer shows Declined.
 
 ## Development
 
