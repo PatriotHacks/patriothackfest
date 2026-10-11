@@ -49,6 +49,10 @@ set published_schema = '{"title": "Participant", "description": null, "fields": 
 ]}'
 where id = 'f0000000-0000-0000-0000-000000000001';
 
+update public.forms
+set published_schema = '{"title": "Volunteer", "description": null, "fields": []}'
+where id = 'f0000000-0000-0000-0000-000000000002';
+
 select plan(31);
 
 insert into public.events (id, slug, name, starts_at) values
