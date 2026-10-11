@@ -30,7 +30,7 @@ function validateValue(field: Field, value: unknown): string | null {
     case "long_text": {
       if (typeof value !== "string") return "Enter text"
       const { min_length, max_length } = field.validation ?? {}
-      const length = value.trim().length
+      const length = [...value.trim()].length
       if (min_length !== undefined && length < min_length)
         return `Enter at least ${min_length} characters`
       if (max_length !== undefined && length > max_length)
