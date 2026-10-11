@@ -30,16 +30,31 @@ function content({
   role,
 }: DecisionEmailInput) {
   const fromWaitlist = previousDecision === "waitlisted"
+  const isUpdate =
+    previousDecision != null &&
+    previousDecision !== "pending" &&
+    previousDecision !== decision &&
+    !(decision === "accepted" && fromWaitlist)
+  const updateSubject = `Update on your ${eventName} application`
+  const update = `We have an update on your application to be a ${role} at ${eventName}.`
+  const acceptanceChanged =
+    "We're sorry to share that your earlier acceptance has changed"
+  const apology = "We apologize for any confusion."
+
   switch (decision) {
     case "accepted":
       return {
-        subject: fromWaitlist
-          ? `A spot opened up at ${eventName}`
-          : `You're in: ${eventName}`,
+        subject: isUpdate
+          ? updateSubject
+          : fromWaitlist
+            ? `A spot opened up at ${eventName}`
+            : `You're in: ${eventName}`,
         paragraphs: [
-          fromWaitlist
-            ? `Good news: a spot opened up, and you've been moved off the waitlist. You're now accepted as a ${role} for ${eventName}.`
-            : `Congratulations! You've been accepted as a ${role} for ${eventName}.`,
+          isUpdate
+            ? `${update} We took another look, and we're happy to let you know you've been accepted.`
+            : fromWaitlist
+              ? `Good news: a spot opened up, and you've been moved off the waitlist. You're now accepted as a ${role} for ${eventName}.`
+              : `Congratulations! You've been accepted as a ${role} for ${eventName}.`,
           "Event details and updates will be posted in the applicant portal.",
           "If you can no longer attend, please decline your spot in the portal so we can offer it to someone on the waitlist.",
         ],
@@ -47,9 +62,15 @@ function content({
       }
     case "waitlisted":
       return {
-        subject: `You're on the waitlist for ${eventName}`,
+        subject: isUpdate
+          ? updateSubject
+          : `You're on the waitlist for ${eventName}`,
         paragraphs: [
-          `Thanks for applying to be a ${role} at ${eventName}. We received more applications than we have spots, so you're on our waitlist for now.`,
+          !isUpdate
+            ? `Thanks for applying to be a ${role} at ${eventName}. We received more applications than we have spots, so you're on our waitlist for now.`
+            : previousDecision === "accepted"
+              ? `${update} ${acceptanceChanged}, and you're now on our waitlist instead. ${apology}`
+              : `${update} We took another look, and you're now on our waitlist.`,
           "If a spot opens up, we'll email you right away.",
           "If your plans change, you can leave the waitlist in the applicant portal.",
         ],
@@ -57,11 +78,13 @@ function content({
       }
     case "rejected":
       return {
-        subject: `Your ${eventName} application`,
+        subject: isUpdate ? updateSubject : `Your ${eventName} application`,
         paragraphs: [
-          fromWaitlist
-            ? `Thank you for your patience while on the waitlist for ${eventName}. Unfortunately, we aren't able to offer you a spot as a ${role} this time.`
-            : `Thank you for applying to be a ${role} at ${eventName}. We received many strong applications, and unfortunately we aren't able to offer you a spot this time.`,
+          !isUpdate
+            ? `Thank you for applying to be a ${role} at ${eventName}. We received many strong applications, and unfortunately we aren't able to offer you a spot this time.`
+            : fromWaitlist
+              ? `${update} Thank you for your patience while on the waitlist. Unfortunately, we aren't able to offer you a spot this time.`
+              : `${update} ${acceptanceChanged}, and we aren't able to offer you a spot this time. ${apology}`,
           `We truly appreciate your interest and hope you'll apply to a future ${ORGANIZER} event.`,
         ],
         signOff: "Best,",

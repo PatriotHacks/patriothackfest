@@ -44,8 +44,8 @@ describe("decisionEmail", () => {
     expect(email.text).not.toContain("Congratulations")
   })
 
-  it("uses fresh acceptance wording for other previous decisions", () => {
-    for (const previousDecision of ["pending", "rejected", null] as const) {
+  it("uses fresh wording without a previous final decision", () => {
+    for (const previousDecision of ["pending", null, undefined] as const) {
       const email = decisionEmail({ ...base, previousDecision })
       expect(email.subject).toBe("You're in: Patriot HackFest 2026")
       expect(email.text).not.toContain("spot opened up")
@@ -79,13 +79,89 @@ describe("decisionEmail", () => {
     expect(email.html).not.toMatch(/reject/i)
   })
 
-  it("acknowledges waitlist patience when rejected after waitlisting", () => {
+  it("words waitlisted to rejected as an update that thanks their patience", () => {
     const email = decisionEmail({
       ...base,
       decision: "rejected",
       previousDecision: "waitlisted",
     })
+    expect(email.subject).toBe(
+      "Update on your Patriot HackFest 2026 application"
+    )
+    expect(email.text).toContain("We have an update on your application")
     expect(email.text).toContain("patience while on the waitlist")
+    expect(email.text).toContain("aren't able to offer you a spot")
+    expect(email.text).not.toMatch(/reject/i)
+  })
+
+  it("words rejected to accepted as an update", () => {
+    const email = decisionEmail({ ...base, previousDecision: "rejected" })
+    expect(email.subject).toBe(
+      "Update on your Patriot HackFest 2026 application"
+    )
+    expect(email.text).toContain("We have an update on your application")
+    expect(email.text).toContain("you've been accepted")
+    expect(email.text).toContain("decline your spot in the portal")
+    expect(email.text).not.toContain("Congratulations")
+    expect(email.text).not.toContain("spot opened up")
+  })
+
+  it("words accepted to waitlisted as an update with an apology", () => {
+    const email = decisionEmail({
+      ...base,
+      decision: "waitlisted",
+      previousDecision: "accepted",
+    })
+    expect(email.subject).toBe(
+      "Update on your Patriot HackFest 2026 application"
+    )
+    expect(email.text).toContain("earlier acceptance has changed")
+    expect(email.text).toContain("now on our waitlist instead")
+    expect(email.text).toContain("apologize for any confusion")
+    expect(email.text).not.toContain("Thanks for applying")
+  })
+
+  it("words rejected to waitlisted as an update", () => {
+    const email = decisionEmail({
+      ...base,
+      decision: "waitlisted",
+      previousDecision: "rejected",
+    })
+    expect(email.subject).toBe(
+      "Update on your Patriot HackFest 2026 application"
+    )
+    expect(email.text).toContain("We took another look")
+    expect(email.text).toContain("now on our waitlist")
+    expect(email.text).not.toContain("earlier acceptance")
+    expect(email.text).not.toMatch(/reject/i)
+  })
+
+  it("words accepted to rejected as an update with an apology", () => {
+    const email = decisionEmail({
+      ...base,
+      decision: "rejected",
+      previousDecision: "accepted",
+    })
+    expect(email.subject).toBe(
+      "Update on your Patriot HackFest 2026 application"
+    )
+    expect(email.text).toContain("earlier acceptance has changed")
+    expect(email.text).toContain("aren't able to offer you a spot")
+    expect(email.text).toContain("apologize for any confusion")
+    expect(email.html).toContain("We&#39;re sorry to share")
+    expect(email.text).not.toMatch(/reject/i)
+  })
+
+  it("uses first-time wording when the previous decision is the same", () => {
+    for (const decision of ["accepted", "waitlisted", "rejected"] as const) {
+      const email = decisionEmail({
+        ...base,
+        decision,
+        previousDecision: decision,
+      })
+      expect(email.subject).not.toContain("Update")
+      expect(email.text).not.toContain("We have an update")
+    }
   })
 
   it("greets applicants without a name", () => {
