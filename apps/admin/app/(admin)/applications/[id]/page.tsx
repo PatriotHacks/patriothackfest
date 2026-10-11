@@ -218,7 +218,7 @@ export default async function ApplicationPage({
             ))}
           </ol>
           <DecisionControl
-            key={decision?.decided_at}
+            key={id}
             applicationId={id}
             decision={decision?.decision ?? null}
             blockedReason={decisionBlockedReason(

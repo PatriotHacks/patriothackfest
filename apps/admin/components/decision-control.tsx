@@ -21,7 +21,12 @@ export function DecisionControl({
   const [value, setValue] = useState<Decision | undefined>(
     decision ?? undefined
   )
+  const [savedDecision, setSavedDecision] = useState(decision)
   const [message, setMessage] = useState<string | null>(null)
+  if (decision !== savedDecision) {
+    setSavedDecision(decision)
+    setValue(decision ?? undefined)
+  }
   const [pending, startTransition] = useTransition()
 
   return (
@@ -32,7 +37,10 @@ export function DecisionControl({
           <DecisionSelect
             id="decision"
             value={value}
-            onChange={setValue}
+            onChange={(next) => {
+              setValue(next)
+              setMessage(null)
+            }}
             disabled={blockedReason !== null || pending}
           />
         </div>
