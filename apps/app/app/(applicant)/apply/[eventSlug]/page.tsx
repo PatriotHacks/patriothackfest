@@ -1,10 +1,10 @@
 import { formatInZone, publishedSchemaSchema } from "@workspace/forms"
+import { ROLES } from "@workspace/supabase/roles"
 import { notFound, redirect } from "next/navigation"
 
 import { RolePicker } from "@/components/role-picker"
 import { isFormOpen } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
-import { ROLES } from "@/lib/roles"
 
 const formSummary = publishedSchemaSchema.pick({
   title: true,

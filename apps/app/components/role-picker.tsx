@@ -1,5 +1,6 @@
 "use client"
 
+import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +25,6 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 
 import { startApplication } from "@/app/(applicant)/apply/[eventSlug]/actions"
-import { ROLE_LABELS, type Role } from "@/lib/roles"
 
 type OpenForm = {
   id: string

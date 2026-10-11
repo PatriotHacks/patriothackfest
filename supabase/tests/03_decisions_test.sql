@@ -94,7 +94,7 @@ select lives_ok(
 );
 select throws_ok(
   $$select public.admin_release_decisions('f0000000-0000-0000-0000-000000000001')$$,
-  'P0001', 'Form not found or decisions already released', 'decisions cannot be released twice'
+  'P0001', 'Decisions are already released', 'decisions cannot be released twice'
 );
 reset role;
 

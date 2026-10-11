@@ -1,4 +1,4 @@
-import type { Database } from "@workspace/supabase/types"
+import type { Database } from "./database.types"
 
 export type Role = Database["public"]["Enums"]["app_role"]
 

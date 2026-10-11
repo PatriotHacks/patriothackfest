@@ -11,7 +11,8 @@ apps/
   admin/   admin.patriothackfest.com   admin console        (dev port 3002)
 packages/
   ui/                 shared shadcn/ui components and Tailwind v4 styles
-  forms/              form field schemas, conditional visibility, answer and publish validation
+  forms/              form field schemas, conditional visibility, answer and publish validation, CSV export
+  email/              SMTP transport, decision email templates, batch sending
   supabase/           Supabase browser/server clients and generated database types
   eslint-config/      shared ESLint configs
   typescript-config/  shared tsconfig presets
@@ -47,6 +48,10 @@ cp apps/admin/.env.example apps/admin/.env.local
 | `NEXT_PUBLIC_SUPABASE_URL`             | `apps/app`, `apps/admin` | Project URL                                                                                                                                   |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `apps/app`, `apps/admin` | Publishable key (`sb_publishable_...`)                                                                                                        |
 | `NEXT_PUBLIC_APP_URL`                  | `apps/web`               | Applicant portal URL, e.g. `http://localhost:3001`                                                                                            |
+| `APP_URL`                              | `apps/admin`             | Applicant portal URL linked from decision emails, e.g. `https://app.patriothackfest.com`                                                      |
+| `SMTP_HOST`, `SMTP_PORT`               | `apps/admin`             | Decision email SMTP server: `smtp.gmail.com` and `587` (STARTTLS) or `465` (implicit TLS)                                                     |
+| `SMTP_USER`, `SMTP_PASSWORD`           | `apps/admin`             | Google Workspace sending account and its app password                                                                                         |
+| `EMAIL_FROM`                           | `apps/admin`             | From header, e.g. `Patriot HackFest <events@patriothackfest.com>`                                                                             |
 
 ## Database
 
@@ -101,7 +106,7 @@ insert into public.admin_allowlist (email, level)
 values ('first.owner@example.com', 'owner');
 ```
 
-Levels are `owner` (allowlist and everything else), `organizer` (forms, deadlines, role changes, decisions, releases, exports), and `reviewer` (view applications, set decisions before release).
+Levels are `owner` (allowlist and everything else), `organizer` (forms, deadlines, role changes, decisions, releases, emails, exports), and `reviewer` (view applications, set decisions before release). See [Admin review](#admin-review).
 
 ## Admin console
 
@@ -112,6 +117,23 @@ Levels are `owner` (allowlist and everything else), `organizer` (forms, deadline
 - **Admins** (owners only): add, re-level, and remove allowlist entries. The database rejects any change that would leave no owner.
 - Reviewers see forms and the builder read-only.
 
+## Admin review
+
+What each level can do:
+
+| Level     | Applications and decisions                                                  | Release, emails, CSV, role changes |
+| --------- | --------------------------------------------------------------------------- | ---------------------------------- |
+| reviewer  | View applications, answers, files, and history; set decisions until release | No                                 |
+| organizer | Everything reviewers can, plus change decisions after release               | Yes                                |
+| owner     | Everything organizers can, plus manage the admin allowlist                  | Yes                                |
+
+- **Applications** (`/applications`): filter by event, role, status, decision (Undecided means no decision or Pending), released, declined, and name or email; 50 per page, newest first. Select rows to set a decision in bulk. Rows that cannot take a decision (not submitted, declined, or released when you are a reviewer) cannot be selected, and the reasons are listed above the table.
+- **Application detail** (`/applications/<id>`): status timeline (started, role changes, submitted, withdrawn, declined, decided, released), answers rendered from the form's `published_schema` with hidden conditional questions omitted, and file answers opened through 60-second signed URLs. Previous/Next keep the list filters. Archived answers from earlier roles are rendered with the schema snapshot taken at the change. Organizers also see the decision emails for the application.
+- **Role change** (organizers): moves the application to another role's form in the same event. The target form must be published and open, and declined or withdrawn applications cannot move. The current answers are archived, the decision is cleared, and the application returns to draft. The applicant is not emailed; contact them so they complete and submit the new form. Archives keep their schema snapshot even if the source form is later deleted.
+- **Release** (`/forms/<id>/release`, organizers): shows decision counts and releases the form's decisions in one irreversible step (the form must be published). Undecided applications show "Under review" to applicants until an organizer decides; any decision change after release queues a new email for that applicant.
+- **Decision emails**: release queues one email per decided, non-declined submission. "Send pending emails" sends batches of 10 over SMTP and repeats until the queue is empty, showing progress; each email is marked sent or failed as soon as it is attempted, and "Retry failed" queues failures again. Unsent emails are cancelled when the applicant declines, withdraws, or is moved to another role. An email that changes an earlier final decision (other than a waitlist promotion) is worded as an update. Emails stuck in sending are picked up again 10 minutes after they were claimed. Sending requires the `apps/admin` SMTP variables above: use the Google Workspace account with 2-Step Verification on and an app password as `SMTP_PASSWORD`. Google Workspace allows about 2,000 messages per user per day, so large releases may need to be sent over more than one day.
+- **CSV export** (`/forms/<id>/export`, organizers): one row per application on the form with fixed columns and one column per published question, hidden answers blank, times in America/New_York, and file answers linking to the admin detail page. The file starts with a UTF-8 BOM so Excel reads it correctly, and cells that start with formula characters are prefixed with `'`. Export buttons are on the forms list, the release page, and the applications list when filtered to one event and role.
+
 ## Applicant portal
 
 - Sign in with an emailed code at `/login`. Applicants without a name on their profile are sent to `/welcome` before anything else.
@@ -120,7 +142,7 @@ Levels are `owner` (allowlist and everything else), `organizer` (forms, deadline
 - **Application** (`/applications/<id>`) renders the form's `published_schema` with live conditional visibility. Drafts autosave the whole answers object (1 s debounce, on blur, and before submit). If another tab saved more recently, a warning offers a reload.
 - **Files** upload from the browser straight to the private `application-files` bucket at `<user>/<application>/<field>/<uuid>.pdf` (PDF only, up to the field limit, max 10 MB). Replacing or removing a file uploads the new one, saves the answers, then deletes the old object.
 - **Submit** validates in the browser, then `submit_application` validates again; field errors from the database (`PT422`) are shown on their questions. After submitting, answers can be changed with **Save changes** until `edits_lock_at`, then become read-only.
-- **Withdraw** is available only until decisions are released for the form, and is final; the applicant cannot reapply to that event.
+- **Withdraw** is available until the applicant's own decision is visible (decisions released for the form and a decision of accepted, waitlisted, or not accepted), and is final; the applicant cannot reapply to that event.
 - **Decline**: after release, accepted and waitlisted applicants can decline their spot or leave the waitlist from the dashboard or application page (`decline_application_offer` sets `applications.declined_at`). There is no RSVP; accepted applicants count as attending unless they decline. Declining is final: organizers can no longer change that decision or the application's role.
 - Status: Draft, Submitted, or Not submitted (closed draft) until decisions are released; then Accepted, Waitlisted, Not accepted, or Under review (no decision yet). Withdrawn overrides any decision; a declined offer shows Declined.
 
@@ -131,6 +153,6 @@ pnpm dev         # all apps
 pnpm build
 pnpm lint
 pnpm typecheck
-pnpm test        # vitest unit tests (packages/forms) via turbo
+pnpm test        # vitest unit tests (packages/forms, packages/email) via turbo
 pnpm db:test     # pgTAP tests against SUPABASE_DB_URL
 ```

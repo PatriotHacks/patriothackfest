@@ -1,4 +1,5 @@
 import { formatInZone } from "@workspace/forms"
+import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -21,7 +22,6 @@ import {
 } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
 import { deadlineText } from "@/lib/deadline-text"
-import { ROLE_LABELS, ROLES } from "@/lib/roles"
 
 export default async function DashboardPage() {
   const { supabase, fullName } = await getNamedApplicant()

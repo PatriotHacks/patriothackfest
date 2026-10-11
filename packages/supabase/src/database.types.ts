@@ -46,8 +46,10 @@ export type Database = {
           changed_by: string | null
           created_at: string
           event_id: string
+          from_form_id: string | null
           from_role: Database["public"]["Enums"]["app_role"]
           id: string
+          schema: NonNullable<Json>
           to_role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
@@ -58,8 +60,10 @@ export type Database = {
           changed_by?: string | null
           created_at?: string
           event_id: string
+          from_form_id?: string | null
           from_role: Database["public"]["Enums"]["app_role"]
           id?: string
+          schema: NonNullable<Json>
           to_role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
@@ -69,8 +73,10 @@ export type Database = {
           changed_by?: string | null
           created_at?: string
           event_id?: string
+          from_form_id?: string | null
           from_role?: Database["public"]["Enums"]["app_role"]
           id?: string
+          schema?: NonNullable<Json>
           to_role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
@@ -94,6 +100,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_archives_from_form_id_fkey"
+            columns: ["from_form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
             referencedColumns: ["id"]
           },
           {
@@ -213,32 +226,53 @@ export type Database = {
       email_log: {
         Row: {
           application_id: string
+          attempts: number
+          claimed_at: string | null
           created_at: string
+          decision: Database["public"]["Enums"]["decision"]
           error: string | null
+          form_id: string
           id: string
           kind: string
-          recipient: string
+          last_error_at: string | null
+          message_id: string | null
+          previous_decision: Database["public"]["Enums"]["decision"] | null
+          recipient: string | null
           sent_at: string | null
           status: string
         }
         ComputedFields: never
         Insert: {
           application_id: string
+          attempts?: number
+          claimed_at?: string | null
           created_at?: string
+          decision: Database["public"]["Enums"]["decision"]
           error?: string | null
+          form_id: string
           id?: string
           kind: string
-          recipient: string
+          last_error_at?: string | null
+          message_id?: string | null
+          previous_decision?: Database["public"]["Enums"]["decision"] | null
+          recipient?: string | null
           sent_at?: string | null
           status?: string
         }
         Update: {
           application_id?: string
+          attempts?: number
+          claimed_at?: string | null
           created_at?: string
+          decision?: Database["public"]["Enums"]["decision"]
           error?: string | null
+          form_id?: string
           id?: string
           kind?: string
-          recipient?: string
+          last_error_at?: string | null
+          message_id?: string | null
+          previous_decision?: Database["public"]["Enums"]["decision"] | null
+          recipient?: string | null
           sent_at?: string | null
           status?: string
         }
@@ -248,6 +282,13 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
             referencedColumns: ["id"]
           },
         ]
@@ -434,14 +475,53 @@ export type Database = {
         }
         Returns: undefined
       }
-      admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
-      admin_release_decisions: {
-        Args: { p_form_id: string }
+      admin_claim_emails: {
+        Args: { p_form_id: string; p_limit: number }
+        Returns: {
+          decision: Database["public"]["Enums"]["decision"]
+          email: string
+          event_name: string
+          full_name: string
+          id: string
+          previous_decision: Database["public"]["Enums"]["decision"]
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
+      admin_finish_email: {
+        Args: {
+          p_error?: string
+          p_id: string
+          p_message_id?: string
+          p_ok: boolean
+        }
         Returns: undefined
       }
+      admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
+      admin_release_counts: {
+        Args: { p_form_id: string }
+        Returns: {
+          accepted: number
+          declined: number
+          emails_cancelled: number
+          emails_failed: number
+          emails_pending: number
+          emails_sending: number
+          emails_sent: number
+          pending: number
+          rejected: number
+          submitted: number
+          undecided: number
+          waitlisted: number
+        }[]
+      }
+      admin_release_decisions: { Args: { p_form_id: string }; Returns: Json }
       admin_reorder_form_fields: {
         Args: { p_field_ids: string[]; p_form_id: string }
         Returns: undefined
+      }
+      admin_retry_failed_emails: {
+        Args: { p_form_id: string }
+        Returns: number
       }
       application_answer_errors: {
         Args: { p_answers: Json; p_application_id: string; p_schema: Json }
@@ -482,6 +562,14 @@ export type Database = {
       prune_application_answers: {
         Args: { p_answers: Json; p_schema: Json }
         Returns: Json
+      }
+      queue_decision_email: {
+        Args: {
+          p_application_id: string
+          p_decision: Database["public"]["Enums"]["decision"]
+          p_form_id: string
+        }
+        Returns: undefined
       }
       save_application_answers: {
         Args: { p_answers: Json; p_application_id: string }

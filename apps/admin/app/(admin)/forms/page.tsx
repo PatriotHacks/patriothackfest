@@ -1,10 +1,12 @@
 import { formatInZone } from "@workspace/forms"
+import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
+import { Button } from "@workspace/ui/components/button"
 import { Separator } from "@workspace/ui/components/separator"
 import Link from "next/link"
 import { Fragment } from "react"
@@ -14,12 +16,6 @@ import { DeadlinesForm } from "@/components/deadlines-form"
 import { FormStatusBadges } from "@/components/form-status-badges"
 import { getAdmin } from "@/lib/admin"
 import { hasLevel } from "@/lib/levels"
-
-const ROLES = [
-  { role: "participant", label: "Participant" },
-  { role: "volunteer", label: "Volunteer" },
-  { role: "judge", label: "Judge" },
-] as const
 
 export default async function FormsPage() {
   const { supabase, level } = await getAdmin()
@@ -34,7 +30,7 @@ export default async function FormsPage() {
     supabase
       .from("forms")
       .select(
-        "id, event_id, role, title, status, published_at, content_updated_at, submissions_close_at, edits_lock_at"
+        "id, event_id, role, title, status, published_at, content_updated_at, submissions_close_at, edits_lock_at, decisions_released_at"
       ),
   ])
   if (events.error) throw new Error(events.error.message)
@@ -49,7 +45,7 @@ export default async function FormsPage() {
             <CardTitle>{event.name}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {ROLES.map(({ role, label }, index) => {
+            {ROLES.map((role, index) => {
               const form = forms.data.find(
                 (f) => f.event_id === event.id && f.role === role
               )
@@ -58,7 +54,7 @@ export default async function FormsPage() {
                   {index > 0 && <Separator />}
                   <section className="flex flex-col gap-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="w-28 font-medium">{label}</h2>
+                      <h2 className="w-28 font-medium">{ROLE_LABELS[role]}</h2>
                       {form ? (
                         <>
                           <Link
@@ -82,6 +78,31 @@ export default async function FormsPage() {
                         </span>
                       )}
                     </div>
+                    {form && (
+                      <div className="flex flex-wrap gap-2">
+                        <Button asChild variant="outline" size="sm">
+                          <Link
+                            href={`/applications?event=${event.id}&role=${role}`}
+                          >
+                            Applications
+                          </Link>
+                        </Button>
+                        {canEdit && (
+                          <>
+                            <Button asChild variant="outline" size="sm">
+                              <Link href={`/forms/${form.id}/release`}>
+                                Release decisions
+                              </Link>
+                            </Button>
+                            <Button asChild variant="outline" size="sm">
+                              <a href={`/forms/${form.id}/export`}>
+                                Export CSV
+                              </a>
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
                     {form && (
                       <DeadlinesForm
                         formId={form.id}
