@@ -27,12 +27,12 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'organizer@example.test', '{"full_name": "Organizer"}'),
   ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'reviewer@example.test', '{"full_name": "Reviewer"}');
 
-delete from public.admin_allowlist;
-
 insert into public.admin_allowlist (email, level) values
   ('owner@example.test', 'owner'),
   ('organizer@example.test', 'organizer'),
   ('reviewer@example.test', 'reviewer');
+
+delete from public.admin_allowlist where email not like '%@example.test';
 
 insert into public.events (id, slug, name, starts_at) values
   ('e0000000-0000-0000-0000-000000000001', 'pgtap-event', 'pgTAP Event', now() + interval '30 days');
