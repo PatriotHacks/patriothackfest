@@ -42,6 +42,13 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
   ('f0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', 'volunteer', 'Volunteer', 'published', now() + interval '1 day', now() + interval '2 days'),
   ('f0000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', 'judge', 'Judge', 'draft', null, null);
 
+update public.forms
+set published_schema = '{"title": "Participant", "description": null, "fields": [
+  {"id": "d0000000-0000-0000-0000-000000000001", "type": "short_text", "label": "Name", "help_text": null,
+   "required": true, "options": null, "validation": null, "condition": null}
+]}'
+where id = 'f0000000-0000-0000-0000-000000000001';
+
 select plan(31);
 
 insert into public.events (id, slug, name, starts_at) values
@@ -112,7 +119,7 @@ select is((select count(*) from public.admin_allowlist), 3::bigint, 'reviewer ca
 
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
 select set_config('test.alice_app', public.start_application('f0000000-0000-0000-0000-000000000001')::text, true);
-select public.save_application_answers(current_setting('test.alice_app')::uuid, '{"q": "participant answer"}');
+select public.save_application_answers(current_setting('test.alice_app')::uuid, '{"d0000000-0000-0000-0000-000000000001": "participant answer"}');
 select public.submit_application(current_setting('test.alice_app')::uuid);
 select throws_ok(
   format('select public.admin_change_application_role(%L, %L)', current_setting('test.alice_app'), 'volunteer'),
@@ -167,7 +174,7 @@ select is(
 );
 select is(
   (select answers from public.application_archives where application_id = current_setting('test.alice_app')::uuid),
-  '{"q": "participant answer"}'::jsonb,
+  '{"d0000000-0000-0000-0000-000000000001": "participant answer"}'::jsonb,
   'archive keeps the previous answers'
 );
 select is(

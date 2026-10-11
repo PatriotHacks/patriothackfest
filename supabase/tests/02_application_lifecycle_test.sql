@@ -40,6 +40,13 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
   ('f0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', 'volunteer', 'Volunteer', 'published', now() + interval '1 day', now() + interval '2 days'),
   ('f0000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', 'judge', 'Judge', 'draft', null, null);
 
+update public.forms
+set published_schema = '{"title": "Participant", "description": null, "fields": [
+  {"id": "d0000000-0000-0000-0000-000000000001", "type": "short_text", "label": "Name", "help_text": null,
+   "required": true, "options": null, "validation": null, "condition": null}
+]}'
+where id = 'f0000000-0000-0000-0000-000000000001';
+
 select plan(24);
 
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
@@ -71,12 +78,12 @@ select throws_ok(
 );
 
 select lives_ok(
-  format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '{"q": "draft"}'),
+  format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '{"d0000000-0000-0000-0000-000000000001": "draft"}'),
   'draft answers save before submissions close'
 );
 select is(
   (select answers from public.applications where id = current_setting('test.alice_app')::uuid),
-  '{"q": "draft"}'::jsonb,
+  '{"d0000000-0000-0000-0000-000000000001": "draft"}'::jsonb,
   'answers are stored'
 );
 select throws_ok(
@@ -114,7 +121,7 @@ reset role;
 
 select pg_temp.login('22222222-2222-2222-2222-222222222222', 'bob@example.test');
 select throws_ok(
-  format('select public.save_application_answers(%L, %L)', current_setting('test.bob_app'), '{"q": "late"}'),
+  format('select public.save_application_answers(%L, %L)', current_setting('test.bob_app'), '{"d0000000-0000-0000-0000-000000000001": "late"}'),
   'P0001', 'Application can no longer be edited', 'draft cannot be saved after submissions close'
 );
 select throws_ok(
@@ -125,7 +132,7 @@ reset role;
 
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
 select lives_ok(
-  format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '{"q": "edited"}'),
+  format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '{"d0000000-0000-0000-0000-000000000001": "edited"}'),
   'submitted application can be edited after submissions close and before edits lock'
 );
 reset role;
@@ -136,12 +143,12 @@ where id = 'f0000000-0000-0000-0000-000000000001';
 
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
 select throws_ok(
-  format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '{"q": "too late"}'),
+  format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '{"d0000000-0000-0000-0000-000000000001": "too late"}'),
   'P0001', 'Application can no longer be edited', 'submitted application cannot be edited after edits lock'
 );
 select is(
   (select answers from public.applications where id = current_setting('test.alice_app')::uuid),
-  '{"q": "edited"}'::jsonb,
+  '{"d0000000-0000-0000-0000-000000000001": "edited"}'::jsonb,
   'answers are unchanged after a rejected edit'
 );
 reset role;
@@ -164,7 +171,7 @@ select throws_ok(
   'P0001', 'Application is already withdrawn', 'cannot withdraw twice'
 );
 select throws_ok(
-  format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '{"q": "again"}'),
+  format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '{"d0000000-0000-0000-0000-000000000001": "again"}'),
   'P0001', 'Application can no longer be edited', 'withdrawn application cannot be edited'
 );
 select throws_ok(
