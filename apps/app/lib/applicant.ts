@@ -23,3 +23,21 @@ export const getApplicant = cache(async (): Promise<Applicant> => {
 
   return { supabase, userId: data.claims.sub, email: data.claims.email ?? "" }
 })
+
+export const getFullName = cache(async () => {
+  const { supabase, userId } = await getApplicant()
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", userId)
+    .single()
+  if (error) throw new Error(error.message)
+  return data.full_name?.trim() || null
+})
+
+export async function getNamedApplicant() {
+  const applicant = await getApplicant()
+  const fullName = await getFullName()
+  if (!fullName) redirect("/welcome")
+  return { ...applicant, fullName }
+}
