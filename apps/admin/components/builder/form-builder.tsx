@@ -47,6 +47,7 @@ import { DeadlinesForm } from "@/components/deadlines-form"
 import { FormStatusBadges } from "@/components/form-status-badges"
 
 import { withType } from "./field-utils"
+import { PreviewPane } from "./preview-pane"
 import { QuestionEditor } from "./question-editor"
 import { SaveIndicator } from "./save-indicator"
 import { SortableQuestion } from "./sortable-question"
@@ -220,91 +221,105 @@ export function FormBuilder({
         </CardContent>
       </Card>
 
-      <fieldset disabled={!canEdit} className="flex flex-col gap-4">
-        <Card>
-          <CardContent className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="form-title">Title</Label>
-              <Input
-                id="form-title"
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value)
-                  saveDetails(e.target.value, description)
-                }}
-              />
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <fieldset disabled={!canEdit} className="flex min-w-0 flex-col gap-4">
+          <Card>
+            <CardContent className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="form-title">Title</Label>
+                <Input
+                  id="form-title"
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value)
+                    saveDetails(e.target.value, description)
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="form-description">Description</Label>
+                <Textarea
+                  id="form-description"
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value)
+                    saveDetails(title, e.target.value)
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <DndContext
+            id={dndId}
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={reorder}
+          >
+            <SortableContext
+              items={fields.map((f) => f.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {fields.map((field, index) => (
+                <SortableQuestion
+                  key={field.id}
+                  id={field.id}
+                  index={index}
+                  draggable={canEdit}
+                >
+                  <QuestionEditor
+                    field={field}
+                    index={index}
+                    typeLocked={answeredFieldIds.includes(field.id)}
+                    conditionSources={fields
+                      .slice(0, index)
+                      .filter((f) => isConditionSourceType(f.type))}
+                    issues={[]}
+                    onChange={changeField}
+                    onTypeChange={(type) => changeType(field, type)}
+                    onArchive={() => archive(field)}
+                  />
+                </SortableQuestion>
+              ))}
+            </SortableContext>
+          </DndContext>
+
+          {canEdit && (
+            <div className="flex items-center gap-2">
+              <Select
+                value={newType}
+                onValueChange={(value) => setNewType(value as FieldType)}
+              >
+                <SelectTrigger aria-label="New question type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FIELD_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {FIELD_TYPE_LABELS[type]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={add}>
+                Add question
+              </Button>
             </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="form-description">Description</Label>
-              <Textarea
-                id="form-description"
-                value={description}
-                onChange={(e) => {
-                  setDescription(e.target.value)
-                  saveDetails(title, e.target.value)
-                }}
-              />
-            </div>
+          )}
+        </fieldset>
+        <Card className="lg:sticky lg:top-6">
+          <CardContent>
+            <p className="mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Preview (working copy)
+            </p>
+            <PreviewPane
+              title={title}
+              description={description}
+              fields={fields}
+            />
           </CardContent>
         </Card>
-
-        <DndContext
-          id={dndId}
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={reorder}
-        >
-          <SortableContext
-            items={fields.map((f) => f.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {fields.map((field, index) => (
-              <SortableQuestion
-                key={field.id}
-                id={field.id}
-                index={index}
-                draggable={canEdit}
-              >
-                <QuestionEditor
-                  field={field}
-                  index={index}
-                  typeLocked={answeredFieldIds.includes(field.id)}
-                  conditionSources={fields
-                    .slice(0, index)
-                    .filter((f) => isConditionSourceType(f.type))}
-                  issues={[]}
-                  onChange={changeField}
-                  onTypeChange={(type) => changeType(field, type)}
-                  onArchive={() => archive(field)}
-                />
-              </SortableQuestion>
-            ))}
-          </SortableContext>
-        </DndContext>
-
-        {canEdit && (
-          <div className="flex items-center gap-2">
-            <Select
-              value={newType}
-              onValueChange={(value) => setNewType(value as FieldType)}
-            >
-              <SelectTrigger aria-label="New question type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FIELD_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {FIELD_TYPE_LABELS[type]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={add}>
-              Add question
-            </Button>
-          </div>
-        )}
-      </fieldset>
+      </div>
     </div>
   )
 }
