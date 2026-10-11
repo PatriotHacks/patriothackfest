@@ -478,7 +478,7 @@ export type Database = {
       }
       save_application_answers: {
         Args: { p_answers: Json; p_application_id: string }
-        Returns: undefined
+        Returns: string
       }
       start_application: { Args: { p_form_id: string }; Returns: string }
       submit_application: {

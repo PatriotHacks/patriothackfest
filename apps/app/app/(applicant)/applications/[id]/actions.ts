@@ -51,13 +51,13 @@ export async function saveAnswers(
   const input = answersInput.parse(answers)
   const { supabase } = await getApplicant()
 
-  const { error } = await supabase.rpc("save_application_answers", {
+  const { data, error } = await supabase.rpc("save_application_answers", {
     p_application_id: id,
     p_answers: input as Json,
   })
   if (error) return answerFailure(error)
 
-  return getUpdatedAt(id)
+  return { error: null, updatedAt: data }
 }
 
 export async function submitApplication(

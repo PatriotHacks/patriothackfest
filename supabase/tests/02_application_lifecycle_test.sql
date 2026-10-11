@@ -47,7 +47,7 @@ set published_schema = '{"title": "Participant", "description": null, "fields": 
 ]}'
 where id = 'f0000000-0000-0000-0000-000000000001';
 
-select plan(24);
+select plan(25);
 
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
 
@@ -85,6 +85,16 @@ select is(
   (select answers from public.applications where id = current_setting('test.alice_app')::uuid),
   '{"d0000000-0000-0000-0000-000000000001": "draft"}'::jsonb,
   'answers are stored'
+);
+select set_config(
+  'test.saved_at',
+  public.save_application_answers(current_setting('test.alice_app')::uuid, '{"d0000000-0000-0000-0000-000000000001": "draft"}')::text,
+  true
+);
+select is(
+  (select updated_at from public.applications where id = current_setting('test.alice_app')::uuid),
+  current_setting('test.saved_at')::timestamptz,
+  'save returns the stored updated_at'
 );
 select throws_ok(
   format('select public.save_application_answers(%L, %L)', current_setting('test.alice_app'), '[]'),
