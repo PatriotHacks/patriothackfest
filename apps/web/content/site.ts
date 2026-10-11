@@ -36,8 +36,8 @@ export const site: SiteContent = {
     "Patriot HackFest is a hackathon where students team up to design and build projects over a single event. Whether you are writing your first line of code or have shipped many projects, you are welcome to join, learn from others, and make something new.",
   event: {
     name: "Fall 2026",
-    startsOn: null,
-    endsOn: null,
+    startsOn: "2026-11-14",
+    endsOn: "2026-11-15",
     location: null,
     applicationsOpen: false,
   },
