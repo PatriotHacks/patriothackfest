@@ -436,9 +436,17 @@ export type Database = {
         Args: { p_form_id: string }
         Returns: undefined
       }
+      admin_reorder_form_fields: {
+        Args: { p_field_ids: string[]; p_form_id: string }
+        Returns: undefined
+      }
       current_admin_level: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["admin_level"]
+      }
+      form_answered_field_ids: {
+        Args: { p_form_id: string }
+        Returns: string[]
       }
       form_decisions_released: {
         Args: { p_application_id: string }
