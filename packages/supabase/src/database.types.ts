@@ -46,7 +46,7 @@ export type Database = {
           changed_by: string | null
           created_at: string
           event_id: string
-          from_form_id: string
+          from_form_id: string | null
           from_role: Database["public"]["Enums"]["app_role"]
           id: string
           schema: NonNullable<Json>
@@ -60,7 +60,7 @@ export type Database = {
           changed_by?: string | null
           created_at?: string
           event_id: string
-          from_form_id: string
+          from_form_id?: string | null
           from_role: Database["public"]["Enums"]["app_role"]
           id?: string
           schema: NonNullable<Json>
@@ -73,7 +73,7 @@ export type Database = {
           changed_by?: string | null
           created_at?: string
           event_id?: string
-          from_form_id?: string
+          from_form_id?: string | null
           from_role?: Database["public"]["Enums"]["app_role"]
           id?: string
           schema?: NonNullable<Json>

@@ -79,7 +79,7 @@ where application_id = current_setting('test.emailed')::uuid;
 
 update public.forms set decisions_released_at = now() where id = 'f8000000-0000-0000-0000-000000000005';
 
-select plan(14);
+select plan(17);
 
 select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
 select throws_ok(
@@ -176,6 +176,25 @@ select is(
    where application_id = current_setting('test.emailed')::uuid and form_id = 'f8000000-0000-0000-0000-000000000005'),
   'pending:accepted:-',
   'an email sent for the previous form does not suppress the new form''s email'
+);
+
+select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
+select lives_ok(
+  $$delete from public.forms where id = 'f8000000-0000-0000-0000-000000000004'$$,
+  'organizer deletes a form referenced only by archives'
+);
+reset role;
+
+select is(
+  (select count(*) from public.forms where id = 'f8000000-0000-0000-0000-000000000004'),
+  0::bigint,
+  'the form is gone'
+);
+select is(
+  (select string_agg(coalesce(from_form_id::text, '-') || ':' || (schema ->> 'title'), ',')
+   from public.application_archives where application_id = current_setting('test.undecided')::uuid),
+  '-:Participant',
+  'archive keeps its schema snapshot after the source form is deleted'
 );
 
 select * from finish(true);
