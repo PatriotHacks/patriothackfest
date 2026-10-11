@@ -81,7 +81,11 @@ export function applicantAction(
   form: FormTiming,
   decision: Enums["decision"] | null
 ): ApplicantAction {
-  if (form.decisions_released_at === null)
+  const decisionVisible =
+    form.decisions_released_at !== null &&
+    decision !== null &&
+    decision !== "pending"
+  if (!decisionVisible)
     return phase === "draft" ||
       phase === "editable_submission" ||
       phase === "locked_submission"
