@@ -192,7 +192,7 @@ export default async function ApplicationPage({
         </CardHeader>
         <CardContent>
           {schema ? (
-            <AnswersView schema={schema} answers={answers} />
+            <AnswersView applicationId={id} schema={schema} answers={answers} />
           ) : (
             <p className="text-sm text-muted-foreground">
               This form has not been published.
@@ -215,6 +215,7 @@ export default async function ApplicationPage({
           </CardHeader>
           <CardContent>
             <AnswersView
+              applicationId={id}
               schema={publishedSchemaSchema.parse(archive.schema)}
               answers={answersSchema.parse(archive.answers)}
             />
