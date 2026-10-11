@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { cache } from "react"
 
 import { AUTH_COOKIE } from "./auth-cookie"
+import { isOtpSession } from "./otp-session"
 
 type Applicant = { supabase: ServerClient; userId: string; email: string }
 
@@ -13,15 +14,11 @@ export const getApplicant = cache(async (): Promise<Applicant> => {
   const { data } = await supabase.auth.getClaims()
   if (!data?.claims) redirect("/login")
 
-  const viaOtp = data.claims.amr?.some(
-    (entry) => typeof entry !== "string" && entry.method === "otp"
-  )
-  if (!viaOtp) {
-    await supabase.auth.signOut({ scope: "local" })
-    redirect("/login?error=session")
-  }
+  const { claims } = data
+  if (!isOtpSession(claims)) redirect("/login?error=session")
+  if (!claims.email) throw new Error("Session is missing an email claim")
 
-  return { supabase, userId: data.claims.sub, email: data.claims.email ?? "" }
+  return { supabase, userId: claims.sub, email: claims.email }
 })
 
 export const getFullName = cache(async () => {
