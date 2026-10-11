@@ -1,4 +1,9 @@
 import { formatInZone } from "@workspace/forms"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -11,11 +16,15 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import * as z from "zod"
 
+import { EmailSender } from "@/components/email-sender"
 import { ReleaseButton } from "@/components/release-button"
 import { getAdmin } from "@/lib/admin"
+import { EMAIL_NOT_CONFIGURED, isEmailConfigured } from "@/lib/email"
 import { fetchAll } from "@/lib/fetch-all"
 import { hasLevel } from "@/lib/levels"
 import { ROLE_LABELS } from "@/lib/roles"
+
+export const maxDuration = 60
 
 const EMAIL_STATUSES = {
   pending: "Pending",
@@ -85,6 +94,9 @@ export default async function ReleasePage({
   const pending = count((a) => decisionOf(a) === "pending")
   const none = count((a) => decisionOf(a) === null)
   const declined = count((a) => a.declined_at !== null)
+  const emailCount = (status: keyof typeof EMAIL_STATUSES) =>
+    emailCounts.find((c) => c.status === status)?.count ?? 0
+  const configured = isEmailConfigured()
   const listHref = `/applications?event=${form.event_id}&role=${form.role}`
 
   return (
@@ -149,12 +161,25 @@ export default async function ReleasePage({
           <CardHeader>
             <CardTitle>Decision emails</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col gap-4">
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               {emailCounts.map(({ status, label, count }) => (
                 <Stat key={status} label={label} value={count} />
               ))}
             </dl>
+            {!configured && (
+              <Alert variant="destructive">
+                <AlertTitle>Sending is disabled</AlertTitle>
+                <AlertDescription>{EMAIL_NOT_CONFIGURED}</AlertDescription>
+              </Alert>
+            )}
+            <EmailSender
+              formId={form.id}
+              pending={emailCount("pending")}
+              sending={emailCount("sending")}
+              failed={emailCount("failed")}
+              configured={configured}
+            />
           </CardContent>
         </Card>
       )}
