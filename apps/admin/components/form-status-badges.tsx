@@ -4,7 +4,9 @@ import { hasUnpublishedChanges } from "@/lib/form-status"
 
 export function FormStatusBadges({
   form,
+  unpublishedChanges = false,
 }: {
+  unpublishedChanges?: boolean
   form: {
     status: string
     published_at: string | null
@@ -16,7 +18,7 @@ export function FormStatusBadges({
       <Badge variant={form.status === "published" ? "default" : "secondary"}>
         {form.status === "published" ? "Published" : "Draft"}
       </Badge>
-      {hasUnpublishedChanges(form) && (
+      {(unpublishedChanges || hasUnpublishedChanges(form)) && (
         <Badge variant="outline">Unpublished changes</Badge>
       )}
     </div>
