@@ -1,19 +1,10 @@
 import { formatInZone } from "@workspace/forms"
-import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@workspace/ui/components/table"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { ApplicationFiltersForm } from "@/components/application-filters-form"
-import { DecisionBadge } from "@/components/decision-badge"
+import { ApplicationsTable } from "@/components/applications-table"
 import { getAdmin } from "@/lib/admin"
 import {
   filteredApplications,
@@ -21,6 +12,7 @@ import {
   parseFilters,
   parsePage,
 } from "@/lib/application-filters"
+import { decisionBlockedReason } from "@/lib/decisions"
 import { hasLevel } from "@/lib/levels"
 import { ROLE_LABELS, STATUS_LABELS } from "@/lib/roles"
 
@@ -71,60 +63,29 @@ export default async function ApplicationsPage({
         )}
       </div>
       <ApplicationFiltersForm filters={filters} events={events.data} />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Submitted</TableHead>
-            <TableHead>Decision</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {applications.data.map((a) => (
-            <TableRow key={a.id}>
-              <TableCell>
-                <Link
-                  href={`/applications/${a.id}${detailQuery}`}
-                  className="underline"
-                >
-                  {a.profiles.full_name ?? "No name"}
-                </Link>
-              </TableCell>
-              <TableCell>{a.profiles.email}</TableCell>
-              <TableCell>{ROLE_LABELS[a.role]}</TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  {STATUS_LABELS[a.status]}
-                  {a.declined_at && <Badge variant="outline">Declined</Badge>}
-                </div>
-              </TableCell>
-              <TableCell>
-                {a.submitted_at ? formatInZone(a.submitted_at) : ""}
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <DecisionBadge
-                    decision={a.application_decisions?.decision ?? null}
-                  />
-                  {a.forms.decisions_released_at && (
-                    <Badge variant="outline">Released</Badge>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-          {applications.data.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} className="text-muted-foreground">
-                No applications match these filters.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      <ApplicationsTable
+        key={detailQuery}
+        rows={applications.data.map((a) => ({
+          id: a.id,
+          href: `/applications/${a.id}${detailQuery}`,
+          name: a.profiles.full_name ?? "No name",
+          email: a.profiles.email,
+          role: ROLE_LABELS[a.role],
+          status: STATUS_LABELS[a.status],
+          submittedAt: a.submitted_at ? formatInZone(a.submitted_at) : "",
+          declined: a.declined_at !== null,
+          decision: a.application_decisions?.decision ?? null,
+          released: a.forms.decisions_released_at !== null,
+          blockedReason: decisionBlockedReason(
+            {
+              status: a.status,
+              declined_at: a.declined_at,
+              released: a.forms.decisions_released_at !== null,
+            },
+            isOrganizer
+          ),
+        }))}
+      />
       <nav aria-label="Pagination" className="flex items-center gap-3 text-sm">
         <span className="text-muted-foreground">
           {total === 0

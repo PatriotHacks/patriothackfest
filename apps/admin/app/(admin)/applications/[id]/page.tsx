@@ -22,6 +22,7 @@ import * as z from "zod"
 
 import { AnswersView } from "@/components/answers-view"
 import { DecisionBadge } from "@/components/decision-badge"
+import { DecisionControl } from "@/components/decision-control"
 import { getAdmin } from "@/lib/admin"
 import {
   filteredApplications,
@@ -29,6 +30,7 @@ import {
   parseFilters,
   parsePage,
 } from "@/lib/application-filters"
+import { decisionBlockedReason } from "@/lib/decisions"
 import { hasLevel } from "@/lib/levels"
 import { DECISION_LABELS, ROLE_LABELS, STATUS_LABELS } from "@/lib/roles"
 
@@ -182,6 +184,19 @@ export default async function ApplicationPage({
               </li>
             ))}
           </ol>
+          <DecisionControl
+            key={decision?.decided_at}
+            applicationId={id}
+            decision={decision?.decision ?? null}
+            blockedReason={decisionBlockedReason(
+              {
+                status: application.status,
+                declined_at: application.declined_at,
+                released: form.decisions_released_at !== null,
+              },
+              isOrganizer
+            )}
+          />
         </CardContent>
       </Card>
 
