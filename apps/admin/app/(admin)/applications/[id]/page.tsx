@@ -26,7 +26,8 @@ import { DecisionControl } from "@/components/decision-control"
 import { RoleChangeDialog } from "@/components/role-change-dialog"
 import { getAdmin } from "@/lib/admin"
 import {
-  filteredApplications,
+  applyFilters,
+  filterEmbeds,
   filtersQuery,
   parseFilters,
   parsePage,
@@ -64,13 +65,19 @@ export default async function ApplicationPage({
     `created_at.${op}.${at},and(created_at.eq.${at},id.${op}.${id})`
 
   const [newer, older, archives, emails, eventForms] = await Promise.all([
-    filteredApplications(supabase, filters)
+    applyFilters(
+      supabase.from("applications").select(filterEmbeds("id", filters)),
+      filters
+    )
       .or(after("gt"))
       .order("created_at", { ascending: true })
       .order("id", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    filteredApplications(supabase, filters)
+    applyFilters(
+      supabase.from("applications").select(filterEmbeds("id", filters)),
+      filters
+    )
       .or(after("lt"))
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })

@@ -7,7 +7,8 @@ import { ApplicationFiltersForm } from "@/components/application-filters-form"
 import { ApplicationsTable } from "@/components/applications-table"
 import { getAdmin } from "@/lib/admin"
 import {
-  filteredApplications,
+  applyFilters,
+  filterEmbeds,
   filtersQuery,
   parseFilters,
   parsePage,
@@ -35,7 +36,18 @@ export default async function ApplicationsPage({
       .order("starts_at", { nullsFirst: false })
       .order("slug"),
     supabase.from("forms").select("id, event_id, role"),
-    filteredApplications(supabase, filters, "exact")
+    applyFilters(
+      supabase
+        .from("applications")
+        .select(
+          filterEmbeds(
+            "id, role, status, submitted_at, declined_at, profiles(full_name, email), forms(decisions_released_at), application_decisions(decision)",
+            filters
+          ),
+          { count: "exact" }
+        ),
+      filters
+    )
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .range(from, from + PAGE_SIZE - 1),
