@@ -1,4 +1,5 @@
 import { formatInZone, publishedSchemaSchema } from "@workspace/forms"
+import type { Database } from "@workspace/supabase/types"
 import {
   Card,
   CardAction,
@@ -13,10 +14,13 @@ import * as z from "zod"
 
 import { ApplicationForm } from "@/components/application/application-form"
 import { AnswersView } from "@/components/application/answers-view"
+import { DeclineButton } from "@/components/application/decline-button"
 import { WithdrawButton } from "@/components/application/withdraw-button"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import {
+  applicantAction,
   applicationPhase,
+  declinedText,
   statusLabel,
   type ApplicationPhase,
   type FormTiming,
@@ -25,16 +29,24 @@ import { getNamedApplicant } from "@/lib/applicant"
 import { deadlineText } from "@/lib/deadline-text"
 import { ROLE_LABELS } from "@/lib/roles"
 
+type Decision = Database["public"]["Enums"]["decision"]
+
 const answersSchema = z.record(z.string(), z.unknown())
 
 function phaseNote(
   phase: ApplicationPhase,
   form: FormTiming,
-  withdrawnAt: string | null
+  application: {
+    withdrawn_at: string | null
+    declined_at: string | null
+    decision: Decision | null
+  }
 ) {
   switch (phase) {
     case "withdrawn":
-      return `You withdrew this application on ${formatInZone(withdrawnAt!)}. You cannot apply to this event again.`
+      return `You withdrew this application on ${formatInZone(application.withdrawn_at!)}. You cannot apply to this event again.`
+    case "declined":
+      return `${declinedText(application.decision)} on ${formatInZone(application.declined_at!)}. This is final.`
     case "closed_draft":
       return "Submissions are closed. This application was not submitted."
     case "locked_submission":
@@ -54,7 +66,7 @@ export default async function ApplicationPage({
   const { data: application, error } = await supabase
     .from("applications")
     .select(
-      "id, role, status, answers, updated_at, withdrawn_at, events(name), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
+      "id, role, status, answers, updated_at, withdrawn_at, declined_at, events(name), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
     )
     .eq("id", id)
     .maybeSingle()
@@ -63,12 +75,15 @@ export default async function ApplicationPage({
 
   const form = application.forms
   const eventName = application.events.name
-  const phase = applicationPhase(application.status, form, Date.now())
-  const status = statusLabel(
-    phase,
+  const decision = application.application_decisions?.decision ?? null
+  const phase = applicationPhase(
+    application.status,
+    application.declined_at,
     form,
-    application.application_decisions?.decision ?? null
+    Date.now()
   )
+  const status = statusLabel(phase, form, decision)
+  const action = applicantAction(phase, form, decision)
   const schema =
     form.published_schema === null
       ? null
@@ -78,14 +93,10 @@ export default async function ApplicationPage({
     schema !== null &&
     form.status === "published" &&
     (phase === "draft" || phase === "editable_submission")
-  const canWithdraw =
-    phase === "draft" ||
-    phase === "editable_submission" ||
-    phase === "locked_submission"
   const note =
     !editable && (phase === "draft" || phase === "editable_submission")
       ? "This form is not accepting changes right now."
-      : phaseNote(phase, form, application.withdrawn_at)
+      : phaseNote(phase, form, { ...application, decision })
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -144,8 +155,15 @@ export default async function ApplicationPage({
         </>
       )}
 
-      {canWithdraw && (
+      {action?.kind === "withdraw" && (
         <WithdrawButton applicationId={application.id} eventName={eventName} />
+      )}
+      {action?.kind === "decline" && (
+        <DeclineButton
+          applicationId={application.id}
+          eventName={eventName}
+          decision={action.decision}
+        />
       )}
     </div>
   )

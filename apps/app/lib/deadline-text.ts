@@ -15,6 +15,7 @@ export function deadlineText(phase: ApplicationPhase, form: FormTiming) {
     case "locked_submission":
       return lock && `Answers locked ${formatInZone(lock)}`
     case "withdrawn":
+    case "declined":
       return null
   }
 }

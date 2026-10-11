@@ -10,9 +10,12 @@ import {
 } from "@workspace/ui/components/card"
 import Link from "next/link"
 
+import { DeclineButton } from "@/components/application/decline-button"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import {
+  applicantAction,
   applicationPhase,
+  declinedText,
   isFormOpen,
   statusLabel,
 } from "@/lib/application-status"
@@ -37,7 +40,7 @@ export default async function DashboardPage() {
     supabase
       .from("applications")
       .select(
-        "id, event_id, form_id, role, status, created_at, application_decisions(decision)"
+        "id, event_id, form_id, role, status, declined_at, created_at, application_decisions(decision)"
       )
       .order("created_at", { ascending: false }),
   ])
@@ -71,34 +74,49 @@ export default async function DashboardPage() {
           {applications.data.map((application) => {
             const form = forms.data.find((f) => f.id === application.form_id)
             if (!form) return null
-            const phase = applicationPhase(application.status, form, now)
-            const deadline = deadlineText(phase, form)
+            const decision = application.application_decisions?.decision ?? null
+            const phase = applicationPhase(
+              application.status,
+              application.declined_at,
+              form,
+              now
+            )
+            const action = applicantAction(phase, form, decision)
+            const name = eventName.get(application.event_id)!
             return (
               <Card key={application.id}>
                 <CardHeader>
-                  <CardTitle>{eventName.get(application.event_id)}</CardTitle>
+                  <CardTitle>{name}</CardTitle>
                   <CardDescription>
                     {ROLE_LABELS[application.role]}
                   </CardDescription>
                   <CardAction>
                     <ApplicationStatusBadge
-                      status={statusLabel(
-                        phase,
-                        form,
-                        application.application_decisions?.decision ?? null
-                      )}
+                      status={statusLabel(phase, form, decision)}
                     />
                   </CardAction>
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-sm text-muted-foreground">
-                    {deadline}
+                    {phase === "declined"
+                      ? declinedText(decision)
+                      : deadlineText(phase, form)}
                   </span>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/applications/${application.id}`}>
-                      {phase === "draft" ? "Continue" : "View"}
-                    </Link>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    {action?.kind === "decline" && (
+                      <DeclineButton
+                        applicationId={application.id}
+                        eventName={name}
+                        decision={action.decision}
+                        size="sm"
+                      />
+                    )}
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/applications/${application.id}`}>
+                        {phase === "draft" ? "Continue" : "View"}
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )

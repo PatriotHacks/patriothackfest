@@ -15,6 +15,7 @@ export type ApplicationPhase =
   | "editable_submission"
   | "locked_submission"
   | "withdrawn"
+  | "declined"
 
 export function isFormOpen(form: FormTiming, now: number) {
   return (
@@ -26,10 +27,12 @@ export function isFormOpen(form: FormTiming, now: number) {
 
 export function applicationPhase(
   status: Enums["application_status"],
+  declinedAt: string | null,
   form: FormTiming,
   now: number
 ): ApplicationPhase {
   if (status === "withdrawn") return "withdrawn"
+  if (declinedAt !== null) return "declined"
   if (status === "draft")
     return isFormOpen(form, now) ? "draft" : "closed_draft"
   return form.edits_lock_at !== null && now < Date.parse(form.edits_lock_at)
@@ -48,6 +51,7 @@ export function statusLabel(
   decision: Enums["decision"] | null
 ): StatusLabel {
   if (phase === "withdrawn") return { label: "Withdrawn", variant: "outline" }
+  if (phase === "declined") return { label: "Declined", variant: "outline" }
   if (phase === "draft") return { label: "Draft", variant: "secondary" }
   if (phase === "closed_draft")
     return { label: "Not submitted", variant: "outline" }
@@ -63,4 +67,36 @@ export function statusLabel(
     default:
       return { label: "Under review", variant: "secondary" }
   }
+}
+
+export type DeclinableDecision = "accepted" | "waitlisted"
+
+export type ApplicantAction =
+  | { kind: "withdraw" }
+  | { kind: "decline"; decision: DeclinableDecision }
+  | null
+
+export function applicantAction(
+  phase: ApplicationPhase,
+  form: FormTiming,
+  decision: Enums["decision"] | null
+): ApplicantAction {
+  if (form.decisions_released_at === null)
+    return phase === "draft" ||
+      phase === "editable_submission" ||
+      phase === "locked_submission"
+      ? { kind: "withdraw" }
+      : null
+  if (
+    (phase === "editable_submission" || phase === "locked_submission") &&
+    (decision === "accepted" || decision === "waitlisted")
+  )
+    return { kind: "decline", decision }
+  return null
+}
+
+export function declinedText(decision: Enums["decision"] | null) {
+  return decision === "waitlisted"
+    ? "You left the waitlist"
+    : "You declined your spot"
 }

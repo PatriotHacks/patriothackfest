@@ -89,3 +89,18 @@ export async function withdrawApplication(
   refresh()
   return ok
 }
+
+export async function declineOffer(
+  applicationId: string
+): Promise<ActionResult> {
+  const id = z.guid().parse(applicationId)
+  const { supabase } = await getApplicant()
+
+  const { error } = await supabase.rpc("decline_application_offer", {
+    p_application_id: id,
+  })
+  if (error) return failure(error)
+
+  refresh()
+  return ok
+}
