@@ -3,6 +3,7 @@
 import {
   FIELD_TYPE_LABELS,
   FIELD_TYPES,
+  isChoiceType,
   type Field,
   type FieldType,
 } from "@workspace/forms"
@@ -20,10 +21,15 @@ import { Switch } from "@workspace/ui/components/switch"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useId } from "react"
 
+import { ConditionEditor } from "./condition-editor"
+import { OptionsEditor } from "./options-editor"
+import { ValidationEditor } from "./validation-editor"
+
 type Props = {
   field: Field
   index: number
   typeLocked: boolean
+  conditionSources: Field[]
   issues: string[]
   onChange: (field: Field) => void
   onTypeChange: (type: FieldType) => void
@@ -34,6 +40,7 @@ export function QuestionEditor({
   field,
   index,
   typeLocked,
+  conditionSources,
   issues,
   onChange,
   onTypeChange,
@@ -103,6 +110,18 @@ export function QuestionEditor({
         />
         <Label htmlFor={`${id}-required`}>Required</Label>
       </div>
+      {isChoiceType(field.type) && (
+        <OptionsEditor
+          options={field.options ?? []}
+          onChange={(options) => onChange({ ...field, options } as Field)}
+        />
+      )}
+      <ValidationEditor field={field} onChange={onChange} />
+      <ConditionEditor
+        field={field}
+        sources={conditionSources}
+        onChange={onChange}
+      />
       {issues.length > 0 && (
         <ul className="text-sm text-destructive">
           {issues.map((issue) => (

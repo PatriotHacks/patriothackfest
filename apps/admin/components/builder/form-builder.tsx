@@ -4,6 +4,7 @@ import {
   FIELD_TYPE_LABELS,
   FIELD_TYPES,
   type Field,
+  isConditionSourceType,
   type FieldType,
 } from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
@@ -212,6 +213,9 @@ export function FormBuilder({
                 field={field}
                 index={index}
                 typeLocked={answeredFieldIds.includes(field.id)}
+                conditionSources={fields
+                  .slice(0, index)
+                  .filter((f) => isConditionSourceType(f.type))}
                 issues={[]}
                 onChange={changeField}
                 onTypeChange={(type) => changeType(field, type)}
