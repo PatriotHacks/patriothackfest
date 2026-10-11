@@ -80,7 +80,7 @@ insert into public.application_decisions (application_id, decision) values
   (current_setting('test.withdrawn')::uuid, 'accepted'),
   (current_setting('test.unreleased')::uuid, 'accepted');
 
-select plan(23);
+select plan(25);
 
 select pg_temp.login('d1000000-0000-0000-0000-000000000007', 'd1000000-0000-0000-0000-000000000007@example.test');
 select public.withdraw_application(current_setting('test.withdrawn')::uuid);
@@ -122,7 +122,7 @@ reset role;
 select pg_temp.login('d1000000-0000-0000-0000-000000000001', 'd1000000-0000-0000-0000-000000000001@example.test');
 select throws_ok(
   format('select public.withdraw_application(%L)', current_setting('test.accepted')),
-  'P0001', 'Applications cannot be withdrawn after decisions are released', 'cannot withdraw after decisions are released'
+  'P0001', 'Applications cannot be withdrawn after the decision is released', 'cannot withdraw after an acceptance is released'
 );
 select lives_ok(
   format('select public.decline_application_offer(%L)', current_setting('test.accepted')),
@@ -145,7 +145,7 @@ select throws_ok(
 );
 select throws_ok(
   format('select public.withdraw_application(%L)', current_setting('test.rejected')),
-  'P0001', 'Applications cannot be withdrawn after decisions are released', 'rejected applicant cannot withdraw after release'
+  'P0001', 'Applications cannot be withdrawn after the decision is released', 'rejected applicant cannot withdraw after release'
 );
 reset role;
 
@@ -154,12 +154,20 @@ select throws_ok(
   format('select public.decline_application_offer(%L)', current_setting('test.pending')),
   'P0001', 'Only accepted or waitlisted applications can be declined', 'cannot decline a pending decision'
 );
+select lives_ok(
+  format('select public.withdraw_application(%L)', current_setting('test.pending')),
+  'withdraw works after release while the decision is pending'
+);
 reset role;
 
 select pg_temp.login('d1000000-0000-0000-0000-000000000005', 'd1000000-0000-0000-0000-000000000005@example.test');
 select throws_ok(
   format('select public.decline_application_offer(%L)', current_setting('test.undecided')),
   'P0001', 'Only accepted or waitlisted applications can be declined', 'cannot decline without a decision'
+);
+select lives_ok(
+  format('select public.withdraw_application(%L)', current_setting('test.undecided')),
+  'withdraw works after release without a decision'
 );
 reset role;
 

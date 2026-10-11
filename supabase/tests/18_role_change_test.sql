@@ -73,7 +73,7 @@ reset role;
 
 update public.forms set decisions_released_at = now() where id = 'f8000000-0000-0000-0000-000000000005';
 
-select plan(12);
+select plan(13);
 
 select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
 select throws_ok(
@@ -146,6 +146,13 @@ select is(
   'pending:accepted',
   'organizer decision on the released form queues an email'
 );
+
+select pg_temp.login('d8000000-0000-0000-0000-000000000002', 'd8000000-0000-0000-0000-000000000002@example.test', 'otp');
+select throws_ok(
+  format('select public.withdraw_application(%L)', current_setting('test.undecided')),
+  'P0001', 'Applications cannot be withdrawn after the decision is released', 'moved applicant cannot withdraw once decided'
+);
+reset role;
 
 select * from finish(true);
 rollback;
