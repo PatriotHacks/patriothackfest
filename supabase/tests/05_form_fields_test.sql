@@ -65,8 +65,8 @@ reset role;
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
 select is(
   (select count(*) from public.form_fields where form_id = 'f0000000-0000-0000-0000-000000000001'),
-  3::bigint,
-  'applicant reads fields of a published form'
+  0::bigint,
+  'applicant cannot read the working copy of a published form'
 );
 select throws_ok(
   $$insert into public.form_fields (form_id, position, type, label) values ('f0000000-0000-0000-0000-000000000001', 5, 'email', 'Email')$$,

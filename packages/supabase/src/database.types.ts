@@ -336,6 +336,7 @@ export type Database = {
       }
       forms: {
         Row: {
+          content_updated_at: string
           created_at: string
           decisions_released_at: string | null
           description: string | null
@@ -343,6 +344,7 @@ export type Database = {
           event_id: string
           id: string
           published_at: string | null
+          published_schema: Json | null
           role: Database["public"]["Enums"]["app_role"]
           status: Database["public"]["Enums"]["form_status"]
           submissions_close_at: string | null
@@ -351,6 +353,7 @@ export type Database = {
         }
         ComputedFields: never
         Insert: {
+          content_updated_at?: string
           created_at?: string
           decisions_released_at?: string | null
           description?: string | null
@@ -358,6 +361,7 @@ export type Database = {
           event_id: string
           id?: string
           published_at?: string | null
+          published_schema?: Json | null
           role: Database["public"]["Enums"]["app_role"]
           status?: Database["public"]["Enums"]["form_status"]
           submissions_close_at?: string | null
@@ -365,6 +369,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          content_updated_at?: string
           created_at?: string
           decisions_released_at?: string | null
           description?: string | null
@@ -372,6 +377,7 @@ export type Database = {
           event_id?: string
           id?: string
           published_at?: string | null
+          published_schema?: Json | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: Database["public"]["Enums"]["form_status"]
           submissions_close_at?: string | null
@@ -425,13 +431,22 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
       admin_release_decisions: {
         Args: { p_form_id: string }
+        Returns: undefined
+      }
+      admin_reorder_form_fields: {
+        Args: { p_field_ids: string[]; p_form_id: string }
         Returns: undefined
       }
       current_admin_level: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["admin_level"]
+      }
+      form_answered_field_ids: {
+        Args: { p_form_id: string }
+        Returns: string[]
       }
       form_decisions_released: {
         Args: { p_application_id: string }
