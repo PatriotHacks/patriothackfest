@@ -7,7 +7,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "pnpm db:test",
+    "test": "turbo test",
     "format": "turbo format",
     "db:push": "dotenv -e .env -- sh -c 'supabase db push --db-url \"$SUPABASE_DB_URL\"'",
     "db:seed": "dotenv -e .env -- sh -c 'supabase db query --db-url \"$SUPABASE_DB_URL\" -f supabase/seed.sql'",
