@@ -1,8 +1,9 @@
 import "server-only"
 
+import { ROLES } from "@workspace/supabase/roles"
 import * as z from "zod"
 
-import { DECISIONS, ROLES, STATUSES } from "./roles"
+import { DECISIONS, STATUSES } from "./roles"
 
 const optional = <T extends z.ZodType>(schema: T) =>
   schema.optional().catch(undefined)

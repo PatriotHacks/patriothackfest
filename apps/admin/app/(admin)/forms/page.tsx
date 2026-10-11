@@ -1,4 +1,5 @@
 import { formatInZone } from "@workspace/forms"
+import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import {
   Card,
   CardContent,
@@ -15,7 +16,6 @@ import { DeadlinesForm } from "@/components/deadlines-form"
 import { FormStatusBadges } from "@/components/form-status-badges"
 import { getAdmin } from "@/lib/admin"
 import { hasLevel } from "@/lib/levels"
-import { ROLE_LABELS, ROLES } from "@/lib/roles"
 
 export default async function FormsPage() {
   const { supabase, level } = await getAdmin()

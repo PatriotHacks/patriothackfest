@@ -1,3 +1,4 @@
+import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -14,8 +15,6 @@ import type { ApplicationFilters } from "@/lib/application-filters"
 import {
   DECISION_LABELS,
   DECISIONS,
-  ROLE_LABELS,
-  ROLES,
   STATUS_LABELS,
   STATUSES,
 } from "@/lib/roles"

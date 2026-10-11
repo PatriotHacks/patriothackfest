@@ -1,12 +1,13 @@
 "use server"
 
 import { APPLICATION_FILES_BUCKET } from "@workspace/forms"
+import { ROLES } from "@workspace/supabase/roles"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
-import { DECISIONS, ROLES } from "@/lib/roles"
+import { DECISIONS } from "@/lib/roles"
 
 export async function applicationFileUrl(
   applicationId: string,

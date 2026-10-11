@@ -1,4 +1,5 @@
 import { formatInZone } from "@workspace/forms"
+import { ROLE_LABELS } from "@workspace/supabase/roles"
 import {
   Alert,
   AlertDescription,
@@ -21,7 +22,6 @@ import { ReleaseButton } from "@/components/release-button"
 import { getAdmin } from "@/lib/admin"
 import { EMAIL_NOT_CONFIGURED, isEmailConfigured } from "@/lib/email"
 import { hasLevel } from "@/lib/levels"
-import { ROLE_LABELS } from "@/lib/roles"
 
 export const maxDuration = 60
 

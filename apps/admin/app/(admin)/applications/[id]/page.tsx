@@ -3,6 +3,7 @@ import {
   formatInZone,
   publishedSchemaSchema,
 } from "@workspace/forms"
+import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -38,7 +39,7 @@ import {
 } from "@/lib/application-filters"
 import { decisionBlockedReason } from "@/lib/decisions"
 import { hasLevel } from "@/lib/levels"
-import { DECISION_LABELS, ROLE_LABELS, ROLES, STATUS_LABELS } from "@/lib/roles"
+import { DECISION_LABELS, STATUS_LABELS } from "@/lib/roles"
 
 export default async function ApplicationPage({
   params,

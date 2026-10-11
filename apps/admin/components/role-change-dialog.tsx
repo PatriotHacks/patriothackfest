@@ -1,5 +1,6 @@
 "use client"
 
+import type { Role } from "@workspace/supabase/roles"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +21,6 @@ import {
 import { useState, useTransition } from "react"
 
 import { changeApplicationRole } from "@/app/(admin)/applications/actions"
-import type { Role } from "@/lib/roles"
 
 export type RoleOption = { role: Role; label: string; reason: string | null }
 

@@ -1,4 +1,5 @@
 import { formatInZone } from "@workspace/forms"
+import { ROLE_LABELS } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -15,7 +16,7 @@ import {
 } from "@/lib/application-filters"
 import { decisionBlockedReason } from "@/lib/decisions"
 import { hasLevel } from "@/lib/levels"
-import { ROLE_LABELS, STATUS_LABELS } from "@/lib/roles"
+import { STATUS_LABELS } from "@/lib/roles"
 
 const PAGE_SIZE = 50
 

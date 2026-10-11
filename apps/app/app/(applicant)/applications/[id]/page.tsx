@@ -3,6 +3,7 @@ import {
   formatInZone,
   publishedSchemaSchema,
 } from "@workspace/forms"
+import { ROLE_LABELS } from "@workspace/supabase/roles"
 import type { Database } from "@workspace/supabase/types"
 import {
   Card,
@@ -31,7 +32,6 @@ import {
 } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
 import { deadlineText } from "@/lib/deadline-text"
-import { ROLE_LABELS } from "@/lib/roles"
 
 type Decision = Database["public"]["Enums"]["decision"]
 
