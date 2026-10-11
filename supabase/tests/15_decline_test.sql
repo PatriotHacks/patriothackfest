@@ -77,7 +77,6 @@ insert into public.application_decisions (application_id, decision) values
   (current_setting('test.waitlisted')::uuid, 'waitlisted'),
   (current_setting('test.rejected')::uuid, 'rejected'),
   (current_setting('test.pending')::uuid, 'pending'),
-  (current_setting('test.draft')::uuid, 'accepted'),
   (current_setting('test.withdrawn')::uuid, 'accepted'),
   (current_setting('test.unreleased')::uuid, 'accepted');
 
