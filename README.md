@@ -112,6 +112,17 @@ Levels are `owner` (allowlist and everything else), `organizer` (forms, deadline
 - **Admins** (owners only): add, re-level, and remove allowlist entries. The database rejects any change that would leave no owner.
 - Reviewers see forms and the builder read-only.
 
+## Applicant portal
+
+- Sign in with an emailed code at `/login`. Applicants without a name on their profile are sent to `/welcome` before anything else.
+- **Dashboard** (`/`): the applicant's applications with status and deadlines (shown in America/New_York), plus events with a published form that is still open (before `submissions_close_at`).
+- **Role selection** (`/apply/<event-slug>`): lists roles whose form is published and open. Starting an application calls `start_application`; the role is locked and each applicant gets one application per event.
+- **Application** (`/applications/<id>`) renders the form's `published_schema` with live conditional visibility. Drafts autosave the whole answers object (1 s debounce, on blur, and before submit). If another tab saved more recently, a warning offers a reload.
+- **Files** upload from the browser straight to the private `application-files` bucket at `<user>/<application>/<field>/<uuid>.pdf` (PDF only, up to the field limit, max 10 MB). Replacing or removing a file uploads the new one, saves the answers, then deletes the old object.
+- **Submit** validates in the browser, then `submit_application` validates again; field errors from the database (`PT422`) are shown on their questions. After submitting, answers can be changed with **Save changes** until `edits_lock_at`, then become read-only.
+- **Withdraw** is final; the applicant cannot reapply to that event.
+- Status: Draft, Submitted, or Not submitted (closed draft) until decisions are released; then Accepted, Waitlisted, Not accepted, or Under review (no decision yet). Withdrawn overrides any decision.
+
 ## Development
 
 ```sh
