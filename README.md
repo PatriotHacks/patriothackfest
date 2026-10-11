@@ -146,6 +146,12 @@ What each level can do:
 - **Decline**: after release, accepted and waitlisted applicants can decline their spot or leave the waitlist from the dashboard or application page (`decline_application_offer` sets `applications.declined_at`). There is no RSVP; accepted applicants count as attending unless they decline. Declining is final: organizers can no longer change that decision or the application's role.
 - Status: Draft, Submitted, or Not submitted (closed draft) until decisions are released; then Accepted, Waitlisted, Not accepted, or Under review (no decision yet). Withdrawn overrides any decision; a declined offer shows Declined.
 
+## Marketing site
+
+`apps/web` is a single static landing page. All copy and event details live in `apps/web/content/site.ts`; edit that file to change text, roles, FAQ, location, or contact email. Null fields render as "coming soon".
+
+To open applications, set `event.startsOn` and `event.endsOn` (`YYYY-MM-DD`) and flip `event.applicationsOpen` to `true`. The hero and role cards then link to `NEXT_PUBLIC_APP_URL`, which is required: the build fails if it is not set.
+
 ## Development
 
 ```sh
