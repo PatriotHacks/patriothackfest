@@ -1,6 +1,11 @@
 "use server"
 
-import { decisionEmail, sendBatch, smtpTransport } from "@workspace/email"
+import {
+  decisionEmail,
+  sendBatch,
+  smtpTransport,
+  type SendResult,
+} from "@workspace/email"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -12,7 +17,7 @@ import {
   isEmailConfigured,
 } from "@/lib/email"
 
-const BATCH_SIZE = 25
+const BATCH_SIZE = 10
 
 const releaseResult = z.object({ queued: z.number(), undecided: z.number() })
 
@@ -55,34 +60,41 @@ export async function sendPendingEmails(formId: string): Promise<
   if (claimed.error) return { error: claimed.error.message }
 
   const transport = smtpTransport(smtp)
-  const results = await sendBatch(claimed.data, transport, (email) => {
-    if (email.decision === "pending")
-      throw new Error("Pending decisions are not emailed")
-    return {
-      to: email.email,
-      ...decisionEmail({
-        decision: email.decision,
-        previousDecision: email.previous_decision,
-        name: email.full_name,
-        eventName: email.event_name,
-        role: email.role,
-        portalUrl,
-      }),
-    }
-  }).finally(() => transport.close())
-
-  const finished = await Promise.all(
-    results.map((result) =>
-      supabase.rpc(
-        "admin_finish_email",
-        result.ok
-          ? { p_id: result.id, p_ok: true, p_message_id: result.messageId }
-          : { p_id: result.id, p_ok: false, p_error: result.error }
-      )
+  let results: SendResult[]
+  try {
+    results = await sendBatch(
+      claimed.data,
+      transport,
+      (email) => {
+        if (email.decision === "pending")
+          throw new Error("Pending decisions are not emailed")
+        return {
+          to: email.email,
+          ...decisionEmail({
+            decision: email.decision,
+            previousDecision: email.previous_decision,
+            name: email.full_name,
+            eventName: email.event_name,
+            role: email.role,
+            portalUrl,
+          }),
+        }
+      },
+      async (result) => {
+        const { error } = await supabase.rpc(
+          "admin_finish_email",
+          result.ok
+            ? { p_id: result.id, p_ok: true, p_message_id: result.messageId }
+            : { p_id: result.id, p_ok: false, p_error: result.error }
+        )
+        if (error) throw new Error(error.message)
+      }
     )
-  )
-  const finishError = finished.find((f) => f.error)?.error
-  if (finishError) return { error: finishError.message }
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) }
+  } finally {
+    transport.close()
+  }
 
   const { count, error } = await supabase
     .from("email_log")

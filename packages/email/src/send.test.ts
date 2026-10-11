@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { sendBatch } from "./send"
+import { sendBatch, type SendResult } from "./send"
 import { memoryTransport, type EmailMessage } from "./transport"
 
 const items = [
@@ -16,10 +16,12 @@ const build = (item: { email: string }): EmailMessage => ({
   html: "<p>Hello</p>",
 })
 
+const noop = async () => {}
+
 describe("sendBatch", () => {
   it("sends every item in order and reports message ids", async () => {
     const transport = memoryTransport()
-    const results = await sendBatch(items, transport, build)
+    const results = await sendBatch(items, transport, build, noop)
     expect(transport.messages.map((m) => m.to)).toEqual([
       "a@example.com",
       "b@example.com",
@@ -33,7 +35,7 @@ describe("sendBatch", () => {
   })
 
   it("returns an empty result for no items", async () => {
-    expect(await sendBatch([], memoryTransport(), build)).toEqual([])
+    expect(await sendBatch([], memoryTransport(), build, noop)).toEqual([])
   })
 
   it("records per-item failures and keeps sending", async () => {
@@ -44,7 +46,7 @@ describe("sendBatch", () => {
         return memory.send(message)
       },
     }
-    const results = await sendBatch(items, transport, build)
+    const results = await sendBatch(items, transport, build, noop)
     expect(results).toEqual([
       { id: "a", ok: true, messageId: "memory-1" },
       { id: "b", ok: false, error: "550 rejected" },
@@ -59,7 +61,7 @@ describe("sendBatch", () => {
     const results = await sendBatch(items.slice(0, 2), transport, (item) => {
       if (item.id === "b") throw new Error("missing template data")
       return build(item)
-    })
+    }, noop)
     expect(results).toEqual([
       { id: "a", ok: false, error: "connection reset" },
       { id: "b", ok: false, error: "missing template data" },
@@ -78,7 +80,41 @@ describe("sendBatch", () => {
         return { messageId: "x" }
       },
     }
-    await sendBatch(items, transport, build)
+    await sendBatch(items, transport, build, noop)
     expect(maxActive).toBe(1)
+  })
+
+  it("awaits onResult for each item before sending the next", async () => {
+    const memory = memoryTransport()
+    const events: string[] = []
+    const transport = {
+      async send(message: EmailMessage) {
+        events.push(`send ${message.to}`)
+        if (message.to === "b@example.com") throw new Error("550 rejected")
+        return memory.send(message)
+      },
+    }
+    await sendBatch(items, transport, build, async (result: SendResult) => {
+      await new Promise((resolve) => setTimeout(resolve, 1))
+      events.push(`done ${result.id} ${result.ok}`)
+    })
+    expect(events).toEqual([
+      "send a@example.com",
+      "done a true",
+      "send b@example.com",
+      "done b false",
+      "send c@example.com",
+      "done c true",
+    ])
+  })
+
+  it("stops when onResult rejects", async () => {
+    const transport = memoryTransport()
+    await expect(
+      sendBatch(items, transport, build, async (result) => {
+        if (result.id === "a") throw new Error("finish failed")
+      })
+    ).rejects.toThrow("finish failed")
+    expect(transport.messages).toHaveLength(1)
   })
 })
