@@ -1,10 +1,8 @@
-import { Button } from "@workspace/ui/components/button"
+import { redirect } from "next/navigation"
 
-export default function Page() {
-  return (
-    <main className="flex min-h-svh flex-col items-start gap-4 p-6">
-      <h1 className="text-2xl font-semibold">Patriot HackFest Admin</h1>
-      <Button disabled>Sign in with Google</Button>
-    </main>
-  )
+import { getAdmin } from "@/lib/admin"
+
+export default async function Page() {
+  await getAdmin()
+  redirect("/forms")
 }

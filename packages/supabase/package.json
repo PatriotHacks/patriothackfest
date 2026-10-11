@@ -10,6 +10,7 @@
   },
   "exports": {
     "./client": "./src/client.ts",
+    "./proxy": "./src/proxy.ts",
     "./server": "./src/server.ts",
     "./types": "./src/database.types.ts"
   },
