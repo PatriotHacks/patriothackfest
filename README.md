@@ -51,7 +51,7 @@ cp apps/admin/.env.example apps/admin/.env.local
 | `APP_URL`                              | `apps/admin`             | Applicant portal URL linked from decision emails, e.g. `https://app.patriothackfest.com`                                                      |
 | `SMTP_HOST`, `SMTP_PORT`               | `apps/admin`             | Decision email SMTP server: `smtp.gmail.com` and `587` (STARTTLS) or `465` (implicit TLS)                                                     |
 | `SMTP_USER`, `SMTP_PASSWORD`           | `apps/admin`             | Google Workspace sending account and its app password                                                                                         |
-| `EMAIL_FROM`                           | `apps/admin`             | From header, e.g. `Patriot HackFest <events@patriothackfest.com>`                                                                             |
+| `EMAIL_FROM`                           | `apps/admin`             | From header, e.g. `Patriot HackFest <hello@patriothackfest.com>`                                                                              |
 
 ## Database
 
