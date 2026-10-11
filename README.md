@@ -11,6 +11,7 @@ apps/
   admin/   admin.patriothackfest.com   admin console        (dev port 3002)
 packages/
   ui/                 shared shadcn/ui components and Tailwind v4 styles
+  forms/              form field schemas, conditional visibility, answer and publish validation
   supabase/           Supabase browser/server clients and generated database types
   eslint-config/      shared ESLint configs
   typescript-config/  shared tsconfig presets
@@ -96,6 +97,15 @@ values ('first.owner@example.com', 'owner');
 
 Levels are `owner` (allowlist and everything else), `organizer` (forms, deadlines, role changes, decisions, releases, exports), and `reviewer` (view applications, set decisions before release).
 
+## Admin console
+
+- Sign in with Google at `/login`. Every page and server action checks `current_admin_level()` on the server; signed-in users without a level see an access-denied page.
+- **Forms**: each event has a participant, volunteer, and judge slot. Organizers create forms and set deadlines (entered and shown in America/New_York, stored as `timestamptz`). Deadlines apply immediately.
+- **Builder** (`/forms/<id>`): edits autosave to the working copy in `form_fields`. Questions support all ten field types, options, per-type validation, and a condition on an earlier choice or checkbox question. Drag the handle (or focus it and use Space and the arrow keys) to reorder. A question's type is locked once an application has answered it. The preview renders the working copy with live conditional visibility.
+- **Publish / Save** calls `admin_publish_form`, which validates the working copy and snapshots it into `forms.published_schema`, the only form content applicants can read. Edits after publishing show an "Unpublished changes" badge until the next save.
+- **Admins** (owners only): add, re-level, and remove allowlist entries. The database rejects any change that would leave no owner.
+- Reviewers see forms and the builder read-only.
+
 ## Development
 
 ```sh
@@ -103,5 +113,6 @@ pnpm dev         # all apps
 pnpm build
 pnpm lint
 pnpm typecheck
-pnpm test        # same as db:test
+pnpm test        # vitest unit tests (packages/forms) via turbo
+pnpm db:test     # pgTAP tests against SUPABASE_DB_URL
 ```
