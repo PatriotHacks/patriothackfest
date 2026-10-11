@@ -4,6 +4,8 @@ import { Button } from "@workspace/ui/components/button"
 import { createClient } from "@workspace/supabase/client"
 import { useState } from "react"
 
+import { AUTH_COOKIE } from "@/lib/auth-cookie"
+
 export function GoogleSignInButton() {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -11,7 +13,7 @@ export function GoogleSignInButton() {
   async function signIn() {
     setPending(true)
     setError(null)
-    const { error } = await createClient().auth.signInWithOAuth({
+    const { error } = await createClient(AUTH_COOKIE).auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
