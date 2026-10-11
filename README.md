@@ -120,8 +120,9 @@ Levels are `owner` (allowlist and everything else), `organizer` (forms, deadline
 - **Application** (`/applications/<id>`) renders the form's `published_schema` with live conditional visibility. Drafts autosave the whole answers object (1 s debounce, on blur, and before submit). If another tab saved more recently, a warning offers a reload.
 - **Files** upload from the browser straight to the private `application-files` bucket at `<user>/<application>/<field>/<uuid>.pdf` (PDF only, up to the field limit, max 10 MB). Replacing or removing a file uploads the new one, saves the answers, then deletes the old object.
 - **Submit** validates in the browser, then `submit_application` validates again; field errors from the database (`PT422`) are shown on their questions. After submitting, answers can be changed with **Save changes** until `edits_lock_at`, then become read-only.
-- **Withdraw** is final; the applicant cannot reapply to that event.
-- Status: Draft, Submitted, or Not submitted (closed draft) until decisions are released; then Accepted, Waitlisted, Not accepted, or Under review (no decision yet). Withdrawn overrides any decision.
+- **Withdraw** is available only until decisions are released for the form, and is final; the applicant cannot reapply to that event.
+- **Decline**: after release, accepted and waitlisted applicants can decline their spot or leave the waitlist from the dashboard or application page (`decline_application_offer` sets `applications.declined_at`). There is no RSVP; accepted applicants count as attending unless they decline. Declining is final: organizers can no longer change that decision or the application's role.
+- Status: Draft, Submitted, or Not submitted (closed draft) until decisions are released; then Accepted, Waitlisted, Not accepted, or Under review (no decision yet). Withdrawn overrides any decision; a declined offer shows Declined.
 
 ## Development
 
