@@ -11,6 +11,7 @@ export function FormStatusBadges({
     status: string
     published_at: string | null
     content_updated_at: string
+    decisions_released_at?: string | null
   }
 }) {
   return (
@@ -21,6 +22,7 @@ export function FormStatusBadges({
       {(unpublishedChanges || hasUnpublishedChanges(form)) && (
         <Badge variant="outline">Unpublished changes</Badge>
       )}
+      {form.decisions_released_at && <Badge>Released</Badge>}
     </div>
   )
 }
