@@ -47,6 +47,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
+      '@workspace/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       '@workspace/forms':
         specifier: workspace:*
         version: link:../../packages/forms
