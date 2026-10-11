@@ -3,6 +3,7 @@
 import {
   fileAnswerSchema,
   isFieldVisible,
+  pruneHiddenAnswers,
   validateAnswers,
   type AnswerErrors,
   type Answers,
@@ -52,6 +53,12 @@ function filePath(value: unknown) {
   return parsed.success ? parsed.data.path : null
 }
 
+function filePaths(answers: Answers) {
+  return Object.values(answers)
+    .map(filePath)
+    .filter((path) => path !== null)
+}
+
 function firstErrorField(fields: Field[], errors: AnswerErrors) {
   return fields.find((f) => errors[f.id])
 }
@@ -92,20 +99,34 @@ export function ApplicationForm({
     isFieldVisible(f, answers, schema)
   )
 
-  const persist = useCallback(
-    async (snapshot: Answers) => {
-      const result = await saveAnswers(applicationId, snapshot)
-      if (result.error) return result
-      lastKnown.current = result.updatedAt!
-      const referenced = new Set(Object.values(snapshot).map(filePath))
-      const removable = [...pendingDeletes.current].filter(
-        (path) => !referenced.has(path)
-      )
+  const removeUnreferencedFiles = useCallback(
+    (previous: Answers, stored: Answers) => {
+      const referenced = new Set(filePaths(stored))
+      const removable = [
+        ...new Set([...pendingDeletes.current, ...filePaths(previous)]),
+      ].filter((path) => !referenced.has(path))
       removable.forEach((path) => pendingDeletes.current.delete(path))
       void removeFiles(removable)
+    },
+    []
+  )
+
+  function replaceAnswers(next: Answers) {
+    answersRef.current = next
+    setAnswers(next)
+  }
+
+  const persist = useCallback(
+    async (snapshot: Answers) => {
+      const stored =
+        mode === "edit" ? pruneHiddenAnswers(schema, snapshot) : snapshot
+      const result = await saveAnswers(applicationId, stored)
+      if (result.error) return result
+      lastKnown.current = result.updatedAt!
+      removeUnreferencedFiles(snapshot, stored)
       return result
     },
-    [applicationId]
+    [applicationId, mode, schema, removeUnreferencedFiles]
   )
 
   const autosave = useDraftAutosave(persist)
@@ -140,8 +161,7 @@ export function ApplicationForm({
     const next = { ...answersRef.current }
     if (value === undefined) delete next[field.id]
     else next[field.id] = value
-    answersRef.current = next
-    setAnswers(next)
+    replaceAnswers(next)
     setMessage(null)
     if (errors[field.id]) {
       const rest = { ...errors }
@@ -180,7 +200,10 @@ export function ApplicationForm({
       if (Object.keys(local).length > 0) return showErrors(local)
       const result = await submitApplication(applicationId)
       if (result.fieldErrors) return showErrors(result.fieldErrors)
-      if (result.error) setFormError(result.error)
+      if (result.error) return setFormError(result.error)
+      const submitted = pruneHiddenAnswers(schema, answersRef.current)
+      removeUnreferencedFiles(answersRef.current, submitted)
+      replaceAnswers(submitted)
     } finally {
       setBusy(false)
     }
@@ -197,7 +220,10 @@ export function ApplicationForm({
       const result = await persist(snapshot)
       if (result.fieldErrors) return showErrors(result.fieldErrors)
       if (result.error) return setFormError(result.error)
-      if (answersRef.current === snapshot) setDirty(false)
+      if (answersRef.current === snapshot) {
+        replaceAnswers(pruneHiddenAnswers(schema, snapshot))
+        setDirty(false)
+      }
       setMessage("Changes saved")
     } finally {
       setBusy(false)
