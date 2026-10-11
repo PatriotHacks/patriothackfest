@@ -1,6 +1,21 @@
 "use client"
 
 import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import {
   FIELD_TYPE_LABELS,
   FIELD_TYPES,
   type Field,
@@ -19,11 +34,12 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import { Textarea } from "@workspace/ui/components/textarea"
-import { useState } from "react"
+import { useId, useState } from "react"
 
 import {
   addField,
   archiveField,
+  reorderFields,
   saveField,
   updateFormDetails,
 } from "@/app/(admin)/forms/[formId]/actions"
@@ -33,6 +49,7 @@ import { FormStatusBadges } from "@/components/form-status-badges"
 import { withType } from "./field-utils"
 import { QuestionEditor } from "./question-editor"
 import { SaveIndicator } from "./save-indicator"
+import { SortableQuestion } from "./sortable-question"
 import { useAutosave } from "./use-autosave"
 
 export type BuilderForm = {
@@ -69,6 +86,13 @@ export function FormBuilder({
   const [actionError, setActionError] = useState<string | null>(null)
   const [editedLocally, setEditedLocally] = useState(false)
   const autosave = useAutosave()
+  const dndId = useId()
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   function track(run: () => Promise<{ error: string | null }>) {
     return async () => {
@@ -116,9 +140,27 @@ export function FormBuilder({
     )
   }
 
+  function reorder({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return
+    const from = fields.findIndex((f) => f.id === active.id)
+    const to = fields.findIndex((f) => f.id === over.id)
+    const next = arrayMove(fields, from, to)
+    setFields(next)
+    autosave.schedule(
+      "order",
+      track(() =>
+        reorderFields(
+          form.id,
+          next.map((f) => f.id)
+        )
+      ),
+      0
+    )
+  }
+
   async function add() {
     setActionError(null)
-    const result = await addField(form.id, newType, fields.length + 1)
+    const result = await addField(form.id, newType)
     if (result.error || !result.field) {
       setActionError(result.error)
       return
@@ -206,24 +248,39 @@ export function FormBuilder({
           </CardContent>
         </Card>
 
-        {fields.map((field, index) => (
-          <Card key={field.id}>
-            <CardContent>
-              <QuestionEditor
-                field={field}
+        <DndContext
+          id={dndId}
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={reorder}
+        >
+          <SortableContext
+            items={fields.map((f) => f.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {fields.map((field, index) => (
+              <SortableQuestion
+                key={field.id}
+                id={field.id}
                 index={index}
-                typeLocked={answeredFieldIds.includes(field.id)}
-                conditionSources={fields
-                  .slice(0, index)
-                  .filter((f) => isConditionSourceType(f.type))}
-                issues={[]}
-                onChange={changeField}
-                onTypeChange={(type) => changeType(field, type)}
-                onArchive={() => archive(field)}
-              />
-            </CardContent>
-          </Card>
-        ))}
+                draggable={canEdit}
+              >
+                <QuestionEditor
+                  field={field}
+                  index={index}
+                  typeLocked={answeredFieldIds.includes(field.id)}
+                  conditionSources={fields
+                    .slice(0, index)
+                    .filter((f) => isConditionSourceType(f.type))}
+                  issues={[]}
+                  onChange={changeField}
+                  onTypeChange={(type) => changeType(field, type)}
+                  onArchive={() => archive(field)}
+                />
+              </SortableQuestion>
+            ))}
+          </SortableContext>
+        </DndContext>
 
         {canEdit && (
           <div className="flex items-center gap-2">

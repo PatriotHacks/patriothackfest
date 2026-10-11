@@ -30,19 +30,26 @@ export async function updateFormDetails(
 
 export async function addField(
   formId: string,
-  type: string,
-  position: number
+  type: string
 ): Promise<ActionResult & { field?: Field }> {
   const id = z.guid().parse(formId)
   const fieldType = fieldTypeSchema.parse(type)
-  const pos = z.int().parse(position)
   const { supabase } = await requireAdmin("organizer")
+
+  const last = await supabase
+    .from("form_fields")
+    .select("position")
+    .eq("form_id", id)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (last.error) return failure(last.error)
 
   const { data, error } = await supabase
     .from("form_fields")
     .insert({
       form_id: id,
-      position: pos,
+      position: (last.data?.position ?? 0) + 1,
       type: fieldType,
       label: "",
       options: isChoiceType(fieldType) ? [] : null,
@@ -97,5 +104,20 @@ export async function archiveField(fieldId: string): Promise<ActionResult> {
     .from("form_fields")
     .update({ archived_at: new Date().toISOString() })
     .eq("id", id)
+  return error ? failure(error) : ok
+}
+
+export async function reorderFields(
+  formId: string,
+  fieldIds: string[]
+): Promise<ActionResult> {
+  const id = z.guid().parse(formId)
+  const ids = z.array(z.guid()).parse(fieldIds)
+  const { supabase } = await requireAdmin("organizer")
+
+  const { error } = await supabase.rpc("admin_reorder_form_fields", {
+    p_form_id: id,
+    p_field_ids: ids,
+  })
   return error ? failure(error) : ok
 }
