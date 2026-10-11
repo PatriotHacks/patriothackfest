@@ -6,7 +6,7 @@ import * as z from "zod"
 
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
-import { DECISIONS } from "@/lib/roles"
+import { DECISIONS, ROLES } from "@/lib/roles"
 
 export async function applicationFileUrl(
   applicationId: string,
@@ -36,6 +36,24 @@ export async function setDecisions(
     ids.map((id) => ({ application_id: id, decision: value })),
     { onConflict: "application_id" }
   )
+  if (error) return failure(error)
+
+  revalidatePath("/applications", "layout")
+  return ok
+}
+
+export async function changeApplicationRole(
+  applicationId: string,
+  role: string
+): Promise<ActionResult> {
+  const id = z.guid().parse(applicationId)
+  const newRole = z.enum(ROLES).parse(role)
+  const { supabase } = await requireAdmin("organizer")
+
+  const { error } = await supabase.rpc("admin_change_application_role", {
+    p_application_id: id,
+    p_new_role: newRole,
+  })
   if (error) return failure(error)
 
   revalidatePath("/applications", "layout")

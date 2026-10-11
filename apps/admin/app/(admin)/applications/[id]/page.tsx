@@ -23,6 +23,7 @@ import * as z from "zod"
 import { AnswersView } from "@/components/answers-view"
 import { DecisionBadge } from "@/components/decision-badge"
 import { DecisionControl } from "@/components/decision-control"
+import { RoleChangeDialog } from "@/components/role-change-dialog"
 import { getAdmin } from "@/lib/admin"
 import {
   filteredApplications,
@@ -32,7 +33,7 @@ import {
 } from "@/lib/application-filters"
 import { decisionBlockedReason } from "@/lib/decisions"
 import { hasLevel } from "@/lib/levels"
-import { DECISION_LABELS, ROLE_LABELS, STATUS_LABELS } from "@/lib/roles"
+import { DECISION_LABELS, ROLE_LABELS, ROLES, STATUS_LABELS } from "@/lib/roles"
 
 const answersSchema = z.record(z.string(), z.unknown())
 
@@ -51,7 +52,7 @@ export default async function ApplicationPage({
   const { data: application, error } = await supabase
     .from("applications")
     .select(
-      "id, role, status, answers, created_at, submitted_at, withdrawn_at, declined_at, profiles(full_name, email), events(name), forms(id, title, published_schema, decisions_released_at), application_decisions(decision, decided_at, profiles(email))"
+      "id, event_id, role, status, answers, created_at, submitted_at, withdrawn_at, declined_at, profiles(full_name, email), events(name), forms(id, title, published_schema, decisions_released_at), application_decisions(decision, decided_at, profiles(email))"
     )
     .eq("id", id)
     .maybeSingle()
@@ -62,7 +63,7 @@ export default async function ApplicationPage({
   const after = (op: "gt" | "lt") =>
     `created_at.${op}.${at},and(created_at.eq.${at},id.${op}.${id})`
 
-  const [newer, older, archives, emails] = await Promise.all([
+  const [newer, older, archives, emails, eventForms] = await Promise.all([
     filteredApplications(supabase, filters)
       .or(after("gt"))
       .order("created_at", { ascending: true })
@@ -91,11 +92,18 @@ export default async function ApplicationPage({
           .eq("application_id", id)
           .order("created_at", { ascending: false })
       : null,
+    isOrganizer
+      ? supabase
+          .from("forms")
+          .select("role, status, submissions_close_at")
+          .eq("event_id", application.event_id)
+      : null,
   ])
   if (newer.error) throw new Error(newer.error.message)
   if (older.error) throw new Error(older.error.message)
   if (archives.error) throw new Error(archives.error.message)
   if (emails?.error) throw new Error(emails.error.message)
+  if (eventForms?.error) throw new Error(eventForms.error.message)
 
   const form = application.forms
   const decision = application.application_decisions
@@ -103,6 +111,31 @@ export default async function ApplicationPage({
     ? publishedSchemaSchema.parse(form.published_schema)
     : null
   const answers = answersSchema.parse(application.answers)
+
+  const now = Date.now()
+  const roleOptions = eventForms
+    ? ROLES.map((role) => {
+        const target = eventForms.data.find((f) => f.role === role)
+        const reason =
+          role === application.role
+            ? "current role"
+            : !target
+              ? "no form"
+              : target.status !== "published"
+                ? "form not published"
+                : target.submissions_close_at !== null &&
+                    now >= Date.parse(target.submissions_close_at)
+                  ? "form closed"
+                  : null
+        return { role, label: ROLE_LABELS[role], reason }
+      })
+    : null
+  const roleBlockedReason =
+    application.status === "withdrawn"
+      ? "Withdrawn applications cannot change role."
+      : application.declined_at
+        ? "Declined applications cannot change role."
+        : null
 
   const timeline = [
     { label: "Started", at: application.created_at },
@@ -197,6 +230,13 @@ export default async function ApplicationPage({
               isOrganizer
             )}
           />
+          {roleOptions && (
+            <RoleChangeDialog
+              applicationId={id}
+              options={roleOptions}
+              blockedReason={roleBlockedReason}
+            />
+          )}
         </CardContent>
       </Card>
 
