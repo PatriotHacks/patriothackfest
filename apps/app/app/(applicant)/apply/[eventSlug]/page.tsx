@@ -1,10 +1,15 @@
-import { formatInZone } from "@workspace/forms"
+import { formatInZone, publishedSchemaSchema } from "@workspace/forms"
 import { notFound, redirect } from "next/navigation"
 
 import { RolePicker } from "@/components/role-picker"
 import { isFormOpen } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
 import { ROLES } from "@/lib/roles"
+
+const formSummary = publishedSchemaSchema.pick({
+  title: true,
+  description: true,
+})
 
 export default async function ApplyPage({
   params,
@@ -46,8 +51,7 @@ export default async function ApplyPage({
     .map((f) => ({
       id: f.id,
       role: f.role,
-      title: f.title ?? "",
-      description: f.description,
+      ...formSummary.parse({ title: f.title, description: f.description }),
       closesAt: formatInZone(f.submissions_close_at!),
     }))
 
