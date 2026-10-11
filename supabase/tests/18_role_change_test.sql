@@ -39,6 +39,7 @@ insert into auth.users (id, email) values
   ('d8000000-0000-0000-0000-000000000001', 'd8000000-0000-0000-0000-000000000001@example.test'),
   ('d8000000-0000-0000-0000-000000000002', 'd8000000-0000-0000-0000-000000000002@example.test'),
   ('d8000000-0000-0000-0000-000000000003', 'd8000000-0000-0000-0000-000000000003@example.test'),
+  ('d8000000-0000-0000-0000-000000000004', 'd8000000-0000-0000-0000-000000000004@example.test'),
   ('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
 
 insert into public.admin_allowlist (email, level) values ('roles-organizer@example.test', 'organizer');
@@ -65,15 +66,20 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
 select set_config('test.open', pg_temp.apply('d8000000-0000-0000-0000-000000000001', 'f8000000-0000-0000-0000-000000000001')::text, true);
 select set_config('test.undecided', pg_temp.apply('d8000000-0000-0000-0000-000000000002', 'f8000000-0000-0000-0000-000000000004')::text, true);
 select set_config('test.accepted', pg_temp.apply('d8000000-0000-0000-0000-000000000003', 'f8000000-0000-0000-0000-000000000004')::text, true);
+select set_config('test.emailed', pg_temp.apply('d8000000-0000-0000-0000-000000000004', 'f8000000-0000-0000-0000-000000000004')::text, true);
 
 select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
 insert into public.application_decisions (application_id, decision) values (current_setting('test.accepted')::uuid, 'accepted');
 select public.admin_release_decisions('f8000000-0000-0000-0000-000000000004');
+insert into public.application_decisions (application_id, decision) values (current_setting('test.emailed')::uuid, 'accepted');
 reset role;
+
+update public.email_log set status = 'sent', claimed_at = now(), sent_at = now()
+where application_id = current_setting('test.emailed')::uuid;
 
 update public.forms set decisions_released_at = now() where id = 'f8000000-0000-0000-0000-000000000005';
 
-select plan(13);
+select plan(14);
 
 select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
 select throws_ok(
@@ -153,6 +159,24 @@ select throws_ok(
   'P0001', 'Applications cannot be withdrawn after the decision is released', 'moved applicant cannot withdraw once decided'
 );
 reset role;
+
+select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
+select public.admin_change_application_role(current_setting('test.emailed')::uuid, 'volunteer');
+reset role;
+select pg_temp.login('d8000000-0000-0000-0000-000000000004', 'd8000000-0000-0000-0000-000000000004@example.test', 'otp');
+select public.submit_application(current_setting('test.emailed')::uuid);
+reset role;
+select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
+insert into public.application_decisions (application_id, decision) values (current_setting('test.emailed')::uuid, 'accepted');
+reset role;
+
+select is(
+  (select string_agg(status || ':' || decision || ':' || coalesce(previous_decision::text, '-'), ',')
+   from public.email_log
+   where application_id = current_setting('test.emailed')::uuid and form_id = 'f8000000-0000-0000-0000-000000000005'),
+  'pending:accepted:-',
+  'an email sent for the previous form does not suppress the new form''s email'
+);
 
 select * from finish(true);
 rollback;
