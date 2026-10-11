@@ -148,5 +148,9 @@ describe("validateAnswers", () => {
       errorFor(image, { ...pdf, type: "image/png", size: 2 * 1024 * 1024 })
     ).toBe("Files must be 1 MB or smaller")
     expect(errorFor(resume, "r.pdf")).toBe("Upload a file")
+    const oversized = field("file", { validation: { max_size_mb: 50 } })
+    expect(errorFor(oversized, { ...pdf, size: 11 * 1024 * 1024 })).toBe(
+      "Files must be 10 MB or smaller"
+    )
   })
 })

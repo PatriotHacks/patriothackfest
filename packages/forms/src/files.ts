@@ -1,4 +1,8 @@
-import { DEFAULT_FILE_MAX_SIZE_MB, type Field } from "./schema"
+import {
+  DEFAULT_FILE_MAX_SIZE_MB,
+  MAX_FILE_SIZE_MB,
+  type Field,
+} from "./schema"
 
 export const APPLICATION_FILES_BUCKET = "application-files"
 export const PDF_TYPE = "application/pdf"
@@ -15,7 +19,7 @@ export function applicationFilePath(parts: {
 export function fileMaxSizeMb(field: Extract<Field, { type: "file" }>) {
   return Math.min(
     field.validation?.max_size_mb ?? DEFAULT_FILE_MAX_SIZE_MB,
-    DEFAULT_FILE_MAX_SIZE_MB
+    MAX_FILE_SIZE_MB
   )
 }
 
