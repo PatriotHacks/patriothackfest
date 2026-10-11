@@ -13,6 +13,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
         <span className="font-semibold">HackFest Admin</span>
         <nav className="flex gap-4 text-sm">
           <Link href="/forms">Forms</Link>
+          <Link href="/applications">Applications</Link>
           {level === "owner" && <Link href="/admins">Admins</Link>}
         </nav>
         <div className="ml-auto flex items-center gap-3 text-sm text-muted-foreground">
