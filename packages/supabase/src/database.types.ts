@@ -497,6 +497,23 @@ export type Database = {
         Returns: undefined
       }
       admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
+      admin_release_counts: {
+        Args: { p_form_id: string }
+        Returns: {
+          accepted: number
+          declined: number
+          emails_cancelled: number
+          emails_failed: number
+          emails_pending: number
+          emails_sending: number
+          emails_sent: number
+          pending: number
+          rejected: number
+          submitted: number
+          undecided: number
+          waitlisted: number
+        }[]
+      }
       admin_release_decisions: { Args: { p_form_id: string }; Returns: Json }
       admin_reorder_form_fields: {
         Args: { p_field_ids: string[]; p_form_id: string }

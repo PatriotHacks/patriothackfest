@@ -20,19 +20,18 @@ import { EmailSender } from "@/components/email-sender"
 import { ReleaseButton } from "@/components/release-button"
 import { getAdmin } from "@/lib/admin"
 import { EMAIL_NOT_CONFIGURED, isEmailConfigured } from "@/lib/email"
-import { fetchAll } from "@/lib/fetch-all"
 import { hasLevel } from "@/lib/levels"
 import { ROLE_LABELS } from "@/lib/roles"
 
 export const maxDuration = 60
 
-const EMAIL_STATUSES = {
-  pending: "Pending",
-  sending: "Sending",
-  sent: "Sent",
-  failed: "Failed",
-  cancelled: "Cancelled",
-}
+const EMAIL_STATUSES = [
+  ["emails_pending", "Pending"],
+  ["emails_sending", "Sending"],
+  ["emails_sent", "Sent"],
+  ["emails_failed", "Failed"],
+  ["emails_cancelled", "Cancelled"],
+] as const
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
@@ -51,51 +50,22 @@ export default async function ReleasePage({
   const { supabase, level } = await getAdmin()
   if (!hasLevel(level, "organizer")) redirect("/forms")
 
-  const { data: form, error } = await supabase
-    .from("forms")
-    .select(
-      "id, event_id, role, title, status, decisions_released_at, events(name)"
-    )
-    .eq("id", formId)
-    .maybeSingle()
-  if (error) throw new Error(error.message)
+  const [formResult, countsResult] = await Promise.all([
+    supabase
+      .from("forms")
+      .select(
+        "id, event_id, role, title, status, decisions_released_at, events(name)"
+      )
+      .eq("id", formId)
+      .maybeSingle(),
+    supabase.rpc("admin_release_counts", { p_form_id: formId }).single(),
+  ])
+  if (formResult.error) throw new Error(formResult.error.message)
+  if (countsResult.error) throw new Error(countsResult.error.message)
+  const form = formResult.data
+  const counts = countsResult.data
   if (!form) notFound()
 
-  const [applications, emailCounts] = await Promise.all([
-    fetchAll((from, to) =>
-      supabase
-        .from("applications")
-        .select("id, declined_at, application_decisions(decision)")
-        .eq("form_id", formId)
-        .eq("status", "submitted")
-        .order("id")
-        .range(from, to)
-    ),
-    Promise.all(
-      Object.entries(EMAIL_STATUSES).map(async ([status, label]) => {
-        const { count, error } = await supabase
-          .from("email_log")
-          .select("id", { count: "exact", head: true })
-          .eq("form_id", formId)
-          .eq("status", status)
-        if (error) throw new Error(error.message)
-        return { status, label, count: count ?? 0 }
-      })
-    ),
-  ])
-
-  const decisionOf = (a: (typeof applications)[number]) =>
-    a.application_decisions?.decision ?? null
-  const count = (predicate: (a: (typeof applications)[number]) => boolean) =>
-    applications.filter(predicate).length
-  const accepted = count((a) => decisionOf(a) === "accepted")
-  const waitlisted = count((a) => decisionOf(a) === "waitlisted")
-  const rejected = count((a) => decisionOf(a) === "rejected")
-  const pending = count((a) => decisionOf(a) === "pending")
-  const none = count((a) => decisionOf(a) === null)
-  const declined = count((a) => a.declined_at !== null)
-  const emailCount = (status: keyof typeof EMAIL_STATUSES) =>
-    emailCounts.find((c) => c.status === status)?.count ?? 0
   const configured = isEmailConfigured()
   const listHref = `/applications?event=${form.event_id}&role=${form.role}`
 
@@ -122,17 +92,17 @@ export default async function ReleasePage({
         <CardHeader>
           <CardTitle>Decisions</CardTitle>
           <CardDescription>
-            Submitted applications ({applications.length})
+            Submitted applications ({counts.submitted})
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Stat label="Accepted" value={accepted} />
-            <Stat label="Waitlisted" value={waitlisted} />
-            <Stat label="Not accepted" value={rejected} />
-            <Stat label="Pending" value={pending} />
-            <Stat label="No decision" value={none} />
-            <Stat label="Declined by applicant" value={declined} />
+            <Stat label="Accepted" value={counts.accepted} />
+            <Stat label="Waitlisted" value={counts.waitlisted} />
+            <Stat label="Not accepted" value={counts.rejected} />
+            <Stat label="Pending" value={counts.pending} />
+            <Stat label="No decision" value={counts.undecided} />
+            <Stat label="Declined by applicant" value={counts.declined} />
           </dl>
           {form.decisions_released_at ? (
             <p className="text-sm">
@@ -144,8 +114,8 @@ export default async function ReleasePage({
             <ReleaseButton
               formId={form.id}
               title={form.title}
-              decided={accepted + waitlisted + rejected}
-              undecided={pending + none}
+              decided={counts.accepted + counts.waitlisted + counts.rejected}
+              undecided={counts.pending + counts.undecided}
               disabledReason={
                 form.status === "published"
                   ? null
@@ -163,8 +133,8 @@ export default async function ReleasePage({
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-              {emailCounts.map(({ status, label, count }) => (
-                <Stat key={status} label={label} value={count} />
+              {EMAIL_STATUSES.map(([key, label]) => (
+                <Stat key={key} label={label} value={counts[key]} />
               ))}
             </dl>
             {!configured && (
@@ -175,9 +145,9 @@ export default async function ReleasePage({
             )}
             <EmailSender
               formId={form.id}
-              pending={emailCount("pending")}
-              sending={emailCount("sending")}
-              failed={emailCount("failed")}
+              pending={counts.emails_pending}
+              sending={counts.emails_sending}
+              failed={counts.emails_failed}
               configured={configured}
             />
           </CardContent>
