@@ -11,7 +11,8 @@ apps/
   admin/   admin.patriothackfest.com   admin console        (dev port 3002)
 packages/
   ui/                 shared shadcn/ui components and Tailwind v4 styles
-  forms/              form field schemas, conditional visibility, answer and publish validation
+  forms/              form field schemas, conditional visibility, answer and publish validation, CSV export
+  email/              SMTP transport, decision email templates, batch sending
   supabase/           Supabase browser/server clients and generated database types
   eslint-config/      shared ESLint configs
   typescript-config/  shared tsconfig presets
@@ -131,6 +132,6 @@ pnpm dev         # all apps
 pnpm build
 pnpm lint
 pnpm typecheck
-pnpm test        # vitest unit tests (packages/forms) via turbo
+pnpm test        # vitest unit tests (packages/forms, packages/email) via turbo
 pnpm db:test     # pgTAP tests against SUPABASE_DB_URL
 ```
