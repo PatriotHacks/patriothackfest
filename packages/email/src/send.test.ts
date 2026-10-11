@@ -58,10 +58,15 @@ describe("sendBatch", () => {
     const transport = {
       send: () => Promise.reject("connection reset"),
     }
-    const results = await sendBatch(items.slice(0, 2), transport, (item) => {
-      if (item.id === "b") throw new Error("missing template data")
-      return build(item)
-    }, noop)
+    const results = await sendBatch(
+      items.slice(0, 2),
+      transport,
+      (item) => {
+        if (item.id === "b") throw new Error("missing template data")
+        return build(item)
+      },
+      noop
+    )
     expect(results).toEqual([
       { id: "a", ok: false, error: "connection reset" },
       { id: "b", ok: false, error: "missing template data" },
