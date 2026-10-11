@@ -178,7 +178,8 @@ export const fileAnswerSchema = z.object({
 
 export type FileAnswer = z.infer<typeof fileAnswerSchema>
 export type AnswerValue = string | number | boolean | string[] | FileAnswer
-export type Answers = Record<string, unknown>
+export const answersSchema = z.record(z.string(), z.unknown())
+export type Answers = z.infer<typeof answersSchema>
 
 export function emptyFieldContent(type: FieldType) {
   return {

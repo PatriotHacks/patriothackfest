@@ -1,4 +1,5 @@
 import {
+  answersSchema,
   buildApplicationsCsv,
   publishedSchemaSchema,
   toZonedInputValue,
@@ -9,8 +10,6 @@ import * as z from "zod"
 import { getAdmin } from "@/lib/admin"
 import { fetchAll } from "@/lib/fetch-all"
 import { hasLevel } from "@/lib/levels"
-
-const answersSchema = z.record(z.string(), z.unknown())
 
 const safe = (value: string) =>
   value

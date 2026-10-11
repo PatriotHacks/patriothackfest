@@ -1,6 +1,6 @@
 "use server"
 
-import type { AnswerErrors } from "@workspace/forms"
+import { answersSchema, type AnswerErrors } from "@workspace/forms"
 import type { Json } from "@workspace/supabase/types"
 import { refresh } from "next/cache"
 import * as z from "zod"
@@ -13,7 +13,6 @@ export type SaveResult = ActionResult & {
   updatedAt?: string
 }
 
-const answersInput = z.record(z.string(), z.unknown())
 const errorDetails = z.record(z.string(), z.string())
 
 function answerFailure(error: {
@@ -48,7 +47,7 @@ export async function saveAnswers(
   answers: Record<string, unknown>
 ): Promise<SaveResult> {
   const id = z.guid().parse(applicationId)
-  const input = answersInput.parse(answers)
+  const input = answersSchema.parse(answers)
   const { supabase } = await getApplicant()
 
   const { data, error } = await supabase.rpc("save_application_answers", {

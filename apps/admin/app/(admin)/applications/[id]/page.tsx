@@ -1,4 +1,8 @@
-import { formatInZone, publishedSchemaSchema } from "@workspace/forms"
+import {
+  answersSchema,
+  formatInZone,
+  publishedSchemaSchema,
+} from "@workspace/forms"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -35,8 +39,6 @@ import {
 import { decisionBlockedReason } from "@/lib/decisions"
 import { hasLevel } from "@/lib/levels"
 import { DECISION_LABELS, ROLE_LABELS, ROLES, STATUS_LABELS } from "@/lib/roles"
-
-const answersSchema = z.record(z.string(), z.unknown())
 
 export default async function ApplicationPage({
   params,

@@ -1,4 +1,8 @@
-import { formatInZone, publishedSchemaSchema } from "@workspace/forms"
+import {
+  answersSchema,
+  formatInZone,
+  publishedSchemaSchema,
+} from "@workspace/forms"
 import type { Database } from "@workspace/supabase/types"
 import {
   Card,
@@ -30,8 +34,6 @@ import { deadlineText } from "@/lib/deadline-text"
 import { ROLE_LABELS } from "@/lib/roles"
 
 type Decision = Database["public"]["Enums"]["decision"]
-
-const answersSchema = z.record(z.string(), z.unknown())
 
 function phaseNote(
   phase: ApplicationPhase,
