@@ -63,6 +63,27 @@ describe("fieldSchema", () => {
       max_size_mb: 5,
     })
   })
+
+  it("rejects file validation the storage bucket would refuse", () => {
+    const file = (validation: unknown) =>
+      fieldSchema.safeParse({
+        id,
+        type: "file",
+        label: "Resume",
+        help_text: null,
+        required: true,
+        options: null,
+        validation,
+        condition: null,
+      }).success
+    expect(file({ max_size_mb: 10 })).toBe(true)
+    expect(file({ max_size_mb: 0.5 })).toBe(true)
+    expect(file({ max_size_mb: 10.5 })).toBe(false)
+    expect(file({ max_size_mb: 0 })).toBe(false)
+    expect(file({ max_size_mb: Number.NaN })).toBe(false)
+    expect(file({ accept: ["image/png"] })).toBe(false)
+    expect(file({ accept: ["application/pdf", "image/png"] })).toBe(false)
+  })
 })
 
 describe("publishedSchemaSchema", () => {
