@@ -6,6 +6,7 @@ import {
   isChoiceType,
   type Field,
 } from "@workspace/forms"
+import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
 import { failure, ok, type ActionResult } from "@/lib/action-result"
@@ -120,4 +121,15 @@ export async function reorderFields(
     p_field_ids: ids,
   })
   return error ? failure(error) : ok
+}
+
+export async function publishForm(formId: string): Promise<ActionResult> {
+  const id = z.guid().parse(formId)
+  const { supabase } = await requireAdmin("organizer")
+
+  const { error } = await supabase.rpc("admin_publish_form", { p_form_id: id })
+  if (error) return failure(error)
+
+  revalidatePath("/forms", "layout")
+  return ok
 }

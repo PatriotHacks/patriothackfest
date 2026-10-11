@@ -20,6 +20,7 @@ import {
   FIELD_TYPES,
   type Field,
   isConditionSourceType,
+  validateForPublish,
   type FieldType,
 } from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
@@ -34,11 +35,12 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import { Textarea } from "@workspace/ui/components/textarea"
-import { useId, useState } from "react"
+import { useId, useState, useTransition } from "react"
 
 import {
   addField,
   archiveField,
+  publishForm,
   reorderFields,
   saveField,
   updateFormDetails,
@@ -87,6 +89,20 @@ export function FormBuilder({
   const [actionError, setActionError] = useState<string | null>(null)
   const [editedLocally, setEditedLocally] = useState(false)
   const autosave = useAutosave()
+  const [showIssues, setShowIssues] = useState(false)
+  const [publishErrors, setPublishErrors] = useState<string[]>([])
+  const [publishMessage, setPublishMessage] = useState<string | null>(null)
+  const [publishing, startPublish] = useTransition()
+  const issues = validateForPublish(
+    {
+      title,
+      submissions_close_at: form.submissions_close_at,
+      edits_lock_at: form.edits_lock_at,
+    },
+    fields
+  )
+  const visibleIssues = showIssues ? issues : []
+  const formIssues = visibleIssues.filter((i) => i.field_id === null)
   const dndId = useId()
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -141,6 +157,29 @@ export function FormBuilder({
     )
   }
 
+  function publish() {
+    setShowIssues(true)
+    setPublishErrors([])
+    setPublishMessage(null)
+    startPublish(async () => {
+      if (!(await autosave.flush())) {
+        setPublishErrors(["Fix the save errors before publishing"])
+        return
+      }
+      if (issues.length > 0) return
+      const { error } = await publishForm(form.id)
+      if (error) {
+        setPublishErrors(error.split("\n"))
+        return
+      }
+      setEditedLocally(false)
+      setShowIssues(false)
+      setPublishMessage(
+        form.status === "published" ? "Changes saved" : "Form published"
+      )
+    })
+  }
+
   function reorder({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return
     const from = fields.findIndex((f) => f.id === active.id)
@@ -193,7 +232,12 @@ export function FormBuilder({
         />
         <div className="ml-auto flex items-center gap-3">
           {canEdit && (
-            <SaveIndicator status={autosave.status} error={autosave.error} />
+            <>
+              <SaveIndicator status={autosave.status} error={autosave.error} />
+              <Button onClick={publish} disabled={publishing}>
+                {form.status === "published" ? "Save" : "Publish"}
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -202,6 +246,16 @@ export function FormBuilder({
         <p className="text-sm text-muted-foreground">
           You have read-only access to this form.
         </p>
+      )}
+      {publishMessage && <p className="text-sm">{publishMessage}</p>}
+      {(formIssues.length > 0 || publishErrors.length > 0) && (
+        <ul role="alert" className="text-sm text-destructive">
+          {[...formIssues.map((i) => i.message), ...publishErrors].map(
+            (message) => (
+              <li key={message}>{message}</li>
+            )
+          )}
+        </ul>
       )}
       {actionError && (
         <p role="alert" className="text-sm text-destructive">
@@ -274,7 +328,9 @@ export function FormBuilder({
                     conditionSources={fields
                       .slice(0, index)
                       .filter((f) => isConditionSourceType(f.type))}
-                    issues={[]}
+                    issues={visibleIssues
+                      .filter((i) => i.field_id === field.id)
+                      .map((i) => i.message)}
                     onChange={changeField}
                     onTypeChange={(type) => changeType(field, type)}
                     onArchive={() => archive(field)}
