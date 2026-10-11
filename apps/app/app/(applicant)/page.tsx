@@ -1,4 +1,4 @@
-import { formatInZone } from "@workspace/forms"
+import { formatDateRangeInZone, formatInZone } from "@workspace/forms"
 import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   const [events, forms, applications] = await Promise.all([
     supabase
       .from("events")
-      .select("id, slug, name, starts_at")
+      .select("id, slug, name, starts_at, ends_at")
       .order("starts_at", { nullsFirst: false })
       .order("slug"),
     supabase
@@ -137,7 +137,7 @@ export default async function DashboardPage() {
               <CardTitle>{event.name}</CardTitle>
               {event.starts_at && (
                 <CardDescription>
-                  Starts {formatInZone(event.starts_at)}
+                  {formatDateRangeInZone(event.starts_at, event.ends_at)}
                 </CardDescription>
               )}
               <CardAction>
