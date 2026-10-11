@@ -146,6 +146,7 @@ export type Database = {
         Row: {
           answers: NonNullable<Json>
           created_at: string
+          declined_at: string | null
           event_id: string
           form_id: string
           id: string
@@ -160,6 +161,7 @@ export type Database = {
         Insert: {
           answers?: NonNullable<Json>
           created_at?: string
+          declined_at?: string | null
           event_id: string
           form_id: string
           id?: string
@@ -173,6 +175,7 @@ export type Database = {
         Update: {
           answers?: NonNullable<Json>
           created_at?: string
+          declined_at?: string | null
           event_id?: string
           form_id?: string
           id?: string
@@ -449,6 +452,10 @@ export type Database = {
       current_admin_level: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["admin_level"]
+      }
+      decline_application_offer: {
+        Args: { p_application_id: string }
+        Returns: undefined
       }
       form_answered_field_ids: {
         Args: { p_form_id: string }
