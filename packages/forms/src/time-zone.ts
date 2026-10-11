@@ -57,3 +57,37 @@ export function formatInZone(iso: string, timeZone = EVENT_TIME_ZONE) {
     timeZoneName: "short",
   }).format(new Date(iso))
 }
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+]
+
+export function formatDateRangeInZone(
+  startIso: string,
+  endIso: string | null,
+  timeZone = EVENT_TIME_ZONE
+) {
+  const s = zonedParts(new Date(startIso), timeZone)
+  const startText = `${MONTHS[s.month - 1]} ${s.day}`
+  if (!endIso) return `${startText}, ${s.year}`
+  const e = zonedParts(new Date(endIso), timeZone)
+  if (s.year !== e.year) {
+    return `${startText}, ${s.year} – ${MONTHS[e.month - 1]} ${e.day}, ${e.year}`
+  }
+  if (s.month !== e.month) {
+    return `${startText} – ${MONTHS[e.month - 1]} ${e.day}, ${e.year}`
+  }
+  if (s.day !== e.day) return `${startText}–${e.day}, ${e.year}`
+  return `${startText}, ${s.year}`
+}

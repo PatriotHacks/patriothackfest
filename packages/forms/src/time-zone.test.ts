@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  formatDateRangeInZone,
   formatInZone,
   fromZonedInputValue,
   toZonedInputValue,
@@ -36,5 +37,40 @@ describe("time zone helpers", () => {
 
   it("rejects malformed input", () => {
     expect(() => fromZonedInputValue("2026-12-01")).toThrow()
+  })
+})
+
+describe("formatDateRangeInZone", () => {
+  it("formats a same-month range without rolling the 23:59:59 ET end", () => {
+    expect(
+      formatDateRangeInZone("2026-11-14T05:00:00Z", "2026-11-16T04:59:59Z")
+    ).toBe("Nov 14–15, 2026")
+    expect(
+      formatDateRangeInZone("2027-03-19T04:00:00Z", "2027-03-22T03:59:59Z")
+    ).toBe("Mar 19–21, 2027")
+  })
+
+  it("formats a range spanning months and a DST change", () => {
+    expect(
+      formatDateRangeInZone("2026-10-31T04:00:00Z", "2026-11-02T04:59:59Z")
+    ).toBe("Oct 31 – Nov 1, 2026")
+    expect(
+      formatDateRangeInZone("2027-03-30T04:00:00Z", "2027-04-02T03:59:59Z")
+    ).toBe("Mar 30 – Apr 1, 2027")
+  })
+
+  it("formats a range spanning years", () => {
+    expect(
+      formatDateRangeInZone("2027-01-01T04:59:59Z", "2027-01-02T04:59:59Z")
+    ).toBe("Dec 31, 2026 – Jan 1, 2027")
+  })
+
+  it("formats a single date when there is no end or it is the same day", () => {
+    expect(formatDateRangeInZone("2026-11-14T05:00:00Z", null)).toBe(
+      "Nov 14, 2026"
+    )
+    expect(
+      formatDateRangeInZone("2026-11-14T05:00:00Z", "2026-11-15T04:59:59Z")
+    ).toBe("Nov 14, 2026")
   })
 })
