@@ -7,6 +7,7 @@ import { AuthCard } from "@/components/auth/auth-card"
 import {
   AuthButton,
   AuthError,
+  AuthForm,
   AuthInput,
   AuthLabel,
   AuthTextButton,
@@ -62,8 +63,7 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
         title="Sign in"
         description="Enter your email to receive a one-time code."
       >
-        <form
-          className="flex flex-col gap-3"
+        <AuthForm
           onSubmit={(e) => {
             e.preventDefault()
             send()
@@ -88,11 +88,11 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
             aria-describedby={error ? "email-error" : undefined}
             disabled={pending}
           />
-          <AuthButton type="submit" className="mt-3" disabled={pending}>
+          <AuthButton type="submit" disabled={pending}>
             Send code
           </AuthButton>
           {error && <AuthError id="email-error">{error}</AuthError>}
-        </form>
+        </AuthForm>
       </AuthCard>
     )
   }
@@ -107,8 +107,7 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
         </>
       }
     >
-      <form
-        className="flex flex-col gap-3"
+      <AuthForm
         onSubmit={(e) => {
           e.preventDefault()
           verify(code)
@@ -122,7 +121,7 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
           pattern="\d{6}"
           placeholder="123456"
           autoFocus
-          className="text-center text-2xl tracking-[0.5em] md:text-2xl"
+          className="text-center text-[16px] tracking-[0.5em] md:text-[16px]"
           value={code}
           onChange={(e) => {
             const value = e.target.value
@@ -138,13 +137,12 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
         />
         <AuthButton
           type="submit"
-          className="mt-3"
           disabled={pending || code.length !== CODE_LENGTH}
         >
           Verify
         </AuthButton>
         {error && <AuthError id="code-error">{error}</AuthError>}
-        <div className="mt-2 flex flex-wrap justify-between gap-2">
+        <div className="mt-1 flex flex-wrap justify-between gap-2">
           <AuthTextButton onClick={changeEmail} disabled={pending}>
             Use a different email
           </AuthTextButton>
@@ -152,7 +150,7 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
             {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
           </AuthTextButton>
         </div>
-      </form>
+      </AuthForm>
     </AuthCard>
   )
 }
