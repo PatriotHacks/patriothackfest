@@ -9,7 +9,8 @@
     "test": "vitest run"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./templates": "./src/templates.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

@@ -1,18 +1,53 @@
 export type Decision = "accepted" | "waitlisted" | "rejected"
-export type ApplicantRole = "participant" | "volunteer" | "judge"
 
-export type DecisionEmailInput = {
-  decision: Decision
-  previousDecision?: Decision | "pending" | null
-  name: string | null
-  eventName: string
-  role: ApplicantRole
-  portalUrl: string
-}
+export const TEMPLATE_KEYS = [
+  "accepted",
+  "accepted_from_waitlisted",
+  "accepted_from_rejected",
+  "waitlisted",
+  "waitlisted_from_accepted",
+  "waitlisted_from_rejected",
+  "rejected",
+  "rejected_from_accepted",
+  "rejected_from_waitlisted",
+] as const
+
+export type TemplateKey = (typeof TEMPLATE_KEYS)[number]
+
+export const TEMPLATE_VARIABLES = [
+  "name",
+  "event_name",
+  "event_dates",
+  "role",
+  "dashboard_url",
+] as const
+
+export type TemplateVariable = (typeof TEMPLATE_VARIABLES)[number]
+
+export type TemplateValues = Record<TemplateVariable, string | null>
+
+export type EmailTemplate = { subject: string; body: string }
 
 export type RenderedEmail = { subject: string; text: string; html: string }
 
-const ORGANIZER = "Patriot HackFest"
+export const SUBJECT_MAX_LENGTH = 200
+export const BODY_MAX_LENGTH = 10000
+
+const VARIABLE = /\{\{\s*([^{}]*?)\s*\}\}/g
+
+export function templateKey(
+  decision: Decision,
+  previousDecision: Decision | "pending" | null | undefined
+): TemplateKey {
+  if (
+    previousDecision == null ||
+    previousDecision === "pending" ||
+    previousDecision === decision
+  ) {
+    return decision
+  }
+  return `${decision}_from_${previousDecision}` as TemplateKey
+}
 
 export function escapeHtml(value: string) {
   return value
@@ -23,96 +58,95 @@ export function escapeHtml(value: string) {
     .replaceAll("'", "&#39;")
 }
 
-function content({
-  decision,
-  previousDecision,
-  eventName,
-  role,
-}: DecisionEmailInput) {
-  const fromWaitlist = previousDecision === "waitlisted"
-  const isUpdate =
-    previousDecision != null &&
-    previousDecision !== "pending" &&
-    previousDecision !== decision &&
-    !(decision === "accepted" && fromWaitlist)
-  const updateSubject = `Update on your ${eventName} application`
-  const update = `We have an update on your application to be a ${role} at ${eventName}.`
-  const acceptanceChanged =
-    "We're sorry to share that your earlier acceptance has changed"
-  const apology = "We apologize for any confusion."
-
-  switch (decision) {
-    case "accepted":
-      return {
-        subject: isUpdate
-          ? updateSubject
-          : fromWaitlist
-            ? `A spot opened up at ${eventName}`
-            : `You're in: ${eventName}`,
-        paragraphs: [
-          isUpdate
-            ? `${update} We took another look, and we're happy to let you know you've been accepted.`
-            : fromWaitlist
-              ? `Good news: a spot opened up, and you've been moved off the waitlist. You're now accepted as a ${role} for ${eventName}.`
-              : `Congratulations! You've been accepted as a ${role} for ${eventName}.`,
-          "Event details and updates will be posted in the applicant portal.",
-          "If you can no longer attend, please decline your spot in the portal so we can offer it to someone on the waitlist.",
-        ],
-        signOff: "See you soon,",
-      }
-    case "waitlisted":
-      return {
-        subject: isUpdate
-          ? updateSubject
-          : `You're on the waitlist for ${eventName}`,
-        paragraphs: [
-          !isUpdate
-            ? `Thanks for applying to be a ${role} at ${eventName}. We received more applications than we have spots, so you're on our waitlist for now.`
-            : previousDecision === "accepted"
-              ? `${update} ${acceptanceChanged}, and you're now on our waitlist instead. ${apology}`
-              : `${update} We took another look, and you're now on our waitlist.`,
-          "If a spot opens up, we'll email you right away.",
-          "If your plans change, you can leave the waitlist in the applicant portal.",
-        ],
-        signOff: "Thanks for your patience,",
-      }
-    case "rejected":
-      return {
-        subject: isUpdate ? updateSubject : `Your ${eventName} application`,
-        paragraphs: [
-          !isUpdate
-            ? `Thank you for applying to be a ${role} at ${eventName}. We received many strong applications, and unfortunately we aren't able to offer you a spot this time.`
-            : fromWaitlist
-              ? `${update} Thank you for your patience while on the waitlist. Unfortunately, we aren't able to offer you a spot this time.`
-              : `${update} ${acceptanceChanged}, and we aren't able to offer you a spot this time. ${apology}`,
-          `We truly appreciate your interest and hope you'll apply to a future ${ORGANIZER} event.`,
-        ],
-        signOff: "Best,",
-      }
-  }
+function isVariable(name: string): name is TemplateVariable {
+  return (TEMPLATE_VARIABLES as readonly string[]).includes(name)
 }
 
-export function decisionEmail(input: DecisionEmailInput): RenderedEmail {
-  const { subject, paragraphs, signOff } = content(input)
-  const greeting = input.name ? `Hi ${input.name},` : "Hi there,"
-  const team = `The ${ORGANIZER} team`
+export function unknownVariables({ subject, body }: EmailTemplate) {
+  const names = [...`${subject}\n${body}`.matchAll(VARIABLE)].map((m) => m[1]!)
+  return [...new Set(names.filter((name) => !isVariable(name)))]
+}
 
-  const text = [
-    greeting,
-    ...paragraphs,
-    `Applicant portal: ${input.portalUrl}`,
-    `${signOff}\n${team}`,
-  ].join("\n\n")
+export function validateTemplate(template: EmailTemplate) {
+  const errors: string[] = []
+  const { subject, body } = template
+  if (!/\S/.test(subject)) errors.push("Subject is required.")
+  if (subject.length > SUBJECT_MAX_LENGTH)
+    errors.push(`Subject must be at most ${SUBJECT_MAX_LENGTH} characters.`)
+  if (/[\r\n]/.test(subject)) errors.push("Subject must be a single line.")
+  if (!/\S/.test(body)) errors.push("Body is required.")
+  if (body.length > BODY_MAX_LENGTH)
+    errors.push(`Body must be at most ${BODY_MAX_LENGTH} characters.`)
+  const unknown = unknownVariables(template)
+  if (unknown.length > 0)
+    errors.push(
+      `Unknown variables: ${unknown.map((name) => `{{${name}}}`).join(", ")}.`
+    )
+  return errors
+}
 
-  const p = (body: string) =>
-    `<p style="margin:0 0 16px;font-size:16px;line-height:24px;color:#1f2937">${body}</p>`
+function fill(
+  source: string,
+  values: TemplateValues,
+  format: (name: TemplateVariable, value: string) => string = (_, v) => v
+) {
+  return source.replace(VARIABLE, (_, name: string) => {
+    if (!isVariable(name)) throw new Error(`Unknown variable {{${name}}}`)
+    const value = values[name]
+    if (value === null) throw new Error(`No value for {{${name}}}`)
+    return format(name, value)
+  })
+}
+
+const UNLINKED: readonly TemplateVariable[] = ["name"]
+const TOKEN = /\uE000(\d+)\uE001/g
+const URL = /https?:\/\/[^\s<>"\uE000]*[^\s<>".,;:!?)'\]\uE000\uE001]/g
+
+function htmlLine(line: string, unlinked: string[]) {
+  let html = ""
+  let last = 0
+  for (const match of line.matchAll(URL)) {
+    const url = escapeHtml(match[0])
+    html += escapeHtml(line.slice(last, match.index))
+    html += `<a href="${url}" style="color:#006633">${url}</a>`
+    last = match.index + match[0].length
+  }
+  html += escapeHtml(line.slice(last))
+  return html.replace(TOKEN, (_, i: string) => escapeHtml(unlinked[Number(i)]!))
+}
+
+function paragraphs(text: string) {
+  return text
+    .replace(/\r\n?/g, "\n")
+    .trim()
+    .split(/\n[^\S\n]*\n\s*/)
+}
+
+export function renderTemplate(
+  template: EmailTemplate,
+  values: TemplateValues
+): RenderedEmail {
+  const subject = fill(template.subject, values).trim()
+  const text = paragraphs(fill(template.body, values)).join("\n\n")
+
+  const unlinked: string[] = []
+  const body = fill(template.body, values, (name, value) => {
+    if (!UNLINKED.includes(name)) return value
+    unlinked.push(value)
+    return `\uE000${unlinked.length - 1}\uE001`
+  })
+  const content = paragraphs(body)
+    .map((p) => {
+      const lines = p.split("\n").map((line) => htmlLine(line, unlinked))
+      return `<p style="margin:0 0 16px;font-size:16px;line-height:24px;color:#1f2937">${lines.join("<br>")}</p>`
+    })
+    .join("\n")
+
   const html = `<!doctype html>
 <html>
 <body style="margin:0;padding:24px;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">
 <div style="max-width:560px;margin:0 auto;padding:32px;background:#ffffff;border-radius:8px">
-${[greeting, ...paragraphs].map((s) => p(escapeHtml(s))).join("\n")}
-<p style="margin:24px 0"><a href="${escapeHtml(input.portalUrl)}" style="display:inline-block;padding:12px 20px;background:#006633;color:#ffffff;text-decoration:none;border-radius:6px;font-size:16px">Open the applicant portal</a></p>
-${p(`${escapeHtml(signOff)}<br>${escapeHtml(team)}`)}
+${content}
 </div>
 </body>
 </html>`

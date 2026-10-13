@@ -293,6 +293,39 @@ export type Database = {
           },
         ]
       }
+      email_templates: {
+        Row: {
+          body: string
+          key: string
+          subject: string
+          updated_at: string
+          updated_by: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          body: string
+          key: string
+          subject: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body?: string
+          key?: string
+          subject?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -480,7 +513,9 @@ export type Database = {
         Returns: {
           decision: Database["public"]["Enums"]["decision"]
           email: string
+          event_ends_at: string
           event_name: string
+          event_starts_at: string
           full_name: string
           id: string
           previous_decision: Database["public"]["Enums"]["decision"]

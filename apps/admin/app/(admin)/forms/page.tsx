@@ -1,11 +1,6 @@
 import { formatInZone } from "@workspace/forms"
 import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
+import { Card, CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { Separator } from "@workspace/ui/components/separator"
 import Link from "next/link"
@@ -13,18 +8,21 @@ import { Fragment } from "react"
 
 import { CreateFormButton } from "@/components/create-form-button"
 import { DeadlinesForm } from "@/components/deadlines-form"
+import { EventTabs } from "@/components/event-tabs"
 import { FormStatusBadges } from "@/components/form-status-badges"
 import { getAdmin } from "@/lib/admin"
+import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
 
-export default async function FormsPage() {
+export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
+  const { event: slug } = await searchParams
   const { supabase, level } = await getAdmin()
   const canEdit = hasLevel(level, "organizer")
 
   const [events, forms] = await Promise.all([
     supabase
       .from("events")
-      .select("id, slug, name, starts_at")
+      .select("id, slug, name, starts_at, ends_at")
       .order("starts_at", { nullsFirst: false })
       .order("slug"),
     supabase
@@ -36,14 +34,25 @@ export default async function FormsPage() {
   if (events.error) throw new Error(events.error.message)
   if (forms.error) throw new Error(forms.error.message)
 
+  const event = selectEvent(
+    events.data,
+    typeof slug === "string" ? slug : undefined
+  )
+
   return (
     <div className="flex max-w-4xl flex-col gap-6">
       <h1 className="text-2xl font-semibold">Forms</h1>
-      {events.data.map((event) => (
-        <Card key={event.id}>
-          <CardHeader>
-            <CardTitle>{event.name}</CardTitle>
-          </CardHeader>
+      {event ? (
+        <EventTabs
+          events={events.data}
+          selected={event.slug}
+          basePath="/forms"
+        />
+      ) : (
+        <p className="text-sm text-muted-foreground">No events</p>
+      )}
+      {event && (
+        <Card>
           <CardContent className="flex flex-col gap-4">
             {ROLES.map((role, index) => {
               const form = forms.data.find(
@@ -82,7 +91,7 @@ export default async function FormsPage() {
                       <div className="flex flex-wrap gap-2">
                         <Button asChild variant="outline" size="sm">
                           <Link
-                            href={`/applications?event=${event.id}&role=${role}`}
+                            href={`/applications?event=${encodeURIComponent(event.slug)}&role=${role}`}
                           >
                             Applications
                           </Link>
@@ -117,7 +126,7 @@ export default async function FormsPage() {
             })}
           </CardContent>
         </Card>
-      ))}
+      )}
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 
 import { ApplicationFiltersForm } from "@/components/application-filters-form"
 import { ApplicationsTable } from "@/components/applications-table"
+import { EventTabs } from "@/components/event-tabs"
 import { getAdmin } from "@/lib/admin"
 import {
   applyFilters,
@@ -15,6 +16,7 @@ import {
   parsePage,
 } from "@/lib/application-filters"
 import { decisionBlockedReason } from "@/lib/decisions"
+import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
 import { STATUS_LABELS } from "@/lib/roles"
 
@@ -24,18 +26,23 @@ export default async function ApplicationsPage({
   searchParams,
 }: PageProps<"/applications">) {
   const params = await searchParams
-  const filters = parseFilters(params)
   const page = parsePage(params)
   const { supabase, level } = await getAdmin()
   const isOrganizer = hasLevel(level, "organizer")
   const from = (page - 1) * PAGE_SIZE
 
-  const [events, forms, applications] = await Promise.all([
-    supabase
-      .from("events")
-      .select("id, name")
-      .order("starts_at", { nullsFirst: false })
-      .order("slug"),
+  const events = await supabase
+    .from("events")
+    .select("id, slug, name, starts_at, ends_at")
+    .order("starts_at", { nullsFirst: false })
+    .order("slug")
+  if (events.error) throw new Error(events.error.message)
+
+  const parsed = parseFilters(params)
+  const event = selectEvent(events.data, parsed.event)
+  const filters = { ...parsed, event: event?.slug }
+
+  const [forms, applications] = await Promise.all([
     supabase.from("forms").select("id, event_id, role"),
     applyFilters(
       supabase
@@ -53,7 +60,6 @@ export default async function ApplicationsPage({
       .order("id", { ascending: false })
       .range(from, from + PAGE_SIZE - 1),
   ])
-  if (events.error) throw new Error(events.error.message)
   if (forms.error) throw new Error(forms.error.message)
   if (applications.error?.code === "PGRST103")
     redirect(`/applications${filtersQuery(filters)}`)
@@ -61,7 +67,7 @@ export default async function ApplicationsPage({
 
   const total = applications.count ?? 0
   const form = forms.data.find(
-    (f) => f.event_id === filters.event && f.role === filters.role
+    (f) => f.event_id === event?.id && f.role === filters.role
   )
   const detailQuery = filtersQuery(filters, { page: String(page) })
 
@@ -75,7 +81,14 @@ export default async function ApplicationsPage({
           </Button>
         )}
       </div>
-      <ApplicationFiltersForm filters={filters} events={events.data} />
+      {event && (
+        <EventTabs
+          events={events.data}
+          selected={event.slug}
+          basePath="/applications"
+        />
+      )}
+      <ApplicationFiltersForm filters={filters} />
       <ApplicationsTable
         key={detailQuery}
         rows={applications.data.map((a) => ({
