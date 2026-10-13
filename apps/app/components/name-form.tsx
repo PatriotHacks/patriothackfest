@@ -1,11 +1,14 @@
 "use client"
 
-import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
 import { useState, useTransition } from "react"
 
 import { saveFullName } from "@/app/(applicant)/welcome/actions"
+import {
+  AuthButton,
+  AuthError,
+  AuthInput,
+  AuthLabel,
+} from "@/components/auth/auth-fields"
 
 export function NameForm() {
   const [name, setName] = useState("")
@@ -24,11 +27,13 @@ export function NameForm() {
         })
       }}
     >
-      <Label htmlFor="full-name">Full name</Label>
-      <Input
+      <AuthLabel htmlFor="full-name">Full name</AuthLabel>
+      <AuthInput
         id="full-name"
         autoComplete="name"
+        placeholder="Jane Doe"
         required
+        autoFocus
         maxLength={100}
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -36,14 +41,14 @@ export function NameForm() {
         aria-describedby={error ? "full-name-error" : undefined}
         disabled={pending}
       />
-      <Button type="submit" disabled={pending || name.trim() === ""}>
+      <AuthButton
+        type="submit"
+        className="mt-3"
+        disabled={pending || name.trim() === ""}
+      >
         Continue
-      </Button>
-      {error && (
-        <p id="full-name-error" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
+      </AuthButton>
+      {error && <AuthError id="full-name-error">{error}</AuthError>}
     </form>
   )
 }
