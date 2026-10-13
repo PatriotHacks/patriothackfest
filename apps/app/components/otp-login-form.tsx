@@ -120,7 +120,6 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
           inputMode="numeric"
           autoComplete="one-time-code"
           pattern="\d{6}"
-          maxLength={CODE_LENGTH}
           placeholder="123456"
           autoFocus
           className="text-center text-2xl tracking-[0.5em] md:text-2xl"
