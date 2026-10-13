@@ -91,7 +91,7 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
                       <div className="flex flex-wrap gap-2">
                         <Button asChild variant="outline" size="sm">
                           <Link
-                            href={`/applications?event=${event.slug}&role=${role}`}
+                            href={`/applications?event=${encodeURIComponent(event.slug)}&role=${role}`}
                           >
                             Applications
                           </Link>
