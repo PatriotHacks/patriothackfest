@@ -51,6 +51,7 @@ insert into public.forms (id, event_id, role, title, submissions_close_at, edits
    now() + interval '1 day', now() + interval '2 days');
 
 insert into public.form_fields (id, form_id, position, type, label, options) values
+  ('d0000000-0000-0000-0000-00000000000a', 'f0000000-0000-0000-0000-000000000001', 0, 'section', 'About you', null),
   ('d0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001', 1, 'short_text', 'Name', null),
   ('d0000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000001', 2, 'single_choice', 'Size', '["S", "XL"]');
 
