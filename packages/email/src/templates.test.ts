@@ -1,13 +1,20 @@
 import { describe, expect, it } from "vitest"
 
-import { decisionEmail, escapeHtml, type DecisionEmailInput } from "./templates"
+import {
+  escapeHtml,
+  renderTemplate,
+  templateKey,
+  unknownVariables,
+  validateTemplate,
+  type TemplateValues,
+} from "./templates"
 
-const base: DecisionEmailInput = {
-  decision: "accepted",
+const values: TemplateValues = {
   name: "Ada",
-  eventName: "Patriot HackFest 2026",
+  event_name: "Patriot HackFest 2026",
+  event_dates: "Nov 14–15, 2026",
   role: "participant",
-  portalUrl: "https://app.patriothackfest.com",
+  dashboard_url: "https://app.patriothackfest.com",
 }
 
 describe("escapeHtml", () => {
@@ -18,182 +25,159 @@ describe("escapeHtml", () => {
   })
 })
 
-describe("decisionEmail", () => {
-  it("congratulates accepted applicants and mentions declining", () => {
-    const email = decisionEmail(base)
+describe("templateKey", () => {
+  it("uses the decision alone without a different previous decision", () => {
+    for (const previous of [null, undefined, "pending"] as const) {
+      expect(templateKey("accepted", previous)).toBe("accepted")
+      expect(templateKey("waitlisted", previous)).toBe("waitlisted")
+      expect(templateKey("rejected", previous)).toBe("rejected")
+    }
+    expect(templateKey("waitlisted", "waitlisted")).toBe("waitlisted")
+  })
+
+  it("selects the change variant for a different previous decision", () => {
+    expect(templateKey("accepted", "waitlisted")).toBe(
+      "accepted_from_waitlisted"
+    )
+    expect(templateKey("accepted", "rejected")).toBe("accepted_from_rejected")
+    expect(templateKey("waitlisted", "accepted")).toBe(
+      "waitlisted_from_accepted"
+    )
+    expect(templateKey("waitlisted", "rejected")).toBe(
+      "waitlisted_from_rejected"
+    )
+    expect(templateKey("rejected", "accepted")).toBe("rejected_from_accepted")
+    expect(templateKey("rejected", "waitlisted")).toBe(
+      "rejected_from_waitlisted"
+    )
+  })
+})
+
+describe("renderTemplate", () => {
+  it("fills variables in the subject and body", () => {
+    const email = renderTemplate(
+      {
+        subject: "You're in: {{ event_name }}",
+        body: "Hi {{name}},\n\nSee you {{event_dates}} as a {{role}}.",
+      },
+      values
+    )
     expect(email.subject).toBe("You're in: Patriot HackFest 2026")
-    expect(email.text).toContain("Hi Ada,")
-    expect(email.text).toContain(
-      "accepted as a participant for Patriot HackFest 2026"
+    expect(email.text).toBe(
+      "Hi Ada,\n\nSee you Nov 14–15, 2026 as a participant."
     )
-    expect(email.text).toContain("decline your spot in the portal")
-    expect(email.text).toContain(
-      "Applicant portal: https://app.patriothackfest.com"
+  })
+
+  it("splits paragraphs on blank lines and breaks single newlines", () => {
+    const email = renderTemplate(
+      { subject: "s", body: "\n\nOne\r\ntwo\n  \n\n\nThree\n\n" },
+      values
     )
-    expect(email.text).toContain("The Patriot HackFest team")
-    expect(email.text).not.toContain("spot opened up")
-    expect(email.html).toContain('href="https://app.patriothackfest.com"')
-    expect(email.html).toContain("decline your spot in the portal")
-  })
-
-  it("says a spot opened up when promoted from the waitlist", () => {
-    const email = decisionEmail({ ...base, previousDecision: "waitlisted" })
-    expect(email.subject).toBe("A spot opened up at Patriot HackFest 2026")
-    expect(email.text).toContain("a spot opened up")
-    expect(email.text).toContain("moved off the waitlist")
-    expect(email.text).not.toContain("Congratulations")
-  })
-
-  it("uses fresh wording without a previous final decision", () => {
-    for (const previousDecision of ["pending", null, undefined] as const) {
-      const email = decisionEmail({ ...base, previousDecision })
-      expect(email.subject).toBe("You're in: Patriot HackFest 2026")
-      expect(email.text).not.toContain("spot opened up")
-    }
-  })
-
-  it("tells waitlisted applicants they can leave the waitlist", () => {
-    const email = decisionEmail({
-      ...base,
-      decision: "waitlisted",
-      role: "volunteer",
-    })
-    expect(email.subject).toBe(
-      "You're on the waitlist for Patriot HackFest 2026"
+    expect(email.text).toBe("One\ntwo\n\nThree")
+    const paragraphs = [...email.html.matchAll(/<p [^>]*>(.*?)<\/p>/g)].map(
+      (m) => m[1]
     )
-    expect(email.text).toContain("be a volunteer at Patriot HackFest 2026")
-    expect(email.text).toContain("leave the waitlist in the applicant portal")
+    expect(paragraphs).toEqual(["One<br>two", "Three"])
   })
 
-  it("words rejections gently", () => {
-    const email = decisionEmail({
-      ...base,
-      decision: "rejected",
-      role: "judge",
-    })
-    expect(email.subject).toBe("Your Patriot HackFest 2026 application")
-    expect(email.text).toContain("Thank you for applying to be a judge")
-    expect(email.text).toContain("aren't able to offer you a spot")
-    expect(email.text).toContain("hope you'll apply to a future")
-    expect(email.text).not.toMatch(/reject/i)
-    expect(email.html).not.toMatch(/reject/i)
-  })
-
-  it("words waitlisted to rejected as an update that thanks their patience", () => {
-    const email = decisionEmail({
-      ...base,
-      decision: "rejected",
-      previousDecision: "waitlisted",
-    })
-    expect(email.subject).toBe(
-      "Update on your Patriot HackFest 2026 application"
+  it("escapes template text and variable values", () => {
+    const email = renderTemplate(
+      { subject: "s", body: "<b>Hi</b> {{name}} & co" },
+      { ...values, name: `<script>alert("x")</script>` }
     )
-    expect(email.text).toContain("We have an update on your application")
-    expect(email.text).toContain("patience while on the waitlist")
-    expect(email.text).toContain("aren't able to offer you a spot")
-    expect(email.text).not.toMatch(/reject/i)
-  })
-
-  it("words rejected to accepted as an update", () => {
-    const email = decisionEmail({ ...base, previousDecision: "rejected" })
-    expect(email.subject).toBe(
-      "Update on your Patriot HackFest 2026 application"
+    expect(email.html).toContain(
+      "&lt;b&gt;Hi&lt;/b&gt; &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; co"
     )
-    expect(email.text).toContain("We have an update on your application")
-    expect(email.text).toContain("you've been accepted")
-    expect(email.text).toContain("decline your spot in the portal")
-    expect(email.text).not.toContain("Congratulations")
-    expect(email.text).not.toContain("spot opened up")
-  })
-
-  it("words accepted to waitlisted as an update with an apology", () => {
-    const email = decisionEmail({
-      ...base,
-      decision: "waitlisted",
-      previousDecision: "accepted",
-    })
-    expect(email.subject).toBe(
-      "Update on your Patriot HackFest 2026 application"
-    )
-    expect(email.text).toContain("earlier acceptance has changed")
-    expect(email.text).toContain("now on our waitlist instead")
-    expect(email.text).toContain("apologize for any confusion")
-    expect(email.text).not.toContain("Thanks for applying")
-  })
-
-  it("words rejected to waitlisted as an update", () => {
-    const email = decisionEmail({
-      ...base,
-      decision: "waitlisted",
-      previousDecision: "rejected",
-    })
-    expect(email.subject).toBe(
-      "Update on your Patriot HackFest 2026 application"
-    )
-    expect(email.text).toContain("We took another look")
-    expect(email.text).toContain("now on our waitlist")
-    expect(email.text).not.toContain("earlier acceptance")
-    expect(email.text).not.toMatch(/reject/i)
-  })
-
-  it("words accepted to rejected as an update with an apology", () => {
-    const email = decisionEmail({
-      ...base,
-      decision: "rejected",
-      previousDecision: "accepted",
-    })
-    expect(email.subject).toBe(
-      "Update on your Patriot HackFest 2026 application"
-    )
-    expect(email.text).toContain("earlier acceptance has changed")
-    expect(email.text).toContain("aren't able to offer you a spot")
-    expect(email.text).toContain("apologize for any confusion")
-    expect(email.html).toContain("We&#39;re sorry to share")
-    expect(email.text).not.toMatch(/reject/i)
-  })
-
-  it("uses first-time wording when the previous decision is the same", () => {
-    for (const decision of ["accepted", "waitlisted", "rejected"] as const) {
-      const email = decisionEmail({
-        ...base,
-        decision,
-        previousDecision: decision,
-      })
-      expect(email.subject).not.toContain("Update")
-      expect(email.text).not.toContain("We have an update")
-    }
-  })
-
-  it("greets applicants without a name", () => {
-    expect(decisionEmail({ ...base, name: null }).text).toMatch(/^Hi there,/)
-  })
-
-  it("escapes interpolated values in HTML only", () => {
-    const email = decisionEmail({
-      ...base,
-      name: `<script>alert("x")</script>`,
-      eventName: "Hack & Learn",
-      portalUrl: `https://example.com/?a=1&b="><img src=x>`,
-    })
     expect(email.html).not.toContain("<script>")
-    expect(email.html).not.toContain("<img")
-    expect(email.html).toContain(
-      "Hi &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;,"
-    )
-    expect(email.html).toContain("Hack &amp; Learn")
-    expect(email.html).toContain(
-      'href="https://example.com/?a=1&amp;b=&quot;&gt;&lt;img src=x&gt;"'
-    )
-    expect(email.text).toContain(`Hi <script>alert("x")</script>,`)
-    expect(email.subject).toBe("You're in: Hack & Learn")
+    expect(email.text).toContain(`<script>alert("x")</script>`)
   })
 
-  it("renders self-contained HTML without external assets", () => {
-    for (const decision of ["accepted", "waitlisted", "rejected"] as const) {
-      const { html } = decisionEmail({ ...base, decision })
-      expect(html).not.toMatch(/<(img|link|script)\b/)
-      expect(html).not.toContain("<style")
-      expect(html).toMatch(/^<!doctype html>/)
-    }
+  it("autolinks URLs without trailing punctuation", () => {
+    const email = renderTemplate(
+      {
+        subject: "s",
+        body: "Portal: {{dashboard_url}}. Docs (https://x.test/a?b=1&c=2), ok",
+      },
+      values
+    )
+    expect(email.html).toContain(
+      '<a href="https://app.patriothackfest.com" style="color:#006633">https://app.patriothackfest.com</a>.'
+    )
+    expect(email.html).toContain(
+      '(<a href="https://x.test/a?b=1&amp;c=2" style="color:#006633">https://x.test/a?b=1&amp;c=2</a>), ok'
+    )
+  })
+
+  it("does not link URLs in applicant names", () => {
+    const email = renderTemplate(
+      { subject: "s", body: "Hi {{name}}," },
+      { ...values, name: "https://evil.test" }
+    )
+    expect(email.html).toContain("Hi https://evil.test,")
+    expect(email.html).not.toContain("<a ")
+  })
+
+  it("does not re-expand variables inside values", () => {
+    const email = renderTemplate(
+      { subject: "{{name}}", body: "{{name}}" },
+      { ...values, name: "{{event_name}}" }
+    )
+    expect(email.subject).toBe("{{event_name}}")
+    expect(email.text).toBe("{{event_name}}")
+  })
+
+  it("throws on unknown or missing variables", () => {
+    expect(() =>
+      renderTemplate({ subject: "s", body: "{{nope}}" }, values)
+    ).toThrow("Unknown variable {{nope}}")
+    expect(() =>
+      renderTemplate(
+        { subject: "{{event_dates}}", body: "b" },
+        { ...values, event_dates: null }
+      )
+    ).toThrow("No value for {{event_dates}}")
+  })
+
+  it("wraps the body in the branded layout", () => {
+    const { html } = renderTemplate({ subject: "s", body: "Hello" }, values)
+    expect(html).toMatch(/^<!doctype html>/)
+    expect(html).toContain("background:#f3f4f6")
+    expect(html).toContain("max-width:560px")
+  })
+})
+
+describe("validateTemplate", () => {
+  it("accepts a valid template", () => {
+    expect(
+      validateTemplate({ subject: "Hi {{name}}", body: "{{dashboard_url}}" })
+    ).toEqual([])
+  })
+
+  it("lists unknown variables once each", () => {
+    expect(
+      unknownVariables({
+        subject: "{{first_name}}",
+        body: "{{ first_name }} {{Event}} {{name}} {{}}",
+      })
+    ).toEqual(["first_name", "Event", ""])
+    expect(
+      validateTemplate({ subject: "{{first_name}}", body: "{{portal}}" })
+    ).toEqual(["Unknown variables: {{first_name}}, {{portal}}."])
+  })
+
+  it("rejects blank, long, and multi-line subjects and bodies", () => {
+    expect(validateTemplate({ subject: " \t", body: "\n \n" })).toEqual([
+      "Subject is required.",
+      "Body is required.",
+    ])
+    expect(
+      validateTemplate({ subject: "a".repeat(201), body: "b".repeat(10001) })
+    ).toEqual([
+      "Subject must be at most 200 characters.",
+      "Body must be at most 10000 characters.",
+    ])
+    expect(validateTemplate({ subject: "a\nb", body: "b" })).toEqual([
+      "Subject must be a single line.",
+    ])
   })
 })
