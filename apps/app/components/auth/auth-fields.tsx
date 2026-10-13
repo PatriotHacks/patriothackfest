@@ -8,7 +8,7 @@ export function AuthForm({
   ...props
 }: React.ComponentProps<"form">) {
   return (
-    <form className={cn("flex flex-col gap-[7.5px]", className)} {...props} />
+    <form className={cn("flex flex-col gap-[6px]", className)} {...props} />
   )
 }
 
@@ -19,7 +19,7 @@ export function AuthLabel({
   return (
     <Label
       className={cn(
-        "text-[15px] font-semibold tracking-[0.16em] text-[#6E6E68] uppercase",
+        "text-[12.5px] font-semibold tracking-[0.16em] text-[#6E6E68] uppercase",
         className
       )}
       {...props}
@@ -34,7 +34,7 @@ export function AuthInput({
   return (
     <Input
       className={cn(
-        "h-[57px] rounded-[9px] border-2 border-[#3A4A2B] bg-white px-[15px] text-[18px] text-[#2A2A26] placeholder:text-[#A3A39B] focus-visible:border-[#3A4A2B] focus-visible:ring-3 focus-visible:ring-[#3A4A2B]/20 md:text-[18px] dark:bg-white",
+        "h-[47.5px] rounded-[7.5px] border-2 border-[#3A4A2B] bg-white px-[12.5px] text-[15px] text-[#2A2A26] placeholder:text-[#A3A39B] focus-visible:border-[#3A4A2B] focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/20 md:text-[15px] dark:bg-white",
         className
       )}
       {...props}
@@ -49,7 +49,7 @@ export function AuthButton({
   return (
     <Button
       className={cn(
-        "mt-[30px] h-[52.5px] w-full rounded-full bg-[#3A4A2B] text-[17px] font-medium text-[#F8F7F2] hover:bg-[#3A4A2B]/90 focus-visible:ring-3 focus-visible:ring-[#3A4A2B]/30",
+        "mt-[25px] h-[44px] w-full rounded-full bg-[#3A4A2B] text-[14.5px] font-medium text-[#F8F7F2] hover:bg-[#3A4A2B]/90 focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/30",
         className
       )}
       {...props}
@@ -65,7 +65,7 @@ export function AuthTextButton({
     <button
       type="button"
       className={cn(
-        "text-[15px] text-[#3A4A2B] underline-offset-3 hover:underline disabled:cursor-not-allowed disabled:text-[#A3A39B] disabled:no-underline",
+        "text-[12.5px] text-[#3A4A2B] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:text-[#A3A39B] disabled:no-underline",
         className
       )}
       {...props}
@@ -78,7 +78,7 @@ export function AuthError({ className, ...props }: React.ComponentProps<"p">) {
     <p
       role="alert"
       className={cn(
-        "my-1.5 rounded-[9px] border border-destructive/20 bg-destructive/5 px-[15px] py-[10.5px] text-[15px] text-destructive",
+        "my-[5px] rounded-[7.5px] border border-destructive/20 bg-destructive/5 px-[12.5px] py-[9px] text-[12.5px] text-destructive",
         className
       )}
       {...props}
