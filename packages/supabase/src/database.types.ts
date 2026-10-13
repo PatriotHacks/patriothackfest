@@ -359,6 +359,7 @@ export type Database = {
           archived_at: string | null
           condition: Json | null
           created_at: string
+          editable_after_submit: boolean
           form_id: string
           help_text: string | null
           id: string
@@ -375,6 +376,7 @@ export type Database = {
           archived_at?: string | null
           condition?: Json | null
           created_at?: string
+          editable_after_submit?: boolean
           form_id: string
           help_text?: string | null
           id?: string
@@ -390,6 +392,7 @@ export type Database = {
           archived_at?: string | null
           condition?: Json | null
           created_at?: string
+          editable_after_submit?: boolean
           form_id?: string
           help_text?: string | null
           id?: string
@@ -589,11 +592,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      form_locked_field_ids: { Args: { p_schema: Json }; Returns: string[] }
       has_admin_level: {
         Args: { min_level: Database["public"]["Enums"]["admin_level"] }
         Returns: boolean
       }
       js_trim: { Args: { p_value: string }; Returns: string }
+      locked_answer_errors: {
+        Args: { p_after: Json; p_before: Json; p_schema: Json }
+        Returns: Json
+      }
       prune_application_answers: {
         Args: { p_answers: Json; p_schema: Json }
         Returns: Json
@@ -640,6 +648,7 @@ export type Database = {
         | "multiple_choice"
         | "checkbox"
         | "file"
+        | "section"
       form_status: "draft" | "published"
     }
     CompositeTypes: {
@@ -780,6 +789,7 @@ export const Constants = {
         "multiple_choice",
         "checkbox",
         "file",
+        "section",
       ],
       form_status: ["draft", "published"],
     },
