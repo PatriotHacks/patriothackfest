@@ -1,51 +1,35 @@
 "use client"
 
 import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@workspace/ui/components/alert-dialog"
-import { Button } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
 import Link from "next/link"
 import { useState, useTransition } from "react"
 
 import { startApplication } from "@/app/(applicant)/apply/[eventSlug]/actions"
+import { AuthError } from "@/components/auth/auth-fields"
 
-type OpenForm = {
-  id: string
-  role: Role
-  title: string
-  description: string | null
-  closesAt: string
+export type RoleOption =
+  | { role: Role; status: "open"; formId: string; closesAt: string }
+  | { role: Role; status: "not_open" | "closed" }
+
+const ROLE_DESCRIPTIONS: Record<Role, string> = {
+  participant: "Build a project with a team over the weekend.",
+  volunteer: "Help run the event behind the scenes.",
+  judge: "Review projects and help pick the winners.",
 }
 
-export function RolePicker({
-  eventName,
-  forms,
-}: {
-  eventName: string
-  forms: OpenForm[]
-}) {
+const UNAVAILABLE_REASONS = {
+  not_open: "Not open yet",
+  closed: "Applications closed",
+}
+
+export function RolePicker({ options }: { options: RoleOption[] }) {
   const [error, setError] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Role | null>(null)
   const [pending, startTransition] = useTransition()
 
-  function start(formId: string) {
+  function start(role: Role, formId: string) {
     setError(null)
+    setSelected(role)
     startTransition(async () => {
       const result = await startApplication(formId)
       setError(result.error)
@@ -54,57 +38,62 @@ export function RolePicker({
 
   return (
     <div className="flex flex-col gap-3">
+      {options.map((option) => {
+        const open = option.status === "open"
+        return (
+          <button
+            key={option.role}
+            type="button"
+            disabled={!open || pending}
+            onClick={open ? () => start(option.role, option.formId) : undefined}
+            className="flex w-full items-center justify-between gap-4 rounded-2xl border-2 border-[#3A4A2B] bg-white px-6 py-5 text-left transition-colors outline-none hover:bg-[#3A4A2B]/5 focus-visible:ring-4 focus-visible:ring-[#3A4A2B]/20 disabled:cursor-not-allowed disabled:border-[#DAD7CC] disabled:bg-[#F1EFE8] disabled:hover:bg-[#F1EFE8]"
+          >
+            <span className="flex flex-col gap-1">
+              <span
+                className={
+                  open
+                    ? "text-xl font-semibold text-[#3A4A2B]"
+                    : "text-xl font-semibold text-[#A3A39B]"
+                }
+              >
+                {ROLE_LABELS[option.role]}
+              </span>
+              <span
+                className={
+                  open ? "text-sm text-[#6E6E68]" : "text-sm text-[#A3A39B]"
+                }
+              >
+                {ROLE_DESCRIPTIONS[option.role]}
+              </span>
+            </span>
+            <span
+              className={
+                open
+                  ? "shrink-0 text-right text-xs text-[#6E6E68]"
+                  : "shrink-0 text-right text-xs font-medium tracking-[0.12em] text-[#8A8A82] uppercase"
+              }
+            >
+              {open
+                ? pending && selected === option.role
+                  ? "Starting..."
+                  : `Closes ${option.closesAt}`
+                : UNAVAILABLE_REASONS[option.status]}
+            </span>
+          </button>
+        )
+      })}
+      <p className="mt-2 text-center text-sm text-[#6E6E68]">
+        You can apply for one role per event. Your role is final once you choose
+        it.
+      </p>
       {error && (
-        <p role="alert" className="text-sm text-destructive">
+        <AuthError>
           {error}{" "}
           <Link href="/" className="underline">
             Go to your applications
           </Link>
-        </p>
+        </AuthError>
       )}
-      {forms.map((form) => {
-        const label = ROLE_LABELS[form.role]
-        return (
-          <Card key={form.id}>
-            <CardHeader>
-              <CardTitle>{label}</CardTitle>
-              <CardDescription>
-                {form.title} - applications close {form.closesAt}
-              </CardDescription>
-              <CardAction>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button disabled={pending}>Apply as {label}</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Apply as {label}?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Your role is locked once you start. You can only have
-                        one application for {eventName}, and you cannot switch
-                        it to a different role later.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => start(form.id)}>
-                        Start application
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </CardAction>
-            </CardHeader>
-            {form.description && (
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap text-muted-foreground">
-                  {form.description}
-                </p>
-              </CardContent>
-            )}
-          </Card>
-        )
-      })}
     </div>
   )
 }
