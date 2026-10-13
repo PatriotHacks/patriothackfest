@@ -22,12 +22,12 @@ export function AuthCard({
     >
       <div className="flex flex-col items-center text-center">
         <Image
-          src="/logo.svg"
+          src="/logo.png"
           alt="Patriot HackFest"
-          width={72}
-          height={72}
+          width={400}
+          height={211}
           preload
-          className="h-[72px] w-auto"
+          className="h-[60px] w-auto"
         />
         <h1 className="mt-6 font-(family-name:--font-auth-serif) text-[44px] leading-[1.1] italic">
           {title}
