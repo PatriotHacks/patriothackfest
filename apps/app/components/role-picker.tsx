@@ -37,7 +37,7 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-[8px]">
       {options.map((option) => {
         const open = option.status === "open"
         return (
@@ -46,21 +46,23 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
             type="button"
             disabled={!open || pending}
             onClick={open ? () => start(option.role, option.formId) : undefined}
-            className="flex w-full items-center justify-between gap-4 rounded-2xl border-2 border-[#3A4A2B] bg-white px-6 py-5 text-left transition-colors outline-none hover:bg-[#3A4A2B]/5 focus-visible:ring-4 focus-visible:ring-[#3A4A2B]/20 disabled:cursor-not-allowed disabled:border-[#DAD7CC] disabled:bg-[#F1EFE8] disabled:hover:bg-[#F1EFE8]"
+            className="flex w-full items-center justify-between gap-[16.5px] rounded-[11px] border-2 border-[#3A4A2B] bg-white px-[16.5px] py-[14px] text-left transition-colors outline-none hover:bg-[#3A4A2B]/5 focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/20 disabled:cursor-not-allowed disabled:border-[#DAD7CC] disabled:bg-[#F1EFE8] disabled:hover:bg-[#F1EFE8]"
           >
-            <span className="flex flex-col gap-1">
+            <span className="flex flex-col gap-[3px]">
               <span
                 className={
                   open
-                    ? "text-xl font-semibold text-[#3A4A2B]"
-                    : "text-xl font-semibold text-[#A3A39B]"
+                    ? "text-[17.5px] font-semibold text-[#3A4A2B]"
+                    : "text-[17.5px] font-semibold text-[#A3A39B]"
                 }
               >
                 {ROLE_LABELS[option.role]}
               </span>
               <span
                 className={
-                  open ? "text-sm text-[#6E6E68]" : "text-sm text-[#A3A39B]"
+                  open
+                    ? "text-[14px] text-[#6E6E68]"
+                    : "text-[14px] text-[#A3A39B]"
                 }
               >
                 {ROLE_DESCRIPTIONS[option.role]}
@@ -69,8 +71,8 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
             <span
               className={
                 open
-                  ? "shrink-0 text-right text-xs text-[#6E6E68]"
-                  : "shrink-0 text-right text-xs font-medium tracking-[0.12em] text-[#8A8A82] uppercase"
+                  ? "shrink-0 text-right text-[12px] text-[#6E6E68]"
+                  : "shrink-0 text-right text-[12px] font-medium tracking-[0.12em] text-[#8A8A82] uppercase"
               }
             >
               {open
@@ -82,7 +84,7 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
           </button>
         )
       })}
-      <p className="mt-2 text-center text-sm text-[#6E6E68]">
+      <p className="mt-[5.5px] text-center text-[14px] text-[#6E6E68]">
         You can apply for one role per event. Your role is final once you choose
         it.
       </p>
