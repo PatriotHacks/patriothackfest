@@ -17,7 +17,7 @@ export function AuthCard({
       className={cn(
         authSerif.variable,
         authSans.variable,
-        "w-full max-w-[390px] rounded-[12.5px] border border-[#E7E4D9] bg-[#fef9ef] px-[15px] pt-[22.5px] pb-[16px] font-(family-name:--font-auth-sans) text-[#3A4A2B] shadow-[0_1px_2px_rgb(58_74_43/0.05),0_7.5px_20px_rgb(58_74_43/0.06)]"
+        "w-full max-w-[429px] rounded-[13.5px] border border-[#E7E4D9] bg-[#fef9ef] px-[16.5px] pt-[25px] pb-[17.5px] font-(family-name:--font-auth-sans) text-[#3A4A2B] shadow-[0_1px_2px_rgb(58_74_43/0.05),0_8px_22px_rgb(58_74_43/0.06)]"
       )}
     >
       <div className="flex flex-col items-center text-center">
@@ -27,14 +27,14 @@ export function AuthCard({
           width={400}
           height={211}
           preload
-          className="h-[46px] w-auto"
+          className="h-[50.5px] w-auto"
         />
-        <h1 className="mt-[12.5px] font-(family-name:--font-auth-serif) text-[35px] leading-[1.05] italic">
+        <h1 className="mt-[14px] font-(family-name:--font-auth-serif) text-[38.5px] leading-[1.05] italic">
           {title}
         </h1>
-        <p className="mt-[10px] text-[13px] text-[#6E6E68]">{description}</p>
+        <p className="mt-[11px] text-[14.5px] text-[#6E6E68]">{description}</p>
       </div>
-      <div className="mt-5">{children}</div>
+      <div className="mt-[22px]">{children}</div>
     </div>
   )
 }
