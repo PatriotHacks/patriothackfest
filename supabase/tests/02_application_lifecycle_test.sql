@@ -42,6 +42,8 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
 
 update public.forms
 set published_schema = '{"title": "Participant", "description": null, "fields": [
+  {"id": "d0000000-0000-0000-0000-00000000000a", "type": "section", "label": "Details", "help_text": null,
+   "required": false, "options": null, "validation": null, "condition": null, "editable_after_submit": true},
   {"id": "d0000000-0000-0000-0000-000000000001", "type": "short_text", "label": "Name", "help_text": null,
    "required": true, "options": null, "validation": null, "condition": null}
 ]}'

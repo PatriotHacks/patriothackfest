@@ -61,6 +61,8 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
   ('f0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'participant', 'Participant', 'published',
    now() + interval '1 day', now() + interval '2 days',
    '{"title": "Participant", "description": null, "fields": [
+     {"id": "d0000000-0000-0000-0000-00000000000a", "type": "section", "label": "Details", "help_text": null,
+      "required": false, "options": null, "validation": null, "condition": null, "editable_after_submit": true},
      {"id": "d0000000-0000-0000-0000-000000000001", "type": "single_choice", "label": "Size", "help_text": null,
       "required": true, "options": ["S", "XL"], "validation": null, "condition": null},
      {"id": "d0000000-0000-0000-0000-000000000002", "type": "long_text", "label": "Why XL?", "help_text": null,
