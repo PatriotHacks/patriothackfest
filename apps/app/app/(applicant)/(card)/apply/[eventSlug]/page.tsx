@@ -3,6 +3,7 @@ import { ROLES } from "@workspace/supabase/roles"
 import { notFound, redirect } from "next/navigation"
 
 import { AuthCard } from "@/components/auth/auth-card"
+import { SignOutLink } from "@/components/auth/sign-out-link"
 import { RolePicker, type RoleOption } from "@/components/role-picker"
 import { isFormOpen } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
@@ -54,13 +55,12 @@ export default async function ApplyPage({
   })
 
   return (
-    <div className="flex justify-center sm:pt-6">
-      <AuthCard
-        title={`Apply to ${event.name}`}
-        description="Choose the role you want to apply for."
-      >
-        <RolePicker options={options} />
-      </AuthCard>
-    </div>
+    <AuthCard
+      title={`Apply to ${event.name}`}
+      description="Choose the role you want to apply for."
+    >
+      <RolePicker options={options} />
+      <SignOutLink />
+    </AuthCard>
   )
 }

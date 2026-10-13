@@ -4,7 +4,7 @@ import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
 import Link from "next/link"
 import { useState, useTransition } from "react"
 
-import { startApplication } from "@/app/(applicant)/apply/[eventSlug]/actions"
+import { startApplication } from "@/app/(applicant)/(card)/apply/[eventSlug]/actions"
 import { AuthError } from "@/components/auth/auth-fields"
 
 export type RoleOption =

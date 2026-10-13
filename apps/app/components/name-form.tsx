@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 
-import { saveFullName } from "@/app/(applicant)/welcome/actions"
+import { saveFullName } from "@/app/(applicant)/(card)/welcome/actions"
 import {
   AuthButton,
   AuthError,
