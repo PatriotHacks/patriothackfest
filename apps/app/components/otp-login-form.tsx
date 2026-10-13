@@ -121,7 +121,7 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
           pattern="\d{6}"
           placeholder="123456"
           autoFocus
-          className="text-center text-[16px] tracking-[0.5em] md:text-[16px]"
+          className="text-center text-[24px] tracking-[0.5em] md:text-[24px]"
           value={code}
           onChange={(e) => {
             const value = e.target.value
@@ -142,7 +142,7 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
           Verify
         </AuthButton>
         {error && <AuthError id="code-error">{error}</AuthError>}
-        <div className="mt-1 flex flex-wrap justify-between gap-2">
+        <div className="mt-1.5 flex flex-wrap justify-between gap-2">
           <AuthTextButton onClick={changeEmail} disabled={pending}>
             Use a different email
           </AuthTextButton>
