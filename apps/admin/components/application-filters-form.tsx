@@ -59,19 +59,18 @@ const yesNo = [
 
 export function ApplicationFiltersForm({
   filters,
-  events,
 }: {
   filters: ApplicationFilters
-  events: { id: string; name: string }[]
 }) {
+  const clearHref = filters.event
+    ? `/applications?event=${encodeURIComponent(filters.event)}`
+    : "/applications"
+
   return (
     <form className="flex flex-wrap items-end gap-3" action="/applications">
-      <FilterSelect
-        name="event"
-        label="Event"
-        value={filters.event}
-        options={events.map((e) => ({ value: e.id, label: e.name }))}
-      />
+      {filters.event && (
+        <input type="hidden" name="event" value={filters.event} />
+      )}
       <FilterSelect
         name="role"
         label="Role"
@@ -117,7 +116,7 @@ export function ApplicationFiltersForm({
       </div>
       <Button type="submit">Apply</Button>
       <Button asChild variant="ghost">
-        <Link href="/applications">Clear</Link>
+        <Link href={clearHref}>Clear</Link>
       </Button>
     </form>
   )
