@@ -14,7 +14,7 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { useState, useTransition, type ComponentProps } from "react"
 
-import { declineOffer } from "@/app/(applicant)/applications/[id]/actions"
+import { declineOffer } from "@/app/(applicant)/(main)/applications/[id]/actions"
 import type { DeclinableDecision } from "@/lib/application-status"
 
 const COPY = {

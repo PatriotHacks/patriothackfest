@@ -14,7 +14,7 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { useState, useTransition } from "react"
 
-import { withdrawApplication } from "@/app/(applicant)/applications/[id]/actions"
+import { withdrawApplication } from "@/app/(applicant)/(main)/applications/[id]/actions"
 
 export function WithdrawButton({
   applicationId,

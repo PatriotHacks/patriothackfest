@@ -24,7 +24,7 @@ import {
   getUpdatedAt,
   saveAnswers,
   submitApplication,
-} from "@/app/(applicant)/applications/[id]/actions"
+} from "@/app/(applicant)/(main)/applications/[id]/actions"
 import { removeFiles } from "@/lib/application-files"
 
 import {
