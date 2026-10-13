@@ -54,7 +54,7 @@ export default async function ReleasePage({
     supabase
       .from("forms")
       .select(
-        "id, event_id, role, title, status, decisions_released_at, events(name)"
+        "id, event_id, role, title, status, decisions_released_at, events(name, slug)"
       )
       .eq("id", formId)
       .maybeSingle(),
@@ -67,7 +67,7 @@ export default async function ReleasePage({
   if (!form) notFound()
 
   const configured = isEmailConfigured()
-  const listHref = `/applications?event=${form.event_id}&role=${form.role}`
+  const listHref = `/applications?event=${form.events.slug}&role=${form.role}`
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">

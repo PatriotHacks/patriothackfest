@@ -9,7 +9,7 @@ const optional = <T extends z.ZodType>(schema: T) =>
   schema.optional().catch(undefined)
 
 const filtersSchema = z.object({
-  event: optional(z.guid()),
+  event: optional(z.string().trim().min(1).max(100)),
   role: optional(z.enum(ROLES)),
   status: optional(z.enum(STATUSES)),
   decision: optional(z.enum(DECISIONS)),
@@ -54,6 +54,7 @@ export function filterEmbeds<Columns extends string>(
   filters: ApplicationFilters
 ) {
   const embeds = [
+    filters.event && "filter_event:events!inner()",
     filters.q && "filter_profile:profiles!inner()",
     filters.released && "filter_form:forms!inner()",
     filters.decision === "pending" && "undecided:application_decisions()",
@@ -76,7 +77,7 @@ export function applyFilters<Query extends Filterable<Query>>(
   query: Query,
   filters: ApplicationFilters
 ) {
-  if (filters.event) query = query.eq("event_id", filters.event)
+  if (filters.event) query = query.eq("filter_event.slug", filters.event)
   if (filters.role) query = query.eq("role", filters.role)
   if (filters.status) query = query.eq("status", filters.status)
   if (filters.declined === "yes") query = query.not("declined_at", "is", null)
