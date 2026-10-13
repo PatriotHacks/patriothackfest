@@ -17,7 +17,7 @@ export function AuthCard({
       className={cn(
         authSerif.variable,
         authSans.variable,
-        "w-full max-w-[620px] rounded-[20px] border border-[#E7E4D9] bg-[#F8F7F2] px-6 py-10 font-(family-name:--font-auth-sans) text-[#3A4A2B] shadow-[0_1px_2px_rgb(58_74_43/0.05),0_12px_32px_rgb(58_74_43/0.06)] sm:px-14 sm:py-14"
+        "w-full max-w-[620px] rounded-[20px] border border-[#E7E4D9] bg-[#fef9ef] px-6 py-10 font-(family-name:--font-auth-sans) text-[#3A4A2B] shadow-[0_1px_2px_rgb(58_74_43/0.05),0_12px_32px_rgb(58_74_43/0.06)] sm:px-14 sm:py-14"
       )}
     >
       <div className="flex flex-col items-center text-center">
