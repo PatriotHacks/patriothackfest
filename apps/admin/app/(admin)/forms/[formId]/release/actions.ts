@@ -1,11 +1,14 @@
 "use server"
 
 import {
-  decisionEmail,
+  renderTemplate,
   sendBatch,
   smtpTransport,
+  templateKey,
+  type EmailTemplate,
   type SendResult,
 } from "@workspace/email"
+import { formatDateRangeInZone } from "@workspace/forms"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -53,6 +56,14 @@ export async function sendPendingEmails(formId: string): Promise<
   if (!isEmailConfigured()) return { error: EMAIL_NOT_CONFIGURED }
   const { smtp, portalUrl } = emailSettings()
 
+  const templateRows = await supabase
+    .from("email_templates")
+    .select("key, subject, body")
+  if (templateRows.error) return { error: templateRows.error.message }
+  const templates = new Map<string, EmailTemplate>(
+    templateRows.data.map((t) => [t.key, t])
+  )
+
   const claimed = await supabase.rpc("admin_claim_emails", {
     p_form_id: id,
     p_limit: BATCH_SIZE,
@@ -68,15 +79,22 @@ export async function sendPendingEmails(formId: string): Promise<
       (email) => {
         if (email.decision === "pending")
           throw new Error("Pending decisions are not emailed")
+        const key = templateKey(email.decision, email.previous_decision)
+        const template = templates.get(key)
+        if (!template) throw new Error(`Email template "${key}" is missing`)
         return {
           to: email.email,
-          ...decisionEmail({
-            decision: email.decision,
-            previousDecision: email.previous_decision,
-            name: email.full_name,
-            eventName: email.event_name,
+          ...renderTemplate(template, {
+            name: email.full_name || "there",
+            event_name: email.event_name,
+            event_dates: email.event_starts_at
+              ? formatDateRangeInZone(
+                  email.event_starts_at,
+                  email.event_ends_at
+                )
+              : null,
             role: email.role,
-            portalUrl,
+            dashboard_url: portalUrl,
           }),
         }
       },
