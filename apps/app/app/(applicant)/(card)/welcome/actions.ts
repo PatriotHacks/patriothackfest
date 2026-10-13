@@ -25,5 +25,5 @@ export async function saveFullName(name: string): Promise<ActionResult> {
   if (error) return failure(error)
   if (data.length === 0) return { error: "Profile not found" }
 
-  redirect("/")
+  redirect("/start")
 }

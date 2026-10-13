@@ -42,5 +42,5 @@ export async function verifyCode(
   })
   if (error) return failure(error)
 
-  redirect("/")
+  redirect("/start")
 }

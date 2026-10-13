@@ -1,21 +1,21 @@
 "use client"
 
-import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@workspace/ui/components/input-otp"
-import { Label } from "@workspace/ui/components/label"
 import { useEffect, useState, useTransition } from "react"
 
 import { sendCode, verifyCode } from "@/app/login/actions"
+import { AuthCard } from "@/components/auth/auth-card"
+import {
+  AuthButton,
+  AuthError,
+  AuthInput,
+  AuthLabel,
+  AuthTextButton,
+} from "@/components/auth/auth-fields"
 
 const RESEND_COOLDOWN_SECONDS = 60
-const DIGITS_ONLY = "^\\d+$"
+const CODE_LENGTH = 6
 
-export function OtpLoginForm() {
+export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
   const [email, setEmail] = useState("")
   const [code, setCode] = useState("")
   const [step, setStep] = useState<"email" | "code">("email")
@@ -58,90 +58,101 @@ export function OtpLoginForm() {
 
   if (step === "email") {
     return (
-      <form
-        className="flex w-full max-w-sm flex-col gap-3"
-        onSubmit={(e) => {
-          e.preventDefault()
-          send()
-        }}
+      <AuthCard
+        title="Sign in"
+        description="Enter your email to receive a one-time code."
       >
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          aria-invalid={error !== null}
-          disabled={pending}
-        />
-        <Button type="submit" disabled={pending}>
-          Email me a code
-        </Button>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-      </form>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            send()
+          }}
+        >
+          {sessionEnded && !error && (
+            <AuthError>
+              Your session has ended. Please sign in again with an email code.
+            </AuthError>
+          )}
+          <AuthLabel htmlFor="email">Email</AuthLabel>
+          <AuthInput
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            required
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={error !== null}
+            aria-describedby={error ? "email-error" : undefined}
+            disabled={pending}
+          />
+          <AuthButton type="submit" className="mt-3" disabled={pending}>
+            Send code
+          </AuthButton>
+          {error && <AuthError id="email-error">{error}</AuthError>}
+        </form>
+      </AuthCard>
     )
   }
 
   return (
-    <form
-      className="flex w-full max-w-sm flex-col items-center gap-3"
-      onSubmit={(e) => {
-        e.preventDefault()
-        verify(code)
-      }}
+    <AuthCard
+      title="Check your email"
+      description={
+        <>
+          We sent a 6-digit code to{" "}
+          <span className="font-medium text-[#3A4A2B]">{email}</span>.
+        </>
+      }
     >
-      <p className="text-center text-sm text-muted-foreground">
-        Enter the 6-digit code sent to {email}.
-      </p>
-      <InputOTP
-        maxLength={6}
-        pattern={DIGITS_ONLY}
-        autoComplete="one-time-code"
-        autoFocus
-        value={code}
-        onChange={(value) => {
-          setCode(value)
-          setError(null)
+      <form
+        className="flex flex-col gap-3"
+        onSubmit={(e) => {
+          e.preventDefault()
+          verify(code)
         }}
-        onComplete={verify}
-        disabled={pending}
       >
-        <InputOTPGroup>
-          {Array.from({ length: 6 }, (_, i) => (
-            <InputOTPSlot key={i} index={i} aria-invalid={error !== null} />
-          ))}
-        </InputOTPGroup>
-      </InputOTP>
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={pending || code.length !== 6}
-      >
-        Verify
-      </Button>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <div className="flex w-full justify-between">
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          onClick={changeEmail}
+        <AuthLabel htmlFor="code">Code</AuthLabel>
+        <AuthInput
+          id="code"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="\d{6}"
+          placeholder="123456"
+          autoFocus
+          className="text-center text-2xl tracking-[0.5em] md:text-2xl"
+          value={code}
+          onChange={(e) => {
+            const value = e.target.value
+              .replace(/\D/g, "")
+              .slice(0, CODE_LENGTH)
+            setCode(value)
+            setError(null)
+            if (value.length === CODE_LENGTH) verify(value)
+          }}
+          aria-invalid={error !== null}
+          aria-describedby={error ? "code-error" : undefined}
           disabled={pending}
+        />
+        <AuthButton
+          type="submit"
+          className="mt-3"
+          disabled={pending || code.length !== CODE_LENGTH}
         >
-          Use a different email
-        </Button>
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          onClick={send}
-          disabled={pending || cooldown > 0}
-        >
-          {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
-        </Button>
-      </div>
-    </form>
+          Verify
+        </AuthButton>
+        {error && <AuthError id="code-error">{error}</AuthError>}
+        <div className="mt-2 flex flex-wrap justify-between gap-2">
+          <AuthTextButton onClick={changeEmail} disabled={pending}>
+            Use a different email
+          </AuthTextButton>
+          <AuthTextButton onClick={send} disabled={pending || cooldown > 0}>
+            {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+          </AuthTextButton>
+        </div>
+      </form>
+    </AuthCard>
   )
 }
