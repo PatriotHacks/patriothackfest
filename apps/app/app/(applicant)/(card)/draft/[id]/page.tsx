@@ -1,5 +1,6 @@
 import {
   answersSchema,
+  endOfDayInZone,
   formatInZone,
   hasEditableSections,
   publishedSchemaSchema,
@@ -20,7 +21,7 @@ export default async function DraftPage({ params }: PageProps<"/draft/[id]">) {
   if (!z.guid().safeParse(id).success) notFound()
   const { supabase, userId, email } = await getNamedApplicant()
 
-  const [application, profile] = await Promise.all([
+  const [application, profile, submitted] = await Promise.all([
     supabase
       .from("applications")
       .select(
@@ -33,20 +34,26 @@ export default async function DraftPage({ params }: PageProps<"/draft/[id]">) {
       .select("full_name, school, phone, date_of_birth")
       .eq("id", userId)
       .single(),
+    supabase
+      .from("applications")
+      .select("events(starts_at, ends_at)")
+      .eq("user_id", userId)
+      .eq("status", "submitted"),
   ])
   if (application.error) throw new Error(application.error.message)
   if (profile.error) throw new Error(profile.error.message)
+  if (submitted.error) throw new Error(submitted.error.message)
   if (!application.data) notFound()
   const { data } = application
   if (data.status !== "draft") redirect(`/applications/${id}`)
 
+  const now = Date.now()
+  const basicLocked = submitted.data.some(({ events }) => {
+    const last = events.ends_at ?? events.starts_at
+    return last === null || now < Date.parse(endOfDayInZone(last))
+  })
   const form = data.forms
-  const phase = applicationPhase(
-    data.status,
-    data.declined_at,
-    form,
-    Date.now()
-  )
+  const phase = applicationPhase(data.status, data.declined_at, form, now)
   const schema =
     form.published_schema === null
       ? null
@@ -96,6 +103,7 @@ export default async function DraftPage({ params }: PageProps<"/draft/[id]">) {
         userId={userId}
         email={email}
         profile={profile.data}
+        basicLocked={basicLocked}
         schema={schema}
         initialAnswers={answersSchema.parse(data.answers)}
         updatedAt={data.updated_at}

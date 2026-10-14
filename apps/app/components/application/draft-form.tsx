@@ -44,6 +44,7 @@ type Props = {
   userId: string
   email: string
   profile: Profile
+  basicLocked: boolean
   schema: PublishedSchema
   initialAnswers: Answers
   updatedAt: string
@@ -71,6 +72,7 @@ export function DraftForm({
   userId,
   email,
   profile,
+  basicLocked,
   schema,
   initialAnswers,
   updatedAt,
@@ -216,7 +218,7 @@ export function DraftForm({
         value={basic}
         errors={basicErrors}
         email={email}
-        disabled={busy}
+        disabled={busy || basicLocked}
         onChange={updateBasic}
         onBlur={() => void basicSave.flush()}
       />
