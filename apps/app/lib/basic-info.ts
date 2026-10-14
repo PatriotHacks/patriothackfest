@@ -1,13 +1,28 @@
 import { toZonedInputValue } from "@workspace/forms"
 import * as z from "zod"
 
-import { isValidE164 } from "./phone"
+import { isValidE164, splitE164, toE164, type CountryCode } from "./phone"
 
 export type BasicInfo = {
   fullName: string
   school: string
   phone: string
   dateOfBirth: string
+}
+
+export type BasicInfoDraft = {
+  fullName: string
+  school: string
+  phoneCountry: CountryCode
+  phoneNational: string
+  dateOfBirth: string
+}
+
+export type Profile = {
+  full_name: string | null
+  school: string | null
+  phone: string | null
+  date_of_birth: string | null
 }
 
 export type BasicInfoKey = "full_name" | "school" | "phone" | "date_of_birth"
@@ -66,5 +81,38 @@ export function basicInfoErrors(
   )
     errors.date_of_birth = "Enter a valid date of birth"
 
+  return errors
+}
+
+export function draftFromProfile(profile: Profile): BasicInfoDraft {
+  const phone = splitE164(profile.phone)
+  return {
+    fullName: profile.full_name ?? "",
+    school: profile.school ?? "",
+    phoneCountry: phone.country,
+    phoneNational: phone.national,
+    dateOfBirth: profile.date_of_birth ?? "",
+  }
+}
+
+export function toBasicInfo(draft: BasicInfoDraft): BasicInfo {
+  return {
+    fullName: draft.fullName,
+    school: draft.school,
+    phone: toE164(draft.phoneCountry, draft.phoneNational) ?? "",
+    dateOfBirth: draft.dateOfBirth,
+  }
+}
+
+export function basicInfoDraftErrors(
+  draft: BasicInfoDraft,
+  mode: "draft" | "submit"
+): BasicInfoErrors {
+  const errors = basicInfoErrors(toBasicInfo(draft), mode)
+  if (
+    draft.phoneNational !== "" &&
+    toE164(draft.phoneCountry, draft.phoneNational) === null
+  )
+    errors.phone = "Enter a valid phone number"
   return errors
 }
