@@ -164,4 +164,18 @@ describe("validateAnswers", () => {
       )
     ).toEqual({})
   })
+
+  it("skips the given fields", () => {
+    const phone = field("short_text", { required: true })
+    const size = field("single_choice", { options: ["S", "M"] })
+    const bio = field("long_text", { required: true })
+    const schema = { fields: [phone, size, bio] }
+    expect(
+      validateAnswers(
+        schema,
+        { [size.id]: "XL" },
+        { mode: "submit", skip: new Set([phone.id, size.id]) }
+      )
+    ).toEqual({ [bio.id]: "Required" })
+  })
 })

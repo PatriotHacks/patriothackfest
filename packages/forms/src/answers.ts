@@ -95,11 +95,19 @@ function validateValue(field: Question, value: unknown): string | null {
 export function validateAnswers(
   schema: { fields: readonly Field[] },
   answers: Answers,
-  { mode }: { mode: ValidationMode }
+  {
+    mode,
+    skip = new Set(),
+  }: { mode: ValidationMode; skip?: ReadonlySet<string> }
 ) {
   const errors: AnswerErrors = {}
   for (const field of schema.fields) {
-    if (isSection(field) || !isFieldVisible(field, answers, schema)) continue
+    if (
+      isSection(field) ||
+      skip.has(field.id) ||
+      !isFieldVisible(field, answers, schema)
+    )
+      continue
     const value = answers[field.id]
     if (isEmptyAnswer(field, value)) {
       if (mode === "submit" && field.required) errors[field.id] = "Required"
