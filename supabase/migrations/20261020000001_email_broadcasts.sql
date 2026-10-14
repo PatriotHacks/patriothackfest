@@ -82,7 +82,7 @@ begin
 end;
 $$;
 
-create function public.admin_broadcast_recipient_count(p_event_id uuid, p_role public.app_role)
+create function public.admin_broadcast_recipient_count(p_event_id uuid, p_role public.app_role default null)
 returns table (recipients integer, sent_last_24h integer)
 language plpgsql
 stable
@@ -114,10 +114,10 @@ $$;
 
 create function public.admin_create_broadcast(
   p_event_id uuid,
-  p_role public.app_role,
   p_subject text,
   p_body text,
-  p_expected integer
+  p_expected integer,
+  p_role public.app_role default null
 )
 returns table (broadcast_id uuid, queued integer)
 language plpgsql
@@ -288,7 +288,7 @@ $$;
 
 revoke execute on function
   public.admin_broadcast_recipient_count(uuid, public.app_role),
-  public.admin_create_broadcast(uuid, public.app_role, text, text, integer),
+  public.admin_create_broadcast(uuid, text, text, integer, public.app_role),
   public.admin_claim_broadcast_emails(uuid, integer),
   public.admin_retry_failed_broadcast(uuid),
   public.admin_broadcast_history(uuid)
@@ -296,7 +296,7 @@ from public, anon;
 
 grant execute on function
   public.admin_broadcast_recipient_count(uuid, public.app_role),
-  public.admin_create_broadcast(uuid, public.app_role, text, text, integer),
+  public.admin_create_broadcast(uuid, text, text, integer, public.app_role),
   public.admin_claim_broadcast_emails(uuid, integer),
   public.admin_retry_failed_broadcast(uuid),
   public.admin_broadcast_history(uuid)

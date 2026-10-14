@@ -135,9 +135,9 @@ select pg_temp.decide('test.p1', 'accepted');
 select plan(40);
 
 select pg_temp.login('dc000000-0000-0000-0000-0000000000b0', 'broadcast-reviewer@example.test');
-select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', null)$$,
+select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
   '42501', 'Organizer access required', 'reviewer cannot count recipients');
-select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', null, 's', 'b', 3)$$,
+select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3)$$,
   '42501', 'Organizer access required', 'reviewer cannot create broadcasts');
 select throws_ok($$select * from public.admin_claim_broadcast_emails(gen_random_uuid(), 10)$$,
   '42501', 'Organizer access required', 'reviewer cannot claim broadcast emails');
@@ -148,9 +148,9 @@ select throws_ok($$select * from public.admin_broadcast_history('ec000000-0000-0
 reset role;
 
 select pg_temp.login('dc000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000001@example.test', 'otp');
-select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', null)$$,
+select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
   '42501', 'Organizer access required', 'applicant cannot count recipients');
-select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', null, 's', 'b', 3)$$,
+select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3)$$,
   '42501', 'Organizer access required', 'applicant cannot create broadcasts');
 select throws_ok($$select * from public.admin_claim_broadcast_emails(gen_random_uuid(), 10)$$,
   '42501', 'Organizer access required', 'applicant cannot claim broadcast emails');
@@ -164,7 +164,7 @@ select set_config('test.sent_before', pg_temp.sent_last_24h()::text, true);
 
 select pg_temp.organizer();
 select is(
-  (select row(c.*)::text from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', null) c),
+  (select row(c.*)::text from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001') c),
   format('(3,%s)', current_setting('test.sent_before')),
   'counts submitted applications of every role, skipping drafts, withdrawn, declined, and other events'
 );
@@ -177,16 +177,16 @@ select is(
   0, 'roles without applicants have no recipients'
 );
 select throws_ok(
-  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 'participant', 's', 'b', 3)$$,
+  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3, 'participant')$$,
   'P0001', 'The number of recipients changed from 3 to 2. Review and send again.',
   'a stale recipient count is rejected'
 );
 select throws_ok(
-  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 'judge', 's', 'b', 0)$$,
+  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 0, 'judge')$$,
   'P0001', 'No applicants to email', 'a broadcast needs recipients'
 );
 select throws_ok(
-  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', null, ' ', 'b', 3)$$,
+  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', ' ', 'b', 3)$$,
   '23514', null, 'blank subjects are rejected'
 );
 select is(
@@ -194,9 +194,9 @@ select is(
   0::bigint, 'rejected broadcasts leave nothing behind'
 );
 select set_config('test.b1', (select broadcast_id::text from public.admin_create_broadcast(
-  'ec000000-0000-0000-0000-000000000001', null, 'Hello {{name}}', 'Body', 3)), true);
+  'ec000000-0000-0000-0000-000000000001', 'Hello {{name}}', 'Body', 3)), true);
 select set_config('test.b2', (select broadcast_id::text from public.admin_create_broadcast(
-  'ec000000-0000-0000-0000-000000000001', 'participant', 'Participants', 'Body', 2)), true);
+  'ec000000-0000-0000-0000-000000000001', 'Participants', 'Body', 2, 'participant')), true);
 select is(
   (select count(*) from public.email_broadcasts where event_id = 'ec000000-0000-0000-0000-000000000001'),
   2::bigint, 'organizers read broadcasts and may run them concurrently'
@@ -298,7 +298,7 @@ select is(
 select pg_temp.organizer();
 select public.admin_finish_email(pg_temp.row_id('test.b1', 'test.p1'), true, null, 'message-1');
 select is(
-  (select sent_last_24h from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', null)),
+  (select sent_last_24h from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')),
   current_setting('test.sent_before')::integer + 1, 'counts emails sent in the last day'
 );
 select is(
