@@ -14,8 +14,6 @@ export type BroadcastValues = Record<BroadcastVariable, string>
 
 export const EMAIL_DAILY_LIMIT = 1800
 
-const SIGNOFF = "Thanks for being part of Patriot HackFest!"
-
 export function renderBroadcast(
   template: EmailTemplate,
   values: BroadcastValues
@@ -24,12 +22,11 @@ export function renderBroadcast(
   const { text, html } = renderBody(template.body, values)
   return {
     subject,
-    text: brandedText({ body: text, signoff: SIGNOFF }),
+    text: brandedText({ body: text }),
     html: brandedHtml({
       preheader: escapeHtml(subject),
       heading: escapeHtml(subject),
       paragraphs: html,
-      signoff: SIGNOFF,
     }),
   }
 }

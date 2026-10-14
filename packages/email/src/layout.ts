@@ -69,7 +69,7 @@ export function brandedHtml({
   heading?: string
   paragraphs: string[]
   cta?: Cta
-  signoff: string
+  signoff?: string
 }) {
   const rows = paragraphs
     .map((p, i) => {
@@ -80,6 +80,8 @@ export function brandedHtml({
                   </tr>`
     })
     .join("")
+  const signoffLine =
+    signoff === undefined ? "" : `${signoff}<br>\n                      `
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
   <head>
@@ -126,8 +128,7 @@ export function brandedHtml({
                   </tr>
                   <tr>
                     <td style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.6; color: #444444;">
-                      ${signoff}<br>
-                      <strong style="color: #1a1a1a;">&mdash; The Patriot HackFest Team</strong>
+                      ${signoffLine}<strong style="color: #1a1a1a;">&mdash; The Patriot HackFest Team</strong>
                     </td>
                   </tr>
                   <tr>
@@ -158,16 +159,16 @@ export function brandedText({
 }: {
   body: string
   cta?: Cta
-  signoff: string
+  signoff?: string
 }) {
   const action = cta ? `${cta.label}: ${cta.url}\n${cta.note}\n\n` : ""
+  const signoffLine = signoff === undefined ? "" : `${signoff}\n`
   return `${body}
 
 ${action}Stay Connected
 Questions? Reach out anytime at hello@patriothackfest.com
 
-${signoff}
-— The Patriot HackFest Team
+${signoffLine}— The Patriot HackFest Team
 https://patriothackfest.com
 
 You're receiving this because you applied to Patriot HackFest.
