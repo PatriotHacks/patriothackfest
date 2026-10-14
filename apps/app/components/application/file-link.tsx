@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@workspace/ui/components/button"
 import { useState } from "react"
 
 import { signedFileUrl } from "@/lib/application-files"
@@ -27,15 +26,14 @@ export function FileLink({ path, name }: { path: string; name: string }) {
 
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
-      <Button
+      <button
         type="button"
-        variant="link"
-        className="h-auto p-0"
+        className="font-medium text-[#3A4A2B] underline underline-offset-2"
         onClick={open}
         aria-label={`View ${name}`}
       >
         {name}
-      </Button>
+      </button>
       {error && <span className="text-sm text-destructive">{error}</span>}
     </span>
   )
