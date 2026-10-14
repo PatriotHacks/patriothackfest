@@ -91,7 +91,7 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
       {error && (
         <AuthError>
           {error}{" "}
-          <Link href="/" className="underline">
+          <Link href="/start" className="underline">
             Go to your applications
           </Link>
         </AuthError>

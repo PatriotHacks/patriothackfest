@@ -6,7 +6,7 @@ import { NameForm } from "@/components/name-form"
 import { getFullName } from "@/lib/applicant"
 
 export default async function WelcomePage() {
-  if (await getFullName()) redirect("/")
+  if (await getFullName()) redirect("/start")
 
   return (
     <AuthCard
