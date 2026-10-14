@@ -5,19 +5,30 @@ import { Progress } from "@workspace/ui/components/progress"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
-import {
-  retryFailedEmails,
-  sendPendingEmails,
-} from "@/app/(admin)/forms/[formId]/release/actions"
+type Failure = { error: string }
+
+export type SendEmailsResult =
+  | Failure
+  | {
+      error: null
+      claimed: number
+      sent: number
+      failed: number
+      remaining: number
+    }
+
+export type RetryEmailsResult = Failure | { error: null; count: number }
 
 export function EmailSender({
-  formId,
+  send: sendBatch,
+  retry: retryFailed,
   pending,
   sending,
   failed,
   configured,
 }: {
-  formId: string
+  send: () => Promise<SendEmailsResult>
+  retry: () => Promise<RetryEmailsResult>
   pending: number
   sending: number
   failed: number
@@ -40,7 +51,7 @@ export function EmailSender({
     setProgress({ done, total: pending })
     try {
       for (;;) {
-        const result = await sendPendingEmails(formId)
+        const result = await sendBatch()
         if (result.error !== null) throw new Error(result.error)
         done += result.claimed
         sent += result.sent
@@ -66,7 +77,7 @@ export function EmailSender({
     setError(null)
     setMessage(null)
     startRetry(async () => {
-      const result = await retryFailedEmails(formId)
+      const result = await retryFailed()
       if (result.error !== null) setError(result.error)
       else setMessage(`${result.count} failed emails queued again.`)
     })
