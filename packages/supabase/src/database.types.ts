@@ -594,7 +594,7 @@ export type Database = {
         }
         Returns: {
           recipients: number
-          sent_last_24h: number
+          daily_used: number
         }[]
       }
       admin_change_application_role: {

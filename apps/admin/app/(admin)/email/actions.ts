@@ -117,7 +117,7 @@ export async function getBroadcastRecipientCount(
   eventId: string,
   role: Role | null
 ): Promise<
-  { error: string } | { error: null; recipients: number; sentLast24h: number }
+  { error: string } | { error: null; recipients: number; dailyUsed: number }
 > {
   const target = broadcastTarget.parse({ eventId, role })
   const { supabase } = await requireAdmin("organizer")
@@ -133,7 +133,7 @@ export async function getBroadcastRecipientCount(
   return {
     error: null,
     recipients: data.recipients,
-    sentLast24h: data.sent_last_24h,
+    dailyUsed: data.daily_used,
   }
 }
 
@@ -159,7 +159,7 @@ export async function createBroadcast(
     })
     .single()
   if (budget.error) return { error: budget.error.message }
-  const remaining = EMAIL_DAILY_LIMIT - budget.data.sent_last_24h
+  const remaining = EMAIL_DAILY_LIMIT - budget.data.daily_used
   if (count > remaining)
     return {
       error: `This would send ${count} emails, but only ${Math.max(remaining, 0)} of the daily limit of ${EMAIL_DAILY_LIMIT} remain.`,

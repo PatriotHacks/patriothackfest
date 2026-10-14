@@ -109,7 +109,7 @@ end;
 $$;
 
 create function public.admin_broadcast_recipient_count(p_event_id uuid, p_role public.app_role default null)
-returns table (recipients integer, sent_last_24h integer)
+returns table (recipients integer, daily_used integer)
 language plpgsql
 stable
 security definer
@@ -133,7 +133,8 @@ begin
     (
       select count(*)::integer
       from public.email_log l
-      where l.status = 'sent' and l.sent_at > now() - interval '24 hours'
+      where l.status in ('pending', 'sending')
+        or (l.status = 'sent' and l.sent_at > now() - interval '24 hours')
     );
 end;
 $$;

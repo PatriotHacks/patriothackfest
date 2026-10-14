@@ -77,12 +77,20 @@ as $$
     and application_id = current_setting(p_app)::uuid
 $$;
 
-create function pg_temp.sent_last_24h()
+create function pg_temp.daily_used()
 returns integer
 language sql
 as $$
   select count(*)::integer from public.email_log
-  where status = 'sent' and sent_at > now() - interval '24 hours'
+  where status in ('pending', 'sending')
+    or (status = 'sent' and sent_at > now() - interval '24 hours')
+$$;
+
+create function pg_temp.reported_daily_used()
+returns integer
+language sql
+as $$
+  select daily_used from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')
 $$;
 
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -132,7 +140,7 @@ reset role;
 
 select pg_temp.decide('test.p1', 'accepted');
 
-select plan(45);
+select plan(46);
 
 select pg_temp.login('dc000000-0000-0000-0000-0000000000b0', 'broadcast-reviewer@example.test');
 select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
@@ -160,12 +168,12 @@ select throws_ok($$select * from public.admin_broadcast_history('ec000000-0000-0
   '42501', 'Organizer access required', 'applicant cannot read broadcast history');
 reset role;
 
-select set_config('test.sent_before', pg_temp.sent_last_24h()::text, true);
+select set_config('test.used_before', pg_temp.daily_used()::text, true);
 
 select pg_temp.organizer();
 select is(
   (select row(c.*)::text from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001') c),
-  format('(3,%s)', current_setting('test.sent_before')),
+  format('(3,%s)', current_setting('test.used_before')),
   'counts submitted applications of every role, skipping drafts, withdrawn, declined, and other events'
 );
 select is(
@@ -296,10 +304,12 @@ select is(
 );
 
 select pg_temp.organizer();
+select set_config('test.used_before', pg_temp.reported_daily_used()::text, true);
 select public.admin_finish_email(pg_temp.row_id('test.b1', 'test.p1'), true, null, 'message-1');
 select is(
-  (select sent_last_24h from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')),
-  current_setting('test.sent_before')::integer + 1, 'counts emails sent in the last day'
+  pg_temp.reported_daily_used(),
+  current_setting('test.used_before')::integer,
+  'an email counts once toward the daily limit whether sending or sent'
 );
 select is(
   (select array_agg(row(h.subject, h.role, h.sender_email, h.recipients, h.sent, h.failed, h.pending, h.sending, h.cancelled)::text order by h.created_at desc)
@@ -333,8 +343,14 @@ select throws_ok(
 reset role;
 
 select pg_temp.organizer();
+select set_config('test.used_before', pg_temp.reported_daily_used()::text, true);
 select set_config('test.b3', (select broadcast_id::text from public.admin_create_broadcast(
   'ec000000-0000-0000-0000-000000000001', 'Everyone', 'Body', 2)), true);
+select is(
+  pg_temp.reported_daily_used(),
+  current_setting('test.used_before')::integer + 2,
+  'queued broadcast emails count toward the daily limit'
+);
 select public.admin_change_application_role(current_setting('test.p1')::uuid, 'volunteer');
 reset role;
 select is(

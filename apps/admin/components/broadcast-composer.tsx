@@ -63,7 +63,7 @@ type Props = {
   emailDisabledReason: string | null
 }
 
-type Confirm = { recipients: number; sentLast24h: number }
+type Confirm = { recipients: number; dailyUsed: number }
 
 function preview(subject: string, body: string) {
   try {
@@ -102,7 +102,7 @@ export function BroadcastComposer({
   const rendered = errors.length === 0 ? preview(subject, body) : null
   const roleLabel = role ? ROLE_LABELS[role] : "All roles"
   const remaining = confirm
-    ? Math.max(EMAIL_DAILY_LIMIT - confirm.sentLast24h, 0)
+    ? Math.max(EMAIL_DAILY_LIMIT - confirm.dailyUsed, 0)
     : 0
   const overBudget = confirm !== null && confirm.recipients > remaining
   const disabled = errors.length > 0 || emailDisabledReason !== null
@@ -323,8 +323,8 @@ export function BroadcastComposer({
             <AlertDialogDescription>
               This cannot be undone. Recipients are fixed when you confirm;
               applicants who submit later are not added. {remaining} of the{" "}
-              {EMAIL_DAILY_LIMIT} daily emails remain ({confirm?.sentLast24h}{" "}
-              sent in the last 24 hours).
+              {EMAIL_DAILY_LIMIT} daily emails remain ({confirm?.dailyUsed} sent
+              in the last 24 hours or still queued).
             </AlertDialogDescription>
           </AlertDialogHeader>
           {overBudget && (
