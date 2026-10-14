@@ -66,6 +66,7 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('d7000000-0000-0000-0000-000000000007', 'late@emails.test', '{"full_name": "Late"}'),
   ('d7000000-0000-0000-0000-0000000000a0', 'emails-organizer@example.test', '{}'),
   ('d7000000-0000-0000-0000-0000000000b0', 'emails-reviewer@example.test', '{}');
+update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
 update public.profiles set email = 'stale@emails.test' where id = 'd7000000-0000-0000-0000-000000000002';
 

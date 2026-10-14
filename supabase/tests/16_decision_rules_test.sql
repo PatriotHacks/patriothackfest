@@ -55,6 +55,7 @@ insert into auth.users (id, email) values
   ('d6000000-0000-0000-0000-000000000004', 'd6000000-0000-0000-0000-000000000004@example.test'),
   ('d6000000-0000-0000-0000-0000000000a0', 'rules-organizer@example.test'),
   ('d6000000-0000-0000-0000-0000000000b0', 'rules-reviewer@example.test');
+update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
 insert into public.admin_allowlist (email, level) values
   ('rules-organizer@example.test', 'organizer'),

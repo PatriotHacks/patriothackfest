@@ -53,6 +53,7 @@ $$;
 insert into auth.users (id, email, raw_user_meta_data) values
   ('11111111-1111-1111-1111-111111111111', 'alice@example.test', '{"full_name": "Alice"}'),
   ('22222222-2222-2222-2222-222222222222', 'bob@example.test', '{"full_name": "Bob"}');
+update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
 insert into public.events (id, slug, name) values
   ('e0000000-0000-0000-0000-000000000001', 'pgtap-event', 'pgTAP Event');
