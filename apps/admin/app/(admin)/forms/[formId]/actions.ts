@@ -4,6 +4,7 @@ import {
   fieldSchema,
   fieldTypeSchema,
   isChoiceType,
+  isSection,
   type Field,
 } from "@workspace/forms"
 import { revalidatePath } from "next/cache"
@@ -56,7 +57,7 @@ export async function addField(
       options: isChoiceType(fieldType) ? [] : null,
     })
     .select(
-      "id, type, label, help_text, required, options, validation, condition"
+      "id, type, label, help_text, required, options, validation, condition, editable_after_submit"
     )
     .single()
   if (error) return failure(error)
@@ -89,6 +90,9 @@ export async function saveField(field: Field): Promise<ActionResult> {
       options,
       validation,
       condition,
+      editable_after_submit: isSection(parsed.data)
+        ? parsed.data.editable_after_submit
+        : false,
     })
     .eq("id", id)
     .select("id")

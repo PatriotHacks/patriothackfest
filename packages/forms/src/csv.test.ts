@@ -6,7 +6,7 @@ import {
   type ApplicationCsvRow,
 } from "./csv"
 import type { Field } from "./schema"
-import { field } from "./test-utils"
+import { field, section } from "./test-utils"
 
 const URL = "https://admin.example.com/applications/app-1"
 
@@ -201,5 +201,17 @@ describe("buildApplicationsCsv", () => {
       ])
     )
     expect(lines.slice(1).map((l) => l.split(",")[0])).toEqual(["a", "b", "c"])
+  })
+
+  it("omits sections from the columns", () => {
+    const heading = section({ label: "About" })
+    const name = field("short_text", { label: "Name" })
+    const [header, line] = parse(
+      buildApplicationsCsv({ fields: [heading, name] }, [
+        row({ answers: { [heading.id]: "x", [name.id]: "Ada" } }),
+      ])
+    )
+    expect(header!.split(",").slice(11)).toEqual(["Name"])
+    expect(line!.split(",").slice(11)).toEqual(["Ada"])
   })
 })

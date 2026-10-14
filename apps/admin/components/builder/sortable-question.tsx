@@ -3,16 +3,19 @@
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Card, CardContent } from "@workspace/ui/components/card"
+import { cn } from "@workspace/ui/lib/utils"
 import { GripVerticalIcon } from "lucide-react"
 
 export function SortableQuestion({
   id,
-  index,
+  label,
+  section,
   draggable,
   children,
 }: {
   id: string
-  index: number
+  label: string
+  section: boolean
   draggable: boolean
   children: React.ReactNode
 }) {
@@ -33,7 +36,10 @@ export function SortableQuestion({
         transform: CSS.Translate.toString(transform),
         transition,
       }}
-      className={isDragging ? "relative z-10 shadow-lg" : undefined}
+      className={cn(
+        section && "mt-4 border-l-4 border-l-primary bg-muted/50",
+        isDragging && "relative z-10 shadow-lg"
+      )}
     >
       <CardContent className="flex gap-3">
         {draggable && (
@@ -41,7 +47,7 @@ export function SortableQuestion({
             type="button"
             ref={setActivatorNodeRef}
             className="h-fit cursor-grab rounded p-1 text-muted-foreground hover:bg-muted"
-            aria-label={`Reorder question ${index + 1}`}
+            aria-label={`Reorder ${label}`}
             {...attributes}
             {...listeners}
           >

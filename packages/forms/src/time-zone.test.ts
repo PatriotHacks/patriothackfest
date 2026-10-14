@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  endOfDayInZone,
   formatDateRangeInZone,
   formatInZone,
   fromZonedInputValue,
@@ -72,5 +73,20 @@ describe("formatDateRangeInZone", () => {
     expect(
       formatDateRangeInZone("2026-11-14T05:00:00Z", "2026-11-15T04:59:59Z")
     ).toBe("Nov 14, 2026")
+  })
+
+  it("finds the end of the New York day containing an instant", () => {
+    expect(endOfDayInZone("2026-07-01T16:00:00Z")).toBe(
+      "2026-07-02T04:00:00.000Z"
+    )
+    expect(endOfDayInZone("2026-12-01T04:30:00Z")).toBe(
+      "2026-12-01T05:00:00.000Z"
+    )
+    expect(endOfDayInZone("2026-12-31T20:00:00Z")).toBe(
+      "2027-01-01T05:00:00.000Z"
+    )
+    expect(endOfDayInZone("2026-11-01T12:00:00Z")).toBe(
+      "2026-11-02T05:00:00.000Z"
+    )
   })
 })

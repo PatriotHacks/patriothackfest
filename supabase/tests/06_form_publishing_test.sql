@@ -64,6 +64,7 @@ select throws_ok(
 );
 
 insert into public.form_fields (id, form_id, position, type, label, options, archived_at) values
+  ('d0000000-0000-0000-0000-00000000000a', 'f0000000-0000-0000-0000-000000000001', -1, 'section', 'About you', null, null),
   ('d0000000-0000-0000-0000-000000000000', 'f0000000-0000-0000-0000-000000000001', 0, 'short_text', 'Archived', null, now()),
   ('d0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001', 1, 'single_choice', 'Shirt size', '[]', null);
 
@@ -140,11 +141,11 @@ select ok(
 );
 select is(
   (select jsonb_path_query_array(published_schema, '$.fields[*].id') from public.forms where id = 'f0000000-0000-0000-0000-000000000001'),
-  '["d0000000-0000-0000-0000-000000000001", "d0000000-0000-0000-0000-000000000002", "d0000000-0000-0000-0000-000000000003"]'::jsonb,
+  '["d0000000-0000-0000-0000-00000000000a", "d0000000-0000-0000-0000-000000000001", "d0000000-0000-0000-0000-000000000002", "d0000000-0000-0000-0000-000000000003"]'::jsonb,
   'snapshot lists non-archived questions in position order'
 );
 select is(
-  (select published_schema -> 'fields' -> 1 from public.forms where id = 'f0000000-0000-0000-0000-000000000001'),
+  (select published_schema -> 'fields' -> 2 from public.forms where id = 'f0000000-0000-0000-0000-000000000001'),
   jsonb_build_object(
     'id', 'd0000000-0000-0000-0000-000000000002',
     'type', 'long_text',
@@ -167,7 +168,7 @@ select ok(not pg_temp.has_unpublished_changes('f0000000-0000-0000-0000-000000000
 update public.form_fields set label = 'T-shirt size' where id = 'd0000000-0000-0000-0000-000000000001';
 select ok(pg_temp.has_unpublished_changes('f0000000-0000-0000-0000-000000000001'), 'editing a question marks unpublished changes');
 select is(
-  (select published_schema #>> '{fields,0,label}' from public.forms where id = 'f0000000-0000-0000-0000-000000000001'),
+  (select published_schema #>> '{fields,1,label}' from public.forms where id = 'f0000000-0000-0000-0000-000000000001'),
   'Shirt size',
   'working copy edits do not change the published snapshot'
 );
@@ -203,7 +204,7 @@ select throws_ok(
 );
 select is(
   (select count(*) from public.form_fields where form_id = 'f0000000-0000-0000-0000-000000000001'),
-  3::bigint,
+  4::bigint,
   'reviewer reads the working copy'
 );
 select throws_ok(

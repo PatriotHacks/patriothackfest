@@ -1,4 +1,4 @@
-import type { Answers, Field } from "./schema"
+import { isSection, type Answers, type Field } from "./schema"
 
 type FieldSet = { fields: readonly Field[] }
 
@@ -30,7 +30,11 @@ export function isFieldVisible(
 export function pruneHiddenAnswers(schema: FieldSet, answers: Answers) {
   const pruned: Answers = {}
   for (const field of schema.fields) {
-    if (field.id in answers && isFieldVisible(field, answers, schema)) {
+    if (
+      !isSection(field) &&
+      field.id in answers &&
+      isFieldVisible(field, answers, schema)
+    ) {
       pruned[field.id] = answers[field.id]
     }
   }

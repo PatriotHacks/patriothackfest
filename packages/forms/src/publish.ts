@@ -1,4 +1,9 @@
-import { isChoiceType, isConditionSourceType, type Field } from "./schema"
+import {
+  isChoiceType,
+  isConditionSourceType,
+  isSection,
+  type Field,
+} from "./schema"
 
 export type PublishIssue = { field_id: string | null; message: string }
 
@@ -47,8 +52,18 @@ export function validateForPublish(
     add("Edits lock must be at or after submissions close")
   }
 
+  let sections = 0
+  let questions = 0
   fields.forEach((field, index) => {
-    const n = index + 1
+    if (isSection(field)) {
+      sections += 1
+      if (field.label.trim() === "")
+        add(`Section ${sections} needs a title`, field.id)
+      return
+    }
+
+    questions += 1
+    const n = questions
     if (field.label.trim() === "") add(`Question ${n} needs a label`, field.id)
 
     if (isChoiceType(field.type)) {
@@ -76,7 +91,9 @@ export function validateForPublish(
     }
   })
 
-  if (fields.length === 0) add("Add at least one question")
+  if (fields.length > 0 && !isSection(fields[0]!))
+    add("Start the form with a section")
+  if (questions === 0) add("Add at least one question")
 
   return issues
 }

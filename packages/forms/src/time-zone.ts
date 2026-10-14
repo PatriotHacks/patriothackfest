@@ -46,6 +46,15 @@ export function fromZonedInputValue(value: string, timeZone = EVENT_TIME_ZONE) {
   return new Date(second).toISOString()
 }
 
+export function endOfDayInZone(iso: string, timeZone = EVENT_TIME_ZONE) {
+  const p = zonedParts(new Date(iso), timeZone)
+  const next = new Date(Date.UTC(p.year, p.month - 1, p.day + 1))
+  return fromZonedInputValue(
+    `${next.getUTCFullYear()}-${pad(next.getUTCMonth() + 1)}-${pad(next.getUTCDate())}T00:00`,
+    timeZone
+  )
+}
+
 export function formatInZone(iso: string, timeZone = EVENT_TIME_ZONE) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone,

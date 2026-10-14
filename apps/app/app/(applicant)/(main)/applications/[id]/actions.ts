@@ -20,9 +20,12 @@ function answerFailure(error: {
   message: string
   details: string
 }): SaveResult {
-  if (error.code !== "PT422") return failure(error)
+  if (error.code !== "PT422" && error.code !== "PT403") return failure(error)
   return {
-    error: "Some answers need attention",
+    error:
+      error.code === "PT403"
+        ? "Some answers can no longer be changed"
+        : "Some answers need attention",
     fieldErrors: errorDetails.parse(JSON.parse(error.details)),
   }
 }

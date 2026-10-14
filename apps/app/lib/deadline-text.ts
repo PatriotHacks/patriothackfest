@@ -2,7 +2,11 @@ import { formatInZone } from "@workspace/forms"
 
 import type { ApplicationPhase, FormTiming } from "./application-status"
 
-export function deadlineText(phase: ApplicationPhase, form: FormTiming) {
+export function deadlineText(
+  phase: ApplicationPhase,
+  form: FormTiming,
+  canEditSubmission: boolean
+) {
   const close = form.submissions_close_at
   const lock = form.edits_lock_at
   switch (phase) {
@@ -11,7 +15,11 @@ export function deadlineText(phase: ApplicationPhase, form: FormTiming) {
     case "closed_draft":
       return close && `Submissions closed ${formatInZone(close)}`
     case "editable_submission":
-      return lock && `You can edit your answers until ${formatInZone(lock)}`
+      return (
+        canEditSubmission &&
+        lock &&
+        `You can edit your answers until ${formatInZone(lock)}`
+      )
     case "locked_submission":
       return lock && `Answers locked ${formatInZone(lock)}`
     case "withdrawn":

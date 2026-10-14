@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { validateAnswers } from "./answers"
 import type { Field } from "./schema"
-import { field } from "./test-utils"
+import { field, section } from "./test-utils"
 
 function errorFor(f: Field, value: unknown) {
   return validateAnswers(
@@ -152,5 +152,30 @@ describe("validateAnswers", () => {
     expect(errorFor(oversized, { ...pdf, size: 11 * 1024 * 1024 })).toBe(
       "Files must be 10 MB or smaller"
     )
+  })
+
+  it("skips sections", () => {
+    const heading = section()
+    expect(
+      validateAnswers(
+        { fields: [heading] },
+        { [heading.id]: 42 },
+        { mode: "submit" }
+      )
+    ).toEqual({})
+  })
+
+  it("skips the given fields", () => {
+    const phone = field("short_text", { required: true })
+    const size = field("single_choice", { options: ["S", "M"] })
+    const bio = field("long_text", { required: true })
+    const schema = { fields: [phone, size, bio] }
+    expect(
+      validateAnswers(
+        schema,
+        { [size.id]: "XL" },
+        { mode: "submit", skip: new Set([phone.id, size.id]) }
+      )
+    ).toEqual({ [bio.id]: "Required" })
   })
 })

@@ -1,6 +1,6 @@
 "use client"
 
-import type { Field } from "@workspace/forms"
+import type { Question } from "@workspace/forms"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -21,7 +21,7 @@ export function FieldInput({
   onChange,
   onBlur,
 }: {
-  field: Exclude<Field, { type: "file" }>
+  field: Exclude<Question, { type: "file" }>
   value: unknown
   invalid: boolean
   disabled: boolean

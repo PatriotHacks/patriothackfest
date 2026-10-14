@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { validateForPublish } from "./publish"
-import { field } from "./test-utils"
+import { field, section } from "./test-utils"
 
 const form = {
   title: "Participant",
@@ -28,7 +28,15 @@ describe("validateForPublish", () => {
       condition: { field_id: agree.id, operator: "equals", value: true },
     })
     expect(
-      validateForPublish(form, [size, why, diets, vegan, agree, thanks])
+      validateForPublish(form, [
+        section(),
+        size,
+        why,
+        diets,
+        vegan,
+        agree,
+        thanks,
+      ])
     ).toEqual([])
   })
 
@@ -44,6 +52,7 @@ describe("validateForPublish", () => {
   it("requires edits lock at or after submissions close", () => {
     expect(
       messages({ ...form, edits_lock_at: "2026-10-31T04:00:00Z" }, [
+        section(),
         field("short_text"),
       ])
     ).toEqual(["Edits lock must be at or after submissions close"])
@@ -51,7 +60,10 @@ describe("validateForPublish", () => {
 
   it("requires a title and labels", () => {
     expect(
-      messages({ ...form, title: " " }, [field("email", { label: "" })])
+      messages({ ...form, title: " " }, [
+        section(),
+        field("email", { label: "" }),
+      ])
     ).toEqual(["Add a form title", "Question 1 needs a label"])
   })
 
@@ -59,7 +71,12 @@ describe("validateForPublish", () => {
     const empty = field("single_choice", { options: [] })
     const duplicate = field("multiple_choice", { options: ["A", "A"] })
     const blank = field("single_choice", { options: ["A", " "] })
-    const issues = validateForPublish(form, [empty, duplicate, blank])
+    const issues = validateForPublish(form, [
+      section(),
+      empty,
+      duplicate,
+      blank,
+    ])
     expect(issues).toEqual([
       { field_id: empty.id, message: "Question 1 needs at least one option" },
       {
@@ -83,7 +100,7 @@ describe("validateForPublish", () => {
       condition: { field_id: later.id, operator: "equals", value: "A" },
     })
     expect(
-      messages(form, [text, dependsOnText, dependsOnLater, later])
+      messages(form, [section(), text, dependsOnText, dependsOnLater, later])
     ).toEqual([
       "Question 2 must depend on an earlier choice or checkbox question",
       "Question 3 must depend on an earlier choice or checkbox question",
@@ -95,6 +112,7 @@ describe("validateForPublish", () => {
     const multiple = field("multiple_choice", { options: ["A"] })
     const agree = field("checkbox")
     const fields = [
+      section(),
       single,
       multiple,
       agree,
@@ -116,6 +134,43 @@ describe("validateForPublish", () => {
       "Question 5 has an invalid condition",
       "Question 6 has an invalid condition",
       "Question 7 has an invalid condition",
+    ])
+  })
+
+  it("requires the form to start with a section", () => {
+    expect(messages(form, [field("short_text"), section()])).toEqual([
+      "Start the form with a section",
+    ])
+    expect(messages(form, [section(), field("short_text")])).toEqual([])
+  })
+
+  it("requires section titles and numbers questions apart from sections", () => {
+    const blank = section({ label: " " })
+    const unlabeled = field("short_text", { label: "" })
+    expect(
+      validateForPublish(form, [
+        section(),
+        field("short_text"),
+        blank,
+        unlabeled,
+      ])
+    ).toEqual([
+      { field_id: blank.id, message: "Section 2 needs a title" },
+      { field_id: unlabeled.id, message: "Question 2 needs a label" },
+    ])
+  })
+
+  it("requires at least one question besides sections", () => {
+    expect(messages(form, [section()])).toEqual(["Add at least one question"])
+  })
+
+  it("rejects conditions that reference a section", () => {
+    const heading = section()
+    const dependent = field("short_text", {
+      condition: { field_id: heading.id, operator: "equals", value: true },
+    })
+    expect(messages(form, [heading, dependent])).toEqual([
+      "Question 1 must depend on an earlier choice or checkbox question",
     ])
   })
 })
