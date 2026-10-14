@@ -21,12 +21,16 @@ export const BODY_MAX_LENGTH = 10000
 
 const VARIABLE = /\{\{\s*([^{}]*?)\s*\}\}/g
 
+export function usedVariables({ subject, body }: EmailTemplate) {
+  const names = [...`${subject}\n${body}`.matchAll(VARIABLE)].map((m) => m[1]!)
+  return [...new Set(names)]
+}
+
 export function unknownVariables(
-  { subject, body }: EmailTemplate,
+  template: EmailTemplate,
   variables: readonly string[] = TEMPLATE_VARIABLES
 ) {
-  const names = [...`${subject}\n${body}`.matchAll(VARIABLE)].map((m) => m[1]!)
-  return [...new Set(names.filter((name) => !variables.includes(name)))]
+  return usedVariables(template).filter((name) => !variables.includes(name))
 }
 
 export function validateTemplate(

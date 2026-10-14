@@ -4,6 +4,7 @@ import { escapeHtml } from "./layout"
 import {
   renderStatusUpdate,
   unknownVariables,
+  usedVariables,
   validateTemplate,
   type TemplateValues,
 } from "./templates"
@@ -161,5 +162,16 @@ describe("validateTemplate", () => {
     expect(validateTemplate({ subject: "a\nb", body: "b" })).toEqual([
       "Subject must be a single line.",
     ])
+  })
+})
+
+describe("usedVariables", () => {
+  it("lists each variable once in order of use", () => {
+    expect(
+      usedVariables({
+        subject: "{{ event_dates }} {{name}}",
+        body: "{{name}} {{bogus}}",
+      })
+    ).toEqual(["event_dates", "name", "bogus"])
   })
 })
