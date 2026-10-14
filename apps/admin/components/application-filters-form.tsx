@@ -104,6 +104,12 @@ export function ApplicationFiltersForm({
         value={filters.declined}
         options={yesNo}
       />
+      <FilterSelect
+        name="under18"
+        label="Under 18"
+        value={filters.under18}
+        options={yesNo}
+      />
       <div className="flex flex-col gap-1">
         <Label htmlFor="filter-q">Name or email</Label>
         <Input

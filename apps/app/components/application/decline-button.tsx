@@ -12,9 +12,10 @@ import {
   AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog"
 import { Button } from "@workspace/ui/components/button"
-import { useState, useTransition, type ComponentProps } from "react"
+import { useState, useTransition } from "react"
 
 import { declineOffer } from "@/app/(applicant)/(main)/applications/[id]/actions"
+import { OUTLINE_PILL } from "@/components/paper"
 import type { DeclinableDecision } from "@/lib/application-status"
 
 const COPY = {
@@ -38,12 +39,10 @@ export function DeclineButton({
   applicationId,
   eventName,
   decision,
-  size,
 }: {
   applicationId: string
   eventName: string
   decision: DeclinableDecision
-  size?: ComponentProps<typeof Button>["size"]
 }) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +52,7 @@ export function DeclineButton({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size={size} className="w-fit">
+        <Button variant="outline" className={OUTLINE_PILL}>
           {copy.trigger}
         </Button>
       </AlertDialogTrigger>

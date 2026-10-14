@@ -1,182 +1,121 @@
 import {
   formatDateRangeInZone,
-  formatInZone,
   hasEditableSections,
   publishedSchemaSchema,
 } from "@workspace/forms"
-import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
-import { Button } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
+import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 
 import { DeclineButton } from "@/components/application/decline-button"
-import { ApplicationStatusBadge } from "@/components/application-status-badge"
+import { WithdrawButton } from "@/components/application/withdraw-button"
+import { OUTLINE_PILL, PAPER, SERIF } from "@/components/paper"
 import {
   applicantAction,
   applicationPhase,
   declinedText,
-  isFormOpen,
   statusLabel,
 } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
 import { deadlineText } from "@/lib/deadline-text"
 
 export default async function DashboardPage() {
-  const { supabase, fullName } = await getNamedApplicant()
+  const { supabase, userId, fullName } = await getNamedApplicant()
 
-  const [events, forms, applications] = await Promise.all([
-    supabase
-      .from("events")
-      .select("id, slug, name, starts_at, ends_at")
-      .order("starts_at", { nullsFirst: false })
-      .order("slug"),
-    supabase
-      .from("forms")
-      .select(
-        "id, event_id, role, status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema"
-      ),
-    supabase
-      .from("applications")
-      .select(
-        "id, event_id, form_id, role, status, declined_at, created_at, application_decisions(decision)"
-      )
-      .order("created_at", { ascending: false }),
-  ])
-  if (events.error) throw new Error(events.error.message)
-  if (forms.error) throw new Error(forms.error.message)
-  if (applications.error) throw new Error(applications.error.message)
+  const { data: applications, error } = await supabase
+    .from("applications")
+    .select(
+      "id, role, status, declined_at, events(name, starts_at, ends_at), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+  if (error) throw new Error(error.message)
 
   const now = Date.now()
-  const eventName = new Map(events.data.map((e) => [e.id, e.name]))
-  const appliedEventIds = new Set(applications.data.map((a) => a.event_id))
-  const openEvents = events.data
-    .filter((event) => !appliedEventIds.has(event.id))
-    .map((event) => ({
-      event,
-      forms: forms.data
-        .filter((f) => f.event_id === event.id && isFormOpen(f, now))
-        .sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role)),
-    }))
-    .filter(({ forms }) => forms.length > 0)
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Applications</h1>
-        <p className="text-muted-foreground">Welcome, {fullName}.</p>
+    <div className="mx-auto flex max-w-[720px] flex-col gap-[24px] font-(family-name:--font-auth-sans) text-[#3A4A2B]">
+      <div className="flex flex-col gap-[6px]">
+        <h1 className={cn(SERIF, "text-[40px] leading-[1.05]")}>Dashboard</h1>
+        <p className="text-[15px] text-[#6E6E68]">Welcome, {fullName}.</p>
       </div>
 
-      {applications.data.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">Your applications</h2>
-          {applications.data.map((application) => {
-            const form = forms.data.find((f) => f.id === application.form_id)
-            if (!form) return null
-            const decision = application.application_decisions?.decision ?? null
-            const phase = applicationPhase(
-              application.status,
-              application.declined_at,
-              form,
-              now
-            )
-            const action = applicantAction(phase, form, decision)
-            const name = eventName.get(application.event_id)!
-            return (
-              <Card key={application.id}>
-                <CardHeader>
-                  <CardTitle>{name}</CardTitle>
-                  <CardDescription>
-                    {ROLE_LABELS[application.role]}
-                  </CardDescription>
-                  <CardAction>
-                    <ApplicationStatusBadge
-                      status={statusLabel(phase, form, decision)}
-                    />
-                  </CardAction>
-                </CardHeader>
-                <CardContent className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    {phase === "declined"
-                      ? declinedText(decision)
-                      : deadlineText(
-                          phase,
-                          form,
-                          form.published_schema !== null &&
-                            hasEditableSections(
-                              publishedSchemaSchema.parse(form.published_schema)
-                            )
-                        )}
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {action?.kind === "decline" && (
-                      <DeclineButton
-                        applicationId={application.id}
-                        eventName={name}
-                        decision={action.decision}
-                        size="sm"
-                      />
-                    )}
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/applications/${application.id}`}>
-                        {phase === "draft" ? "Continue" : "View"}
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </section>
-      )}
+      {applications.map((application) => {
+        const form = application.forms
+        const event = application.events
+        const decision = application.application_decisions?.decision ?? null
+        const phase = applicationPhase(
+          application.status,
+          application.declined_at,
+          form,
+          now
+        )
+        const action = applicantAction(phase, form, decision)
+        const canEdit =
+          form.published_schema !== null &&
+          hasEditableSections(
+            publishedSchemaSchema.parse(form.published_schema)
+          )
+        const note =
+          phase === "declined"
+            ? declinedText(decision)
+            : deadlineText(phase, form, canEdit)
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Open applications</h2>
-        {openEvents.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No applications are open right now.
-          </p>
-        )}
-        {openEvents.map(({ event, forms }) => (
-          <Card key={event.id}>
-            <CardHeader>
-              <CardTitle>{event.name}</CardTitle>
-              {event.starts_at && (
-                <CardDescription>
-                  {formatDateRangeInZone(event.starts_at, event.ends_at)}
-                </CardDescription>
+        return (
+          <article
+            key={application.id}
+            className={cn(PAPER, "flex flex-col gap-[16px] p-[24px]")}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-[12px]">
+              <div className="flex flex-col gap-[4px]">
+                <h2 className={cn(SERIF, "text-[30px] leading-[1.1]")}>
+                  {event.name}
+                </h2>
+                <p className="text-[14.5px] text-[#6E6E68]">
+                  {event.starts_at
+                    ? `${formatDateRangeInZone(event.starts_at, event.ends_at)} · `
+                    : ""}
+                  {ROLE_LABELS[application.role]}
+                </p>
+              </div>
+              <span className="rounded-full bg-[#3A4A2B] px-[12px] py-[4px] text-[13px] font-medium text-[#F8F7F2]">
+                {statusLabel(phase, form, decision)}
+              </span>
+            </div>
+            {note && <p className="text-[14.5px] text-[#6E6E68]">{note}</p>}
+            <div className="flex flex-wrap gap-[10px]">
+              <Link
+                href={
+                  application.status === "draft"
+                    ? `/draft/${application.id}`
+                    : `/applications/${application.id}`
+                }
+                className={cn(
+                  OUTLINE_PILL,
+                  "inline-flex items-center justify-center"
+                )}
+              >
+                {phase === "draft"
+                  ? "Continue application"
+                  : "View application"}
+              </Link>
+              {action?.kind === "withdraw" && (
+                <WithdrawButton
+                  applicationId={application.id}
+                  eventName={event.name}
+                />
               )}
-              <CardAction>
-                <Button asChild size="sm">
-                  <Link href={`/apply/${event.slug}`}>Apply</Link>
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex flex-col gap-1 text-sm">
-                {forms.map((form) => (
-                  <li key={form.id}>
-                    <span className="font-medium">
-                      {ROLE_LABELS[form.role]}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {" "}
-                      - applications close{" "}
-                      {formatInZone(form.submissions_close_at!)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
+              {action?.kind === "decline" && (
+                <DeclineButton
+                  applicationId={application.id}
+                  eventName={event.name}
+                  decision={action.decision}
+                />
+              )}
+            </div>
+          </article>
+        )
+      })}
     </div>
   )
 }

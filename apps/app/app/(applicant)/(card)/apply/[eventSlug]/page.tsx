@@ -25,7 +25,7 @@ export default async function ApplyPage({
   const [existing, forms] = await Promise.all([
     supabase
       .from("applications")
-      .select("id")
+      .select("id, status")
       .eq("event_id", event.id)
       .eq("user_id", userId)
       .maybeSingle(),
@@ -39,7 +39,12 @@ export default async function ApplyPage({
   ])
   if (existing.error) throw new Error(existing.error.message)
   if (forms.error) throw new Error(forms.error.message)
-  if (existing.data) redirect(`/applications/${existing.data.id}`)
+  if (existing.data)
+    redirect(
+      existing.data.status === "draft"
+        ? `/draft/${existing.data.id}`
+        : `/applications/${existing.data.id}`
+    )
 
   const now = Date.now()
   const options = ROLES.map((role): RoleOption => {

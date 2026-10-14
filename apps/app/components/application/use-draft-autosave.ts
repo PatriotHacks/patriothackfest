@@ -1,18 +1,17 @@
 "use client"
 
-import type { Answers } from "@workspace/forms"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import type { ActionResult } from "@/lib/action-result"
 
 export type SaveStatus = "saved" | "saving" | "error"
 
-export function useDraftAutosave(
-  save: (answers: Answers) => Promise<ActionResult>,
+export function useDraftAutosave<T>(
+  save: (value: T) => Promise<ActionResult>,
   delay = 1000
 ) {
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const queued = useRef<Answers | null>(null)
+  const queued = useRef<T | null>(null)
   const chain = useRef<Promise<void>>(Promise.resolve())
   const failed = useRef(false)
   const [status, setStatus] = useState<SaveStatus>("saved")
@@ -25,15 +24,15 @@ export function useDraftAutosave(
 
   const run = useCallback(() => {
     clearTimer()
-    const answers = queued.current
-    if (!answers) return chain.current
+    const value = queued.current
+    if (value === null) return chain.current
     queued.current = null
     chain.current = chain.current.then(async () => {
-      const { error } = await save(answers).catch((e: unknown) => ({
+      const { error } = await save(value).catch((e: unknown) => ({
         error: e instanceof Error ? e.message : "Save failed",
       }))
       failed.current = error !== null
-      if (error && !queued.current) queued.current = answers
+      if (error && queued.current === null) queued.current = value
       setError(error)
       if (!timer.current || error) setStatus(error ? "error" : "saved")
     })
@@ -41,8 +40,8 @@ export function useDraftAutosave(
   }, [save, clearTimer])
 
   const schedule = useCallback(
-    (answers: Answers) => {
-      queued.current = answers
+    (value: T) => {
+      queued.current = value
       setStatus("saving")
       clearTimer()
       const handle = setTimeout(() => {
@@ -54,7 +53,7 @@ export function useDraftAutosave(
   )
 
   const flush = useCallback(async () => {
-    if (queued.current) setStatus("saving")
+    if (queued.current !== null) setStatus("saving")
     await run()
     return !failed.current
   }, [run])
@@ -63,13 +62,6 @@ export function useDraftAutosave(
     clearTimer()
     queued.current = null
   }, [clearTimer])
-
-  useEffect(() => {
-    if (status === "saved") return
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
-    window.addEventListener("beforeunload", warn)
-    return () => window.removeEventListener("beforeunload", warn)
-  }, [status])
 
   useEffect(() => () => void run(), [run])
 

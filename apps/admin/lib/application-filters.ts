@@ -15,6 +15,7 @@ const filtersSchema = z.object({
   decision: optional(z.enum(DECISIONS)),
   released: optional(z.enum(["yes", "no"])),
   declined: optional(z.enum(["yes", "no"])),
+  under18: optional(z.enum(["yes", "no"])),
   q: optional(z.string().trim().min(1).max(100)),
 })
 
@@ -66,7 +67,7 @@ export function filterEmbeds<Columns extends string>(
 }
 
 type Filterable<Query> = {
-  eq(column: string, value: string): Query
+  eq(column: string, value: string | boolean): Query
   not(column: string, operator: "is", value: null): Query
   is(column: string, value: null): Query
   in(column: string, values: string[]): Query
@@ -82,6 +83,7 @@ export function applyFilters<Query extends Filterable<Query>>(
   if (filters.status) query = query.eq("status", filters.status)
   if (filters.declined === "yes") query = query.not("declined_at", "is", null)
   if (filters.declined === "no") query = query.is("declined_at", null)
+  if (filters.under18) query = query.eq("under_18", filters.under18 === "yes")
   if (filters.released === "yes")
     query = query.not("filter_form.decisions_released_at", "is", null)
   if (filters.released === "no")

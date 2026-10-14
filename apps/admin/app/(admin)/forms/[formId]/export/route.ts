@@ -42,7 +42,7 @@ export async function GET(
     supabase
       .from("applications")
       .select(
-        "id, role, status, submitted_at, declined_at, withdrawn_at, answers, profiles(full_name, email), application_decisions(decision, decided_at)"
+        "id, role, status, submitted_at, declined_at, withdrawn_at, answers, under_18, profiles(full_name, email, school, phone, date_of_birth), application_decisions(decision, decided_at)"
       )
       .eq("form_id", formId)
       .order("created_at")
@@ -56,6 +56,10 @@ export async function GET(
       id: a.id,
       fullName: a.profiles.full_name,
       email: a.profiles.email,
+      school: a.profiles.school,
+      phone: a.profiles.phone,
+      dateOfBirth: a.profiles.date_of_birth,
+      under18: a.under_18,
       role: a.role,
       status: a.status,
       submittedAt: a.submitted_at,

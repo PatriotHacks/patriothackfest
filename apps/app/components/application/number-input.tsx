@@ -1,7 +1,8 @@
 "use client"
 
-import { Input } from "@workspace/ui/components/input"
 import { useState, type ComponentProps } from "react"
+
+import { FormInput } from "./form-controls"
 
 const DECIMAL = /^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/
 
@@ -16,7 +17,7 @@ export function NumberInput({
   value,
   onValueChange,
   ...props
-}: Omit<ComponentProps<typeof Input>, "value" | "onChange" | "type"> & {
+}: Omit<ComponentProps<"input">, "value" | "onChange" | "type"> & {
   value: unknown
   onValueChange: (value: number | string | undefined) => void
 }) {
@@ -25,7 +26,7 @@ export function NumberInput({
   )
 
   return (
-    <Input
+    <FormInput
       {...props}
       type="text"
       inputMode="decimal"

@@ -1,23 +1,25 @@
 import { cn } from "@workspace/ui/lib/utils"
 import Image from "next/image"
 
-import { authSans, authSerif } from "@/lib/auth-fonts"
+import { PAPER, SERIF } from "@/components/paper"
 
 export function AuthCard({
   title,
   description,
+  wide = false,
   children,
 }: {
   title: string
   description: React.ReactNode
+  wide?: boolean
   children: React.ReactNode
 }) {
   return (
     <div
       className={cn(
-        authSerif.variable,
-        authSans.variable,
-        "w-full max-w-[429px] rounded-[13.5px] border border-[#E7E4D9] bg-[#fef9ef] px-[16.5px] pt-[25px] pb-[17.5px] font-(family-name:--font-auth-sans) text-[#3A4A2B] shadow-[0_1px_2px_rgb(58_74_43/0.05),0_8px_22px_rgb(58_74_43/0.06)]"
+        PAPER,
+        "w-full px-[16.5px] pt-[25px] pb-[17.5px]",
+        wide ? "max-w-[640px] sm:px-[32px] sm:pb-[28px]" : "max-w-[429px]"
       )}
     >
       <div className="flex flex-col items-center text-center">
@@ -29,7 +31,7 @@ export function AuthCard({
           preload
           className="h-[50.5px] w-auto"
         />
-        <h1 className="mt-[14px] font-(family-name:--font-auth-serif) text-[38.5px] leading-[1.05] italic">
+        <h1 className={cn(SERIF, "mt-[14px] text-[38.5px] leading-[1.05]")}>
           {title}
         </h1>
         <p className="mt-[11px] text-[14.5px] text-[#6E6E68]">{description}</p>

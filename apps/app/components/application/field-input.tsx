@@ -2,15 +2,13 @@
 
 import type { Question } from "@workspace/forms"
 import { Checkbox } from "@workspace/ui/components/checkbox"
-import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
 import {
   RadioGroup,
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group"
-import { Textarea } from "@workspace/ui/components/textarea"
 
 import { fieldErrorId, fieldInputId, fieldLabelId } from "./field-ids"
+import { FormInput, FormTextarea, OLIVE_CHECK, TILE } from "./form-controls"
 import { NumberInput } from "./number-input"
 
 export function FieldInput({
@@ -41,7 +39,7 @@ export function FieldInput({
     case "url":
     case "date":
       return (
-        <Input
+        <FormInput
           id={inputId}
           type={
             field.type === "short_text"
@@ -59,7 +57,7 @@ export function FieldInput({
       )
     case "long_text":
       return (
-        <Textarea
+        <FormTextarea
           id={inputId}
           value={text}
           onChange={(e) => onChange(e.target.value)}
@@ -93,12 +91,14 @@ export function FieldInput({
           {...a11y}
         >
           {field.options.map((option, i) => (
-            <div key={option} className="flex items-center gap-2">
-              <RadioGroupItem value={option} id={`${inputId}-${i}`} />
-              <Label htmlFor={`${inputId}-${i}`} className="font-normal">
-                {option}
-              </Label>
-            </div>
+            <label key={option} htmlFor={`${inputId}-${i}`} className={TILE}>
+              <RadioGroupItem
+                value={option}
+                id={`${inputId}-${i}`}
+                className={OLIVE_CHECK}
+              />
+              {option}
+            </label>
           ))}
         </RadioGroup>
       )
@@ -113,9 +113,10 @@ export function FieldInput({
           {...a11y}
         >
           {field.options.map((option, i) => (
-            <div key={option} className="flex items-center gap-2">
+            <label key={option} htmlFor={`${inputId}-${i}`} className={TILE}>
               <Checkbox
                 id={`${inputId}-${i}`}
+                className={OLIVE_CHECK}
                 checked={selected.includes(option)}
                 onCheckedChange={(checked) => {
                   onChange(
@@ -129,19 +130,18 @@ export function FieldInput({
                 }}
                 disabled={disabled}
               />
-              <Label htmlFor={`${inputId}-${i}`} className="font-normal">
-                {option}
-              </Label>
-            </div>
+              {option}
+            </label>
           ))}
         </div>
       )
     }
     case "checkbox":
       return (
-        <div className="flex items-center gap-2">
+        <label htmlFor={inputId} className={TILE}>
           <Checkbox
             id={inputId}
+            className={OLIVE_CHECK}
             checked={value === true}
             onCheckedChange={(checked) => {
               onChange(checked === true)
@@ -150,10 +150,8 @@ export function FieldInput({
             disabled={disabled}
             {...a11y}
           />
-          <Label htmlFor={inputId} className="font-normal">
-            Yes
-          </Label>
-        </div>
+          Yes
+        </label>
       )
   }
 }

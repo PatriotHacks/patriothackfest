@@ -1,25 +1,44 @@
-import { Button } from "@workspace/ui/components/button"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@workspace/ui/components/sidebar"
+import Image from "next/image"
+import { redirect } from "next/navigation"
 
-import { getApplicant } from "@/lib/applicant"
-import { signOut } from "@/lib/auth-actions"
+import { ApplicantSidebar } from "@/components/applicant-sidebar"
+import { getNamedApplicant } from "@/lib/applicant"
 
 export default async function MainLayout({ children }: LayoutProps<"/">) {
-  const { email } = await getApplicant()
+  const { supabase, userId } = await getNamedApplicant()
+
+  const { data, error } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("user_id", userId)
+    .neq("status", "draft")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!data) redirect("/start")
 
   return (
-    <div className="flex min-h-svh flex-col">
-      <header className="flex items-center gap-6 border-b px-6 py-3">
-        <span className="font-semibold">Patriot HackFest</span>
-        <div className="ml-auto flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{email}</span>
-          <form action={signOut}>
-            <Button type="submit" variant="outline" size="sm">
-              Sign out
-            </Button>
-          </form>
-        </div>
-      </header>
-      <main className="flex-1 p-6">{children}</main>
-    </div>
+    <SidebarProvider>
+      <ApplicantSidebar applicationId={data.id} />
+      <SidebarInset className="bg-white">
+        <header className="flex items-center gap-3 border-b border-[#E7E4D9] px-4 py-2 md:hidden">
+          <SidebarTrigger />
+          <Image
+            src="/logo.png"
+            alt="Patriot HackFest"
+            width={400}
+            height={211}
+            className="h-[32px] w-auto"
+          />
+        </header>
+        <main className="flex-1 p-4 sm:p-8">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

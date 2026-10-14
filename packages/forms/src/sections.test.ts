@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  groupSections,
   hasEditableSections,
   LOCKED_ANSWER_ERROR,
   lockedAnswerErrors,
@@ -82,5 +83,24 @@ describe("hasEditableSections", () => {
   it("detects whether any section stays editable after submit", () => {
     expect(hasEditableSections(schema)).toBe(true)
     expect(hasEditableSections({ fields: [basics, name] })).toBe(false)
+  })
+})
+
+describe("groupSections", () => {
+  it("groups questions under the nearest preceding section", () => {
+    expect(groupSections(schema.fields)).toEqual([
+      { section: basics, questions: [name, resume] },
+      { section: extras, questions: [bio, tags] },
+    ])
+  })
+
+  it("puts questions before the first section in an untitled group", () => {
+    const loose = field("short_text")
+    const empty = section()
+    expect(groupSections([loose, empty, extras, bio])).toEqual([
+      { section: null, questions: [loose] },
+      { section: empty, questions: [] },
+      { section: extras, questions: [bio] },
+    ])
   })
 })

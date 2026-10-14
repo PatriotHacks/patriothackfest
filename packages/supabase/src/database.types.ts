@@ -169,8 +169,9 @@ export type Database = {
           updated_at: string
           user_id: string
           withdrawn_at: string | null
+          under_18: boolean | null
         }
-        ComputedFields: never
+        ComputedFields: "under_18"
         Insert: {
           answers?: NonNullable<Json>
           created_at?: string
@@ -477,24 +478,33 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          date_of_birth: string | null
           email: string
           full_name: string | null
           id: string
+          phone: string | null
+          school: string | null
           updated_at: string
         }
         ComputedFields: never
         Insert: {
           created_at?: string
+          date_of_birth?: string | null
           email: string
           full_name?: string | null
           id: string
+          phone?: string | null
+          school?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          date_of_birth?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          phone?: string | null
+          school?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -575,6 +585,10 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: undefined
       }
+      event_has_ended: {
+        Args: { p_ends_at: string; p_starts_at: string }
+        Returns: boolean
+      }
       form_answered_field_ids: {
         Args: { p_form_id: string }
         Returns: string[]
@@ -621,6 +635,25 @@ export type Database = {
       start_application: { Args: { p_form_id: string }; Returns: string }
       submit_application: {
         Args: { p_application_id: string }
+        Returns: undefined
+      }
+      under_18: {
+        Args: {
+          p_application: Omit<
+            Database["public"]["Tables"]["applications"]["Row"],
+            Database["public"]["Tables"]["applications"]["ComputedFields"]
+          >
+        }
+        Returns: boolean
+      }
+      update_basic_info: {
+        Args: {
+          p_date_of_birth?: string
+          p_full_name: string
+          p_keep_phone?: boolean
+          p_phone?: string
+          p_school?: string
+        }
         Returns: undefined
       }
       validated_application_answers: {

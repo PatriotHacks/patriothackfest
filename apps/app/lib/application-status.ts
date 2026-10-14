@@ -40,32 +40,25 @@ export function applicationPhase(
     : "locked_submission"
 }
 
-export type StatusLabel = {
-  label: string
-  variant: "default" | "secondary" | "outline" | "destructive"
-}
-
 export function statusLabel(
   phase: ApplicationPhase,
   form: FormTiming,
   decision: Enums["decision"] | null
-): StatusLabel {
-  if (phase === "withdrawn") return { label: "Withdrawn", variant: "outline" }
-  if (phase === "declined") return { label: "Declined", variant: "outline" }
-  if (phase === "draft") return { label: "Draft", variant: "secondary" }
-  if (phase === "closed_draft")
-    return { label: "Not submitted", variant: "outline" }
-  if (form.decisions_released_at === null)
-    return { label: "Submitted", variant: "secondary" }
+) {
+  if (phase === "withdrawn") return "Withdrawn"
+  if (phase === "declined") return "Declined"
+  if (phase === "draft") return "Draft"
+  if (phase === "closed_draft") return "Not submitted"
+  if (form.decisions_released_at === null) return "Submitted"
   switch (decision) {
     case "accepted":
-      return { label: "Accepted", variant: "default" }
+      return "Accepted"
     case "waitlisted":
-      return { label: "Waitlisted", variant: "secondary" }
+      return "Waitlisted"
     case "rejected":
-      return { label: "Not accepted", variant: "destructive" }
+      return "Not accepted"
     default:
-      return { label: "Under review", variant: "secondary" }
+      return "Under review"
   }
 }
 

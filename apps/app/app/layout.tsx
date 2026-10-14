@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "@workspace/ui/globals.css"
 import { cn } from "@workspace/ui/lib/utils"
 
+import { authSans, authSerif } from "@/lib/auth-fonts"
+
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
@@ -22,7 +24,9 @@ export default function RootLayout({
       className={cn(
         "font-sans antialiased",
         geist.variable,
-        geistMono.variable
+        geistMono.variable,
+        authSerif.variable,
+        authSans.variable
       )}
     >
       <body>{children}</body>

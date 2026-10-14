@@ -56,7 +56,7 @@ export default async function ApplicationPage({
   const { data: application, error } = await supabase
     .from("applications")
     .select(
-      "id, event_id, role, status, answers, created_at, submitted_at, withdrawn_at, declined_at, profiles(full_name, email), events(name), forms(id, title, published_schema, decisions_released_at), application_decisions(decision, decided_at, profiles(email))"
+      "id, event_id, role, status, answers, created_at, submitted_at, withdrawn_at, declined_at, under_18, profiles(full_name, email, school, phone, date_of_birth), events(name), forms(id, title, published_schema, decisions_released_at), application_decisions(decision, decided_at, profiles(email))"
     )
     .eq("id", id)
     .maybeSingle()
@@ -205,6 +205,25 @@ export default async function ApplicationPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-[auto_1fr]">
+            {(
+              [
+                ["School", application.profiles.school],
+                ["Phone", application.profiles.phone],
+                ["Date of birth", application.profiles.date_of_birth],
+              ] as const
+            ).map(([label, value]) => (
+              <div key={label} className="contents">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="flex items-center gap-2">
+                  {value ?? "Not provided"}
+                  {label === "Date of birth" && application.under_18 && (
+                    <Badge variant="destructive">Under 18</Badge>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">
               {STATUS_LABELS[application.status]}

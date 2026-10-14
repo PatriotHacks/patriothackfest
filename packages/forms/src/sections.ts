@@ -1,5 +1,11 @@
 import type { AnswerErrors } from "./answers"
-import type { Answers, Field } from "./schema"
+import {
+  isSection,
+  type Answers,
+  type Field,
+  type Question,
+  type Section,
+} from "./schema"
 
 export const LOCKED_ANSWER_ERROR = "This answer can no longer be changed"
 
@@ -11,6 +17,19 @@ export function lockedFieldIds(schema: { fields: readonly Field[] }) {
     else if (!editable) locked.add(field.id)
   }
   return locked
+}
+
+export type SectionGroup = { section: Section | null; questions: Question[] }
+
+export function groupSections(fields: readonly Field[]) {
+  const groups: SectionGroup[] = []
+  for (const field of fields) {
+    if (isSection(field)) groups.push({ section: field, questions: [] })
+    else if (groups.length === 0)
+      groups.push({ section: null, questions: [field] })
+    else groups.at(-1)!.questions.push(field)
+  }
+  return groups
 }
 
 export function hasEditableSections(schema: { fields: readonly Field[] }) {
