@@ -23,7 +23,8 @@ export function BasicInfoView({
     [
       "Phone number",
       profile.phone &&
-        parsePhoneNumberFromString(profile.phone)!.formatInternational(),
+        (parsePhoneNumberFromString(profile.phone)?.formatInternational() ??
+          profile.phone),
     ],
     [
       "Date of birth",

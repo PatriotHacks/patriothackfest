@@ -32,8 +32,7 @@ export function toE164(country: CountryCode, national: string) {
 
 export function splitE164(phone: string | null) {
   const parsed = phone ? parsePhoneNumberFromString(phone) : undefined
-  return {
-    country: parsed?.country ?? DEFAULT_COUNTRY,
-    national: parsed?.nationalNumber ?? "",
-  }
+  if (parsed?.country && parsed.isValid())
+    return { country: parsed.country, national: parsed.nationalNumber }
+  return { country: DEFAULT_COUNTRY, national: phone ?? "" }
 }
