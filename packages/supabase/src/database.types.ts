@@ -650,6 +650,7 @@ export type Database = {
         Args: {
           p_date_of_birth?: string
           p_full_name: string
+          p_keep_phone?: boolean
           p_phone?: string
           p_school?: string
         }

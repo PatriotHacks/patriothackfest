@@ -59,7 +59,7 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
   ('fb000000-0000-0000-0000-000000000002', 'eb000000-0000-0000-0000-000000000002', 'participant', 'Undated', 'published',
    now() + interval '1 day', now() + interval '2 days', '{"title": "Undated", "description": null, "fields": []}');
 
-select plan(22);
+select plan(32);
 
 select pg_temp.login('b1000000-0000-0000-0000-000000000001', 'basic-alice@example.test');
 select throws_ok(
@@ -118,6 +118,26 @@ select results_eq(
 );
 
 select lives_ok(
+  $$select public.update_basic_info('Alice A', 'Other School', null, '2012-06-16', true)$$,
+  'basic info saves while keeping the phone'
+);
+select results_eq(
+  $$select school, phone from public.profiles where id = 'b1000000-0000-0000-0000-000000000001'$$,
+  $$values ('Other School', '+17035551234')$$,
+  'keeping the phone leaves it unchanged while other fields save'
+);
+select lives_ok(
+  $$select public.update_basic_info('Alice A', 'Some School', null, '2012-06-16')$$,
+  'basic info saves with a cleared phone'
+);
+select is(
+  (select phone from public.profiles where id = 'b1000000-0000-0000-0000-000000000001'),
+  null,
+  'a null phone without keep clears it'
+);
+select public.update_basic_info('Alice A', 'Some School', '+17035551234', '2012-06-16');
+
+select lives_ok(
   format('select public.submit_application(%L)', current_setting('test.app1')),
   'under-18 applicants can submit'
 );
@@ -154,7 +174,20 @@ select is(pg_temp.flag(current_setting('test.app5')::uuid), true, 'undated event
 
 update public.profiles set school = 'Some School', date_of_birth = null
 where id = 'b1000000-0000-0000-0000-000000000004';
-select is(pg_temp.flag(current_setting('test.app5')::uuid), false, 'missing birth dates are not flagged');
+select is(pg_temp.flag(current_setting('test.app5')::uuid), null, 'missing birth dates are unknown');
+select is(
+  (select count(*) from public.applications a where a.id = current_setting('test.app5')::uuid and public.under_18(a) = false),
+  0::bigint,
+  'unknown ages are excluded from the not-under-18 filter'
+);
+
+update public.profiles set school = 'George Mason University', date_of_birth = null
+where id = 'b1000000-0000-0000-0000-000000000002';
+select is(pg_temp.flag(current_setting('test.app3')::uuid), false, 'GMU applicants without a birth date are not flagged');
+
+update public.profiles set school = '  george MASON university ', date_of_birth = '2012-06-16'
+where id = 'b1000000-0000-0000-0000-000000000002';
+select is(pg_temp.flag(current_setting('test.app3')::uuid), false, 'the GMU match ignores case and surrounding whitespace');
 
 update public.profiles set school = 'George Mason', date_of_birth = '2012-06-16'
 where id = 'b1000000-0000-0000-0000-000000000002';
@@ -162,7 +195,7 @@ select is(pg_temp.flag(current_setting('test.app3')::uuid), true, 'only the exac
 
 select pg_temp.login('b1000000-0000-0000-0000-000000000004', 'basic-dave@example.test');
 select is(
-  (select count(*) from public.applications a where public.under_18(a) is not null),
+  (select count(public.under_18(a) is null) from public.applications a),
   1::bigint,
   'applicants only see their own applications'
 );
@@ -186,6 +219,19 @@ select throws_ok(
   'basic info stays locked through the last event day'
 );
 reset role;
+
+update public.profiles set school = 'Some School', date_of_birth = '2008-02-29'
+where id = 'b1000000-0000-0000-0000-000000000004';
+update public.events set starts_at = '2026-02-28 12:00:00-05'
+where id = 'eb000000-0000-0000-0000-000000000002';
+select is(pg_temp.flag(current_setting('test.app5')::uuid), true, 'Feb 29 birthdays are under 18 on Feb 28 of a non-leap 18th year');
+update public.events set starts_at = '2026-03-01 12:00:00-05'
+where id = 'eb000000-0000-0000-0000-000000000002';
+select is(pg_temp.flag(current_setting('test.app5')::uuid), false, 'Feb 29 birthdays turn 18 on Mar 1 of a non-leap year');
+
+update public.profiles set date_of_birth = '2008-03-01'
+where id = 'b1000000-0000-0000-0000-000000000004';
+select is(pg_temp.flag(current_setting('test.app5')::uuid), false, 'Mar 1 birthdays turn 18 on Mar 1');
 
 select * from finish(true);
 rollback;
