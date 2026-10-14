@@ -3,6 +3,9 @@
 import {
   fileAnswerSchema,
   isFieldVisible,
+  isSection,
+  lockedAnswerErrors,
+  lockedFieldIds,
   pruneHiddenAnswers,
   validateAnswers,
   type AnswerErrors,
@@ -85,6 +88,7 @@ export function ApplicationForm({
   const router = useRouter()
   const [answers, setAnswers] = useState(initialAnswers)
   const answersRef = useRef(initialAnswers)
+  const savedRef = useRef(initialAnswers)
   const lastKnown = useRef(updatedAt)
   const pendingDeletes = useRef(new Set<string>())
   const [errors, setErrors] = useState<AnswerErrors>({})
@@ -98,6 +102,7 @@ export function ApplicationForm({
   const visible = schema.fields.filter((f) =>
     isFieldVisible(f, answers, schema)
   )
+  const locked = mode === "edit" ? lockedFieldIds(schema) : new Set<string>()
 
   const removeUnreferencedFiles = useCallback(
     (previous: Answers, stored: Answers) => {
@@ -123,6 +128,7 @@ export function ApplicationForm({
       const result = await saveAnswers(applicationId, stored)
       if (result.error) return result
       lastKnown.current = result.updatedAt!
+      savedRef.current = stored
       removeUnreferencedFiles(snapshot, stored)
       return result
     },
@@ -213,6 +219,12 @@ export function ApplicationForm({
     setFormError(null)
     setMessage(null)
     const snapshot = answersRef.current
+    const lockedErrors = lockedAnswerErrors(
+      schema,
+      savedRef.current,
+      pruneHiddenAnswers(schema, snapshot)
+    )
+    if (Object.keys(lockedErrors).length > 0) return showErrors(lockedErrors)
     const local = validateAnswers(schema, snapshot, { mode: "submit" })
     if (Object.keys(local).length > 0) return showErrors(local)
     setBusy(true)
@@ -237,7 +249,7 @@ export function ApplicationForm({
     router.refresh()
   }
 
-  const locked = busy || uploading > 0
+  const blocked = busy || uploading > 0
 
   return (
     <div className="flex flex-col gap-6">
@@ -259,7 +271,19 @@ export function ApplicationForm({
       )}
 
       {visible.map((field) => {
+        if (isSection(field))
+          return (
+            <div key={field.id} className="flex flex-col gap-1 border-t pt-4">
+              <h2 className="text-lg font-semibold">{field.label}</h2>
+              {field.help_text && (
+                <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+                  {field.help_text}
+                </p>
+              )}
+            </div>
+          )
         const error = errors[field.id]
+        const disabled = busy || locked.has(field.id)
         return (
           <div
             key={field.id}
@@ -285,7 +309,7 @@ export function ApplicationForm({
                 field={field}
                 value={answers[field.id]}
                 invalid={error !== undefined}
-                disabled={busy}
+                disabled={disabled}
                 userId={userId}
                 applicationId={applicationId}
                 onChange={(value) => update(field, value)}
@@ -298,7 +322,7 @@ export function ApplicationForm({
                 field={field}
                 value={answers[field.id]}
                 invalid={error !== undefined}
-                disabled={busy}
+                disabled={disabled}
                 onChange={(value) => update(field, value)}
                 onBlur={() => {
                   if (mode === "draft") void autosave.flush()
@@ -321,14 +345,14 @@ export function ApplicationForm({
         <div className="flex flex-wrap items-center gap-3">
           {mode === "draft" ? (
             <>
-              <Button onClick={submit} disabled={locked}>
+              <Button onClick={submit} disabled={blocked}>
                 Submit application
               </Button>
               <SaveIndicator status={autosave.status} error={autosave.error} />
             </>
           ) : (
             <>
-              <Button onClick={saveChanges} disabled={locked || !dirty}>
+              <Button onClick={saveChanges} disabled={blocked || !dirty}>
                 Save changes
               </Button>
               {dirty && (

@@ -1,6 +1,7 @@
 import {
   answersSchema,
   formatInZone,
+  isSection,
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS } from "@workspace/supabase/roles"
@@ -146,8 +147,12 @@ export default async function ApplicationPage({
               initialAnswers={answers}
               updatedAt={application.updated_at}
               editNote={
-                phase === "draft" && form.edits_lock_at
-                  ? `After submitting, you can edit your answers until ${formatInZone(form.edits_lock_at)}.`
+                phase === "draft" &&
+                form.edits_lock_at &&
+                schema.fields.some(
+                  (f) => isSection(f) && f.editable_after_submit
+                )
+                  ? `After submitting, you can edit answers in some sections until ${formatInZone(form.edits_lock_at)}.`
                   : null
               }
             />
