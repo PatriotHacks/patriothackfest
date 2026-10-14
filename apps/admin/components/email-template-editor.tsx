@@ -6,7 +6,6 @@ import {
   SUBJECT_MAX_LENGTH,
   TEMPLATE_VARIABLES,
   validateTemplate,
-  type TemplateVariable,
 } from "@workspace/email/templates"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -18,10 +17,10 @@ import {
 } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { Textarea } from "@workspace/ui/components/textarea"
-import { useId, useRef, useState, useTransition } from "react"
+import { useId, useState, useTransition } from "react"
 
 import { saveEmailTemplate, sendTestEmail } from "@/app/(admin)/email/actions"
+import { BodyField } from "@/components/body-field"
 import {
   SAMPLE_DASHBOARD_URL,
   SAMPLE_VALUES,
@@ -56,7 +55,6 @@ export function EmailTemplateEditor({
   emailDisabledReason,
 }: Props) {
   const id = useId()
-  const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [subject, setSubject] = useState(initialSubject)
   const [body, setBody] = useState(initialBody)
   const [saved, setSaved] = useState({
@@ -71,20 +69,6 @@ export function EmailTemplateEditor({
   const errors = validateTemplate({ subject, body })
   const rendered = errors.length === 0 ? preview(subject, body) : null
   const dirty = subject !== saved.subject || body !== saved.body
-
-  function insert(variable: TemplateVariable) {
-    const el = bodyRef.current
-    if (!el) return
-    const token = `{{${variable}}}`
-    const next =
-      body.slice(0, el.selectionStart) + token + body.slice(el.selectionEnd)
-    const cursor = el.selectionStart + token.length
-    setBody(next)
-    requestAnimationFrame(() => {
-      el.focus()
-      el.setSelectionRange(cursor, cursor)
-    })
-  }
 
   function save() {
     setMessage(null)
@@ -128,38 +112,15 @@ export function EmailTemplateEditor({
               onChange={(e) => setSubject(e.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor={`${id}-body`}>Body</Label>
-            <Textarea
-              id={`${id}-body`}
-              ref={bodyRef}
-              value={body}
-              maxLength={BODY_MAX_LENGTH}
-              onChange={(e) => setBody(e.target.value)}
-              className="min-h-80 font-mono"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Variables</p>
-            <ul className="flex flex-col gap-1">
-              {TEMPLATE_VARIABLES.map((variable) => (
-                <li key={variable} className="flex items-baseline gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="font-mono"
-                    onClick={() => insert(variable)}
-                  >
-                    {`{{${variable}}}`}
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {VARIABLE_INFO[variable]}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <BodyField
+            id={`${id}-body`}
+            value={body}
+            onChange={setBody}
+            maxLength={BODY_MAX_LENGTH}
+            variables={TEMPLATE_VARIABLES}
+            info={VARIABLE_INFO}
+            className="min-h-80"
+          />
           {errors.length > 0 && (
             <ul className="text-sm text-destructive">
               {errors.map((e) => (
