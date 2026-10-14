@@ -4,7 +4,6 @@ import {
   BROADCAST_VARIABLES,
   EMAIL_DAILY_LIMIT,
   renderBroadcast,
-  type BroadcastVariable,
 } from "@workspace/email/broadcast"
 import {
   BODY_MAX_LENGTH,
@@ -39,9 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
-import { Textarea } from "@workspace/ui/components/textarea"
 import { useRouter } from "next/navigation"
-import { useId, useRef, useState, useTransition } from "react"
+import { useId, useState, useTransition } from "react"
 
 import {
   createBroadcast,
@@ -50,6 +48,7 @@ import {
   sendBroadcastBatch,
   sendBroadcastTest,
 } from "@/app/(admin)/email/actions"
+import { BodyField } from "@/components/body-field"
 import { EmailSender } from "@/components/email-sender"
 import {
   BROADCAST_SAMPLE_VALUES,
@@ -83,7 +82,6 @@ export function BroadcastComposer({
 }: Props) {
   const id = useId()
   const router = useRouter()
-  const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [role, setRole] = useState<Role | null>(null)
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
@@ -106,20 +104,6 @@ export function BroadcastComposer({
     : 0
   const overBudget = confirm !== null && confirm.recipients > remaining
   const disabled = errors.length > 0 || emailDisabledReason !== null
-
-  function insert(variable: BroadcastVariable) {
-    const el = bodyRef.current
-    if (!el) return
-    const token = `{{${variable}}}`
-    const next =
-      body.slice(0, el.selectionStart) + token + body.slice(el.selectionEnd)
-    const cursor = el.selectionStart + token.length
-    setBody(next)
-    requestAnimationFrame(() => {
-      el.focus()
-      el.setSelectionRange(cursor, cursor)
-    })
-  }
 
   function sendTest() {
     setMessage(null)
@@ -205,38 +189,15 @@ export function BroadcastComposer({
               onChange={(e) => setSubject(e.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor={`${id}-body`}>Body</Label>
-            <Textarea
-              id={`${id}-body`}
-              ref={bodyRef}
-              value={body}
-              maxLength={BODY_MAX_LENGTH}
-              onChange={(e) => setBody(e.target.value)}
-              className="min-h-60 font-mono"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Variables</p>
-            <ul className="flex flex-col gap-1">
-              {BROADCAST_VARIABLES.map((variable) => (
-                <li key={variable} className="flex items-baseline gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="font-mono"
-                    onClick={() => insert(variable)}
-                  >
-                    {`{{${variable}}}`}
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {BROADCAST_VARIABLE_INFO[variable]}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <BodyField
+            id={`${id}-body`}
+            value={body}
+            onChange={setBody}
+            maxLength={BODY_MAX_LENGTH}
+            variables={BROADCAST_VARIABLES}
+            info={BROADCAST_VARIABLE_INFO}
+            className="min-h-60"
+          />
           {(subject !== "" || body !== "") && errors.length > 0 && (
             <ul className="text-sm text-destructive">
               {errors.map((e) => (
