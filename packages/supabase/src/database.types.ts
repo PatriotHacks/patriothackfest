@@ -593,8 +593,8 @@ export type Database = {
           p_role?: Database["public"]["Enums"]["app_role"]
         }
         Returns: {
-          recipients: number
           daily_used: number
+          recipients: number
         }[]
       }
       admin_change_application_role: {
