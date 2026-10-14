@@ -15,6 +15,7 @@ import { Button } from "@workspace/ui/components/button"
 import { useState, useTransition } from "react"
 
 import { withdrawApplication } from "@/app/(applicant)/(main)/applications/[id]/actions"
+import { OUTLINE_PILL } from "@/components/paper"
 
 export function WithdrawButton({
   applicationId,
@@ -31,7 +32,7 @@ export function WithdrawButton({
     <div className="flex flex-col gap-2">
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger asChild>
-          <Button variant="outline" className="w-fit">
+          <Button variant="outline" className={OUTLINE_PILL}>
             Withdraw application
           </Button>
         </AlertDialogTrigger>
