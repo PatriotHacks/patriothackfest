@@ -1,4 +1,5 @@
-import { escapeHtml, statusUpdateHtml, statusUpdateText } from "./status-update"
+import { escapeHtml } from "./layout"
+import { statusUpdateHtml, statusUpdateText } from "./status-update"
 
 export const TEMPLATE_VARIABLES = [
   "name",
