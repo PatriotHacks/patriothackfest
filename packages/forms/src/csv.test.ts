@@ -15,6 +15,10 @@ function row(overrides: Partial<ApplicationCsvRow> = {}): ApplicationCsvRow {
     id: "app-1",
     fullName: "Ada Lovelace",
     email: "ada@example.com",
+    school: "George Mason University",
+    phone: "+17035551234",
+    dateOfBirth: "2000-01-02",
+    under18: false,
     role: "participant",
     status: "submitted",
     submittedAt: null,
@@ -38,7 +42,7 @@ function answerCell(f: Field, value: unknown) {
   const [, line] = parse(
     buildApplicationsCsv({ fields: [f] }, [row({ answers: { [f.id]: value } })])
   )
-  return line!.split(",").slice(11).join(",")
+  return line!.split(",").slice(15).join(",")
 }
 
 describe("escapeCsvCell", () => {
@@ -78,8 +82,8 @@ describe("buildApplicationsCsv", () => {
       }),
     ])
     expect(parse(csv)).toEqual([
-      "Application ID,Full name,Email,Role,Status,Submitted at,Decision,Decided at,Decisions released,Declined at,Withdrawn at,Team name",
-      'app-1,Ada Lovelace,ada@example.com,participant,submitted,"Jul 1, 2026, 12:00 PM EDT",pending,,no,,,Analytical Engines',
+      "Application ID,Full name,Email,School,Phone,Date of birth,Under 18,Role,Status,Submitted at,Decision,Decided at,Decisions released,Declined at,Withdrawn at,Team name",
+      'app-1,Ada Lovelace,ada@example.com,George Mason University,\'+17035551234,2000-01-02,no,participant,submitted,"Jul 1, 2026, 12:00 PM EDT",pending,,no,,,Analytical Engines',
     ])
   })
 
@@ -92,6 +96,10 @@ describe("buildApplicationsCsv", () => {
       buildApplicationsCsv({ fields: [] }, [
         row({
           fullName: null,
+          school: null,
+          phone: null,
+          dateOfBirth: null,
+          under18: true,
           submittedAt: "2026-07-01T16:00:00Z",
           status: "withdrawn",
           decision: "accepted",
@@ -103,7 +111,7 @@ describe("buildApplicationsCsv", () => {
       ])
     )
     expect(line).toBe(
-      'app-1,,ada@example.com,participant,withdrawn,"Jul 1, 2026, 12:00 PM EDT",accepted,"Dec 1, 2026, 12:00 PM EST",yes,"Dec 2, 2026, 12:30 PM EST","Dec 3, 2026, 12:00 AM EST"'
+      'app-1,,ada@example.com,,,,yes,participant,withdrawn,"Jul 1, 2026, 12:00 PM EDT",accepted,"Dec 1, 2026, 12:00 PM EST",yes,"Dec 2, 2026, 12:30 PM EST","Dec 3, 2026, 12:00 AM EST"'
     )
   })
 
@@ -115,7 +123,7 @@ describe("buildApplicationsCsv", () => {
       field("email", { label: "Email" }),
     ]
     const [header] = parse(buildApplicationsCsv({ fields }, []))
-    expect(header!.split(",").slice(10)).toEqual([
+    expect(header!.split(",").slice(14)).toEqual([
       "Withdrawn at",
       "Notes",
       "Notes (2)",
@@ -157,8 +165,8 @@ describe("buildApplicationsCsv", () => {
         row({ answers: { [name.id]: "x", stale: "gone" } }),
       ])
     )
-    expect(header!.split(",")).toHaveLength(12)
-    expect(line!.split(",")).toHaveLength(12)
+    expect(header!.split(",")).toHaveLength(16)
+    expect(line!.split(",")).toHaveLength(16)
     expect(line).not.toContain("gone")
   })
 
@@ -211,7 +219,7 @@ describe("buildApplicationsCsv", () => {
         row({ answers: { [heading.id]: "x", [name.id]: "Ada" } }),
       ])
     )
-    expect(header!.split(",").slice(11)).toEqual(["Name"])
-    expect(line!.split(",").slice(11)).toEqual(["Ada"])
+    expect(header!.split(",").slice(15)).toEqual(["Name"])
+    expect(line!.split(",").slice(15)).toEqual(["Ada"])
   })
 })

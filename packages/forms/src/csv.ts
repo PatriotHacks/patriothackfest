@@ -6,6 +6,10 @@ export type ApplicationCsvRow = {
   id: string
   fullName: string | null
   email: string
+  school: string | null
+  phone: string | null
+  dateOfBirth: string | null
+  under18: boolean
   role: "participant" | "volunteer" | "judge"
   status: "draft" | "submitted" | "withdrawn"
   submittedAt: string | null
@@ -22,6 +26,10 @@ const FIXED_HEADERS = [
   "Application ID",
   "Full name",
   "Email",
+  "School",
+  "Phone",
+  "Date of birth",
+  "Under 18",
   "Role",
   "Status",
   "Submitted at",
@@ -80,6 +88,10 @@ export function buildApplicationsCsv(
       row.id,
       row.fullName ?? "",
       row.email,
+      row.school ?? "",
+      row.phone ?? "",
+      row.dateOfBirth ?? "",
+      yesNo(row.under18),
       row.role,
       row.status,
       timestamp(row.submittedAt),
