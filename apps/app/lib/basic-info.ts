@@ -6,7 +6,7 @@ import { isValidE164, splitE164, toE164, type CountryCode } from "./phone"
 export type BasicInfo = {
   fullName: string
   school: string
-  phone: string
+  phone: string | null
   dateOfBirth: string
 }
 
@@ -38,7 +38,7 @@ export const BASIC_INFO_KEYS: readonly BasicInfoKey[] = [
 export const basicInfoSchema = z.object({
   fullName: z.string().max(400),
   school: z.string().max(400),
-  phone: z.string().max(20),
+  phone: z.string().max(20).nullable(),
   dateOfBirth: z.string().max(10),
 })
 
@@ -68,7 +68,7 @@ export function basicInfoErrors(
 
   if (info.phone === "") {
     if (required) errors.phone = required
-  } else if (!isValidE164(info.phone))
+  } else if (info.phone !== null && !isValidE164(info.phone))
     errors.phone = "Enter a valid phone number"
 
   const dob = info.dateOfBirth
@@ -99,7 +99,10 @@ export function toBasicInfo(draft: BasicInfoDraft): BasicInfo {
   return {
     fullName: draft.fullName,
     school: draft.school,
-    phone: toE164(draft.phoneCountry, draft.phoneNational) ?? "",
+    phone:
+      draft.phoneNational === ""
+        ? ""
+        : toE164(draft.phoneCountry, draft.phoneNational),
     dateOfBirth: draft.dateOfBirth,
   }
 }
@@ -108,11 +111,8 @@ export function basicInfoDraftErrors(
   draft: BasicInfoDraft,
   mode: "draft" | "submit"
 ): BasicInfoErrors {
-  const errors = basicInfoErrors(toBasicInfo(draft), mode)
-  if (
-    draft.phoneNational !== "" &&
-    toE164(draft.phoneCountry, draft.phoneNational) === null
-  )
-    errors.phone = "Enter a valid phone number"
+  const info = toBasicInfo(draft)
+  const errors = basicInfoErrors(info, mode)
+  if (info.phone === null) errors.phone = "Enter a valid phone number"
   return errors
 }

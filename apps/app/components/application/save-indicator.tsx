@@ -4,9 +4,15 @@ export function SaveIndicator({
   status,
   error,
 }: {
-  status: SaveStatus
+  status: SaveStatus | "incomplete"
   error: string | null
 }) {
+  if (status === "incomplete")
+    return (
+      <span role="status" className="text-[13px] text-destructive">
+        Not saved: {error}
+      </span>
+    )
   if (status === "saving")
     return (
       <span role="status" className="text-[13px] text-[#6E6E68]">

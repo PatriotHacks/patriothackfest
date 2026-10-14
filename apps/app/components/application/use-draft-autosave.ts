@@ -63,13 +63,6 @@ export function useDraftAutosave<T>(
     queued.current = null
   }, [clearTimer])
 
-  useEffect(() => {
-    if (status === "saved") return
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
-    window.addEventListener("beforeunload", warn)
-    return () => window.removeEventListener("beforeunload", warn)
-  }, [status])
-
   useEffect(() => () => void run(), [run])
 
   return { schedule, flush, cancel, status, error }

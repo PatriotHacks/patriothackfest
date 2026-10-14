@@ -11,7 +11,7 @@ import {
   type Question,
 } from "@workspace/forms"
 import { useRouter } from "next/navigation"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
   saveAnswers,
@@ -82,7 +82,8 @@ export function DraftForm({
   const [answers, setAnswers] = useState(initialAnswers)
   const answersRef = useRef(initialAnswers)
   const lastKnown = useRef(updatedAt)
-  const [basic, setBasic] = useState(() => draftFromProfile(profile))
+  const [initialBasic] = useState(() => draftFromProfile(profile))
+  const [basic, setBasic] = useState(initialBasic)
   const [errors, setErrors] = useState<AnswerErrors>({})
   const [basicErrors, setBasicErrors] = useState<BasicInfoErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
@@ -207,7 +208,20 @@ export function DraftForm({
   const groups = groupSections(schema.fields).filter(
     ({ section }) => !section || isFieldVisible(section, answers, schema)
   )
-  const status = combinedStatus(answersSave.status, basicSave.status)
+  const phoneIncomplete =
+    toBasicInfo(basic).phone === null &&
+    (basic.phoneCountry !== initialBasic.phoneCountry ||
+      basic.phoneNational !== initialBasic.phoneNational)
+  const saveStatus = combinedStatus(answersSave.status, basicSave.status)
+  const status =
+    phoneIncomplete && saveStatus === "saved" ? "incomplete" : saveStatus
+
+  useEffect(() => {
+    if (status === "saved") return
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener("beforeunload", warn)
+    return () => window.removeEventListener("beforeunload", warn)
+  }, [status])
 
   return (
     <div className="flex flex-col gap-[28px] text-left">
@@ -262,7 +276,11 @@ export function DraftForm({
         </AuthButton>
         <SaveIndicator
           status={status}
-          error={answersSave.error ?? basicSave.error}
+          error={
+            status === "incomplete"
+              ? "Phone number incomplete"
+              : (answersSave.error ?? basicSave.error)
+          }
         />
         {editNote && <FormHelp className="text-center">{editNote}</FormHelp>}
       </div>

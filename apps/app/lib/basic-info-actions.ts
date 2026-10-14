@@ -14,6 +14,7 @@ export async function saveBasicInfo(input: BasicInfo): Promise<ActionResult> {
     p_full_name: info.fullName.trim(),
     p_school: info.school.trim() || undefined,
     p_phone: info.phone || undefined,
+    p_keep_phone: info.phone === null,
     p_date_of_birth: info.dateOfBirth || undefined,
   })
   if (error) return failure(error)
