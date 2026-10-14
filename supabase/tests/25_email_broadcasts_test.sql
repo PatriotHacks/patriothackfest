@@ -132,7 +132,7 @@ reset role;
 
 select pg_temp.decide('test.p1', 'accepted');
 
-select plan(40);
+select plan(45);
 
 select pg_temp.login('dc000000-0000-0000-0000-0000000000b0', 'broadcast-reviewer@example.test');
 select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
@@ -331,6 +331,40 @@ select throws_ok(
   '42501', null, 'organizers cannot edit broadcasts'
 );
 reset role;
+
+select pg_temp.organizer();
+select set_config('test.b3', (select broadcast_id::text from public.admin_create_broadcast(
+  'ec000000-0000-0000-0000-000000000001', 'Everyone', 'Body', 2)), true);
+select public.admin_change_application_role(current_setting('test.p1')::uuid, 'volunteer');
+reset role;
+select is(
+  (select status from public.email_log where id = pg_temp.row_id('test.b3', 'test.p1')),
+  'pending', 'role changes keep broadcast emails to every role'
+);
+select is(
+  (select status from public.email_log where id = pg_temp.row_id('test.b2', 'test.p1')),
+  'pending', 'role changes leave role-filtered broadcast emails for the claim to check'
+);
+
+select pg_temp.login('dc000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000001@example.test', 'otp');
+select public.submit_application(current_setting('test.p1')::uuid);
+reset role;
+
+select pg_temp.organizer();
+select is(
+  (select count(*) from public.admin_claim_broadcast_emails(current_setting('test.b3')::uuid, 10)),
+  2::bigint, 'resubmitted applicants who changed role still get broadcasts to every role'
+);
+select is(
+  (select count(*) from public.admin_claim_broadcast_emails(current_setting('test.b2')::uuid, 10)),
+  0::bigint, 'applicants who moved outside the role filter are not claimed'
+);
+reset role;
+select is(
+  (select status || ':' || error from public.email_log where id = pg_temp.row_id('test.b2', 'test.p1')),
+  'cancelled:Application no longer matches the broadcast',
+  'claiming cancels emails to applicants outside the role filter'
+);
 
 select * from finish(true);
 rollback;

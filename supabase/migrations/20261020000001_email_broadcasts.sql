@@ -82,6 +82,32 @@ begin
 end;
 $$;
 
+create or replace function public.cancel_unsent_decision_emails()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update public.email_log
+  set status = 'cancelled',
+      error = case
+        when new.form_id <> old.form_id then 'Application moved to another form'
+        when new.status = 'withdrawn' then 'Application withdrawn'
+        else 'Applicant declined the offer'
+      end
+  where application_id = new.id
+    and status in ('pending', 'failed')
+    and (
+      broadcast_id is null
+      or (new.status = 'withdrawn' and old.status <> 'withdrawn')
+      or (new.declined_at is not null and old.declined_at is null)
+    );
+
+  return null;
+end;
+$$;
+
 create function public.admin_broadcast_recipient_count(p_event_id uuid, p_role public.app_role default null)
 returns table (recipients integer, sent_last_24h integer)
 language plpgsql
