@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest"
 
+import { escapeHtml } from "./status-update"
 import {
-  escapeHtml,
-  renderTemplate,
-  templateKey,
+  renderStatusUpdate,
   unknownVariables,
   validateTemplate,
   type TemplateValues,
@@ -14,7 +13,16 @@ const values: TemplateValues = {
   event_name: "Patriot HackFest 2026",
   event_dates: "Nov 14–15, 2026",
   role: "participant",
-  dashboard_url: "https://app.patriothackfest.com",
+}
+
+const url = "https://app.patriothackfest.com"
+
+function bodyCells(html: string) {
+  return [
+    ...html.matchAll(
+      /<td style="padding: 0 0 (?:12|28)px 0; [^"]*">(.*?)<\/td>/g
+    ),
+  ].map((m) => m[1])
 }
 
 describe("escapeHtml", () => {
@@ -25,131 +33,105 @@ describe("escapeHtml", () => {
   })
 })
 
-describe("templateKey", () => {
-  it("uses the decision alone without a different previous decision", () => {
-    for (const previous of [null, undefined, "pending"] as const) {
-      expect(templateKey("accepted", previous)).toBe("accepted")
-      expect(templateKey("waitlisted", previous)).toBe("waitlisted")
-      expect(templateKey("rejected", previous)).toBe("rejected")
-    }
-    expect(templateKey("waitlisted", "waitlisted")).toBe("waitlisted")
-  })
-
-  it("selects the change variant for a different previous decision", () => {
-    expect(templateKey("accepted", "waitlisted")).toBe(
-      "accepted_from_waitlisted"
-    )
-    expect(templateKey("accepted", "rejected")).toBe("accepted_from_rejected")
-    expect(templateKey("waitlisted", "accepted")).toBe(
-      "waitlisted_from_accepted"
-    )
-    expect(templateKey("waitlisted", "rejected")).toBe(
-      "waitlisted_from_rejected"
-    )
-    expect(templateKey("rejected", "accepted")).toBe("rejected_from_accepted")
-    expect(templateKey("rejected", "waitlisted")).toBe(
-      "rejected_from_waitlisted"
-    )
-  })
-})
-
-describe("renderTemplate", () => {
+describe("renderStatusUpdate", () => {
   it("fills variables in the subject and body", () => {
-    const email = renderTemplate(
+    const email = renderStatusUpdate(
       {
-        subject: "You're in: {{ event_name }}",
+        subject: "Update: {{ event_name }}",
         body: "Hi {{name}},\n\nSee you {{event_dates}} as a {{role}}.",
       },
-      values
+      values,
+      url
     )
-    expect(email.subject).toBe("You're in: Patriot HackFest 2026")
-    expect(email.text).toBe(
-      "Hi Ada,\n\nSee you Nov 14–15, 2026 as a participant."
-    )
+    expect(email.subject).toBe("Update: Patriot HackFest 2026")
+    expect(bodyCells(email.html)).toEqual([
+      "Hi Ada,",
+      "See you Nov 14–15, 2026 as a participant.",
+    ])
   })
 
   it("splits paragraphs on blank lines and breaks single newlines", () => {
-    const email = renderTemplate(
+    const email = renderStatusUpdate(
       { subject: "s", body: "\n\nOne\r\ntwo\n  \n\n\nThree\n\n" },
-      values
+      values,
+      url
     )
-    expect(email.text).toBe("One\ntwo\n\nThree")
-    const paragraphs = [...email.html.matchAll(/<p [^>]*>(.*?)<\/p>/g)].map(
-      (m) => m[1]
-    )
-    expect(paragraphs).toEqual(["One<br>two", "Three"])
+    expect(bodyCells(email.html)).toEqual(["One<br>two", "Three"])
+    expect(email.html).toContain('<td style="padding: 0 0 12px 0; ')
+    expect(email.html).toContain('<td style="padding: 0 0 28px 0; ')
+    expect(email.text.startsWith("One\ntwo\n\nThree\n\n")).toBe(true)
   })
 
   it("escapes template text and variable values", () => {
-    const email = renderTemplate(
+    const email = renderStatusUpdate(
       { subject: "s", body: "<b>Hi</b> {{name}} & co" },
-      { ...values, name: `<script>alert("x")</script>` }
+      { ...values, name: `<script>alert("x")</script>` },
+      url
     )
-    expect(email.html).toContain(
-      "&lt;b&gt;Hi&lt;/b&gt; &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; co"
-    )
+    expect(bodyCells(email.html)).toEqual([
+      "&lt;b&gt;Hi&lt;/b&gt; &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; co",
+    ])
     expect(email.html).not.toContain("<script>")
     expect(email.text).toContain(`<script>alert("x")</script>`)
   })
 
-  it("autolinks URLs without trailing punctuation", () => {
-    const email = renderTemplate(
-      {
-        subject: "s",
-        body: "Portal: {{dashboard_url}}. Docs (https://x.test/a?b=1&c=2), ok",
-      },
-      values
-    )
-    expect(email.html).toContain(
-      '<a href="https://app.patriothackfest.com" style="color:#006633">https://app.patriothackfest.com</a>.'
-    )
-    expect(email.html).toContain(
-      '(<a href="https://x.test/a?b=1&amp;c=2" style="color:#006633">https://x.test/a?b=1&amp;c=2</a>), ok'
-    )
-  })
-
-  it("does not link URLs in applicant names", () => {
-    const email = renderTemplate(
-      { subject: "s", body: "Hi {{name}}," },
-      { ...values, name: "https://evil.test" }
-    )
-    expect(email.html).toContain("Hi https://evil.test,")
-    expect(email.html).not.toContain("<a ")
-  })
-
   it("does not re-expand variables inside values", () => {
-    const email = renderTemplate(
+    const email = renderStatusUpdate(
       { subject: "{{name}}", body: "{{name}}" },
-      { ...values, name: "{{event_name}}" }
+      { ...values, name: "{{event_name}}" },
+      url
     )
     expect(email.subject).toBe("{{event_name}}")
-    expect(email.text).toBe("{{event_name}}")
+    expect(bodyCells(email.html)).toEqual(["{{event_name}}"])
   })
 
   it("throws on unknown or missing variables", () => {
     expect(() =>
-      renderTemplate({ subject: "s", body: "{{nope}}" }, values)
-    ).toThrow("Unknown variable {{nope}}")
+      renderStatusUpdate(
+        { subject: "s", body: "{{dashboard_url}}" },
+        values,
+        url
+      )
+    ).toThrow("Unknown variable {{dashboard_url}}")
     expect(() =>
-      renderTemplate(
+      renderStatusUpdate(
         { subject: "{{event_dates}}", body: "b" },
-        { ...values, event_dates: null }
+        { ...values, event_dates: null },
+        url
       )
     ).toThrow("No value for {{event_dates}}")
   })
 
-  it("wraps the body in the branded layout", () => {
-    const { html } = renderTemplate({ subject: "s", body: "Hello" }, values)
-    expect(html).toMatch(/^<!doctype html>/)
-    expect(html).toContain("background:#f3f4f6")
-    expect(html).toContain("max-width:560px")
+  it("links the button to the escaped dashboard URL", () => {
+    const { html } = renderStatusUpdate(
+      { subject: "s", body: "b" },
+      values,
+      "https://x.test/?a=1&b=2"
+    )
+    expect(html).toMatch(/^<!DOCTYPE html>/)
+    expect(html.match(/href="https:\/\/x\.test\/\?a=1&amp;b=2"/g)).toHaveLength(
+      2
+    )
+    expect(html).toContain("View my status")
+  })
+
+  it("adds the dashboard URL and sign-off to the text part", () => {
+    const { text } = renderStatusUpdate(
+      { subject: "s", body: "Hi {{name}}," },
+      values,
+      url
+    )
+    expect(text).toContain(
+      "Hi Ada,\n\nView my status: https://app.patriothackfest.com\n"
+    )
+    expect(text).toContain("— The Patriot HackFest Team")
   })
 })
 
 describe("validateTemplate", () => {
   it("accepts a valid template", () => {
     expect(
-      validateTemplate({ subject: "Hi {{name}}", body: "{{dashboard_url}}" })
+      validateTemplate({ subject: "Hi {{name}}", body: "{{event_name}}" })
     ).toEqual([])
   })
 
@@ -161,8 +143,8 @@ describe("validateTemplate", () => {
       })
     ).toEqual(["first_name", "Event", ""])
     expect(
-      validateTemplate({ subject: "{{first_name}}", body: "{{portal}}" })
-    ).toEqual(["Unknown variables: {{first_name}}, {{portal}}."])
+      validateTemplate({ subject: "{{first_name}}", body: "{{dashboard_url}}" })
+    ).toEqual(["Unknown variables: {{first_name}}, {{dashboard_url}}."])
   })
 
   it("rejects blank, long, and multi-line subjects and bodies", () => {
