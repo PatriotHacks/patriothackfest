@@ -17,6 +17,10 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import * as z from "zod"
 
+import {
+  retryFailedEmails,
+  sendPendingEmails,
+} from "@/app/(admin)/forms/[formId]/release/actions"
 import { EmailSender } from "@/components/email-sender"
 import { ReleaseButton } from "@/components/release-button"
 import { getAdmin } from "@/lib/admin"
@@ -144,7 +148,8 @@ export default async function ReleasePage({
               </Alert>
             )}
             <EmailSender
-              formId={form.id}
+              send={sendPendingEmails.bind(null, form.id)}
+              retry={retryFailedEmails.bind(null, form.id)}
               pending={counts.emails_pending}
               sending={counts.emails_sending}
               failed={counts.emails_failed}

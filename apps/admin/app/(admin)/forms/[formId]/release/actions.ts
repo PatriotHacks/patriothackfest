@@ -10,6 +10,10 @@ import { formatDateRangeInZone } from "@workspace/forms"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
+import type {
+  RetryEmailsResult,
+  SendEmailsResult,
+} from "@/components/email-sender"
 import { failure, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
 import {
@@ -37,18 +41,9 @@ export async function releaseDecisions(
   return { error: null, ...releaseResult.parse(data) }
 }
 
-type Failure = { error: string }
-
-export async function sendPendingEmails(formId: string): Promise<
-  | Failure
-  | {
-      error: null
-      claimed: number
-      sent: number
-      failed: number
-      remaining: number
-    }
-> {
+export async function sendPendingEmails(
+  formId: string
+): Promise<SendEmailsResult> {
   const id = z.guid().parse(formId)
   const { supabase } = await requireAdmin("organizer")
   if (!isEmailConfigured()) return { error: EMAIL_NOT_CONFIGURED }
@@ -126,7 +121,7 @@ export async function sendPendingEmails(formId: string): Promise<
 
 export async function retryFailedEmails(
   formId: string
-): Promise<Failure | { error: null; count: number }> {
+): Promise<RetryEmailsResult> {
   const id = z.guid().parse(formId)
   const { supabase } = await requireAdmin("organizer")
 

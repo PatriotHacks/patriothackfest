@@ -224,15 +224,62 @@ export type Database = {
           },
         ]
       }
+      email_broadcasts: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          event_id: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"] | null
+          subject: string
+        }
+        ComputedFields: never
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          event_id: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          subject: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_broadcasts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_broadcasts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_log: {
         Row: {
           application_id: string
           attempts: number
+          broadcast_id: string | null
           claimed_at: string | null
           created_at: string
-          decision: Database["public"]["Enums"]["decision"]
+          decision: Database["public"]["Enums"]["decision"] | null
           error: string | null
-          form_id: string
+          form_id: string | null
           id: string
           kind: string
           last_error_at: string | null
@@ -246,11 +293,12 @@ export type Database = {
         Insert: {
           application_id: string
           attempts?: number
+          broadcast_id?: string | null
           claimed_at?: string | null
           created_at?: string
-          decision: Database["public"]["Enums"]["decision"]
+          decision?: Database["public"]["Enums"]["decision"] | null
           error?: string | null
-          form_id: string
+          form_id?: string | null
           id?: string
           kind: string
           last_error_at?: string | null
@@ -263,11 +311,12 @@ export type Database = {
         Update: {
           application_id?: string
           attempts?: number
+          broadcast_id?: string | null
           claimed_at?: string | null
           created_at?: string
-          decision?: Database["public"]["Enums"]["decision"]
+          decision?: Database["public"]["Enums"]["decision"] | null
           error?: string | null
-          form_id?: string
+          form_id?: string | null
           id?: string
           kind?: string
           last_error_at?: string | null
@@ -283,6 +332,13 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "email_broadcasts"
             referencedColumns: ["id"]
           },
           {
@@ -514,12 +570,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_broadcast_history: {
+        Args: { p_event_id: string }
+        Returns: {
+          body: string
+          cancelled: number
+          created_at: string
+          failed: number
+          id: string
+          pending: number
+          recipients: number
+          role: Database["public"]["Enums"]["app_role"]
+          sender_email: string
+          sending: number
+          sent: number
+          subject: string
+        }[]
+      }
+      admin_broadcast_recipient_count: {
+        Args: {
+          p_event_id: string
+          p_role?: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: {
+          daily_used: number
+          recipients: number
+        }[]
+      }
       admin_change_application_role: {
         Args: {
           p_application_id: string
           p_new_role: Database["public"]["Enums"]["app_role"]
         }
         Returns: undefined
+      }
+      admin_claim_broadcast_emails: {
+        Args: { p_broadcast_id: string; p_limit: number }
+        Returns: {
+          email: string
+          event_name: string
+          full_name: string
+          id: string
+        }[]
       }
       admin_claim_emails: {
         Args: { p_form_id: string; p_limit: number }
@@ -533,6 +625,19 @@ export type Database = {
           id: string
           previous_decision: Database["public"]["Enums"]["decision"]
           role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
+      admin_create_broadcast: {
+        Args: {
+          p_body: string
+          p_event_id: string
+          p_expected: number
+          p_role?: Database["public"]["Enums"]["app_role"]
+          p_subject: string
+        }
+        Returns: {
+          broadcast_id: string
+          queued: number
         }[]
       }
       admin_finish_email: {
@@ -566,6 +671,10 @@ export type Database = {
       admin_reorder_form_fields: {
         Args: { p_field_ids: string[]; p_form_id: string }
         Returns: undefined
+      }
+      admin_retry_failed_broadcast: {
+        Args: { p_broadcast_id: string }
+        Returns: number
       }
       admin_retry_failed_emails: {
         Args: { p_form_id: string }

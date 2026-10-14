@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { escapeHtml } from "./status-update"
+import { escapeHtml } from "./layout"
 import {
   renderStatusUpdate,
   unknownVariables,

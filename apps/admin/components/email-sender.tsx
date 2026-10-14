@@ -3,25 +3,38 @@
 import { Button } from "@workspace/ui/components/button"
 import { Progress } from "@workspace/ui/components/progress"
 import { useRouter } from "next/navigation"
-import { useState, useTransition } from "react"
+import { useEffect, useRef, useState, useTransition } from "react"
 
-import {
-  retryFailedEmails,
-  sendPendingEmails,
-} from "@/app/(admin)/forms/[formId]/release/actions"
+type Failure = { error: string }
+
+export type SendEmailsResult =
+  | Failure
+  | {
+      error: null
+      claimed: number
+      sent: number
+      failed: number
+      remaining: number
+    }
+
+export type RetryEmailsResult = Failure | { error: null; count: number }
 
 export function EmailSender({
-  formId,
+  send: sendBatch,
+  retry: retryFailed,
   pending,
   sending,
   failed,
   configured,
+  autoStart = false,
 }: {
-  formId: string
+  send: () => Promise<SendEmailsResult>
+  retry: () => Promise<RetryEmailsResult>
   pending: number
   sending: number
   failed: number
   configured: boolean
+  autoStart?: boolean
 }) {
   const router = useRouter()
   const [running, setRunning] = useState(false)
@@ -30,7 +43,10 @@ export function EmailSender({
   const [error, setError] = useState<string | null>(null)
   const [retrying, startRetry] = useTransition()
 
+  const started = useRef(false)
+
   async function send() {
+    started.current = true
     setRunning(true)
     setError(null)
     setMessage(null)
@@ -40,7 +56,7 @@ export function EmailSender({
     setProgress({ done, total: pending })
     try {
       for (;;) {
-        const result = await sendPendingEmails(formId)
+        const result = await sendBatch()
         if (result.error !== null) throw new Error(result.error)
         done += result.claimed
         sent += result.sent
@@ -62,11 +78,15 @@ export function EmailSender({
     router.refresh()
   }
 
+  useEffect(() => {
+    if (autoStart && !started.current) void send()
+  })
+
   function retry() {
     setError(null)
     setMessage(null)
     startRetry(async () => {
-      const result = await retryFailedEmails(formId)
+      const result = await retryFailed()
       if (result.error !== null) setError(result.error)
       else setMessage(`${result.count} failed emails queued again.`)
     })

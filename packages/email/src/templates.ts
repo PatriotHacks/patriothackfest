@@ -1,4 +1,5 @@
-import { escapeHtml, statusUpdateHtml, statusUpdateText } from "./status-update"
+import { escapeHtml } from "./layout"
+import { statusUpdateHtml, statusUpdateText } from "./status-update"
 
 export const TEMPLATE_VARIABLES = [
   "name",
@@ -20,16 +21,18 @@ export const BODY_MAX_LENGTH = 10000
 
 const VARIABLE = /\{\{\s*([^{}]*?)\s*\}\}/g
 
-function isVariable(name: string): name is TemplateVariable {
-  return (TEMPLATE_VARIABLES as readonly string[]).includes(name)
-}
-
-export function unknownVariables({ subject, body }: EmailTemplate) {
+export function unknownVariables(
+  { subject, body }: EmailTemplate,
+  variables: readonly string[] = TEMPLATE_VARIABLES
+) {
   const names = [...`${subject}\n${body}`.matchAll(VARIABLE)].map((m) => m[1]!)
-  return [...new Set(names.filter((name) => !isVariable(name)))]
+  return [...new Set(names.filter((name) => !variables.includes(name)))]
 }
 
-export function validateTemplate(template: EmailTemplate) {
+export function validateTemplate(
+  template: EmailTemplate,
+  variables: readonly string[] = TEMPLATE_VARIABLES
+) {
   const errors: string[] = []
   const { subject, body } = template
   if (!/\S/.test(subject)) errors.push("Subject is required.")
@@ -39,7 +42,7 @@ export function validateTemplate(template: EmailTemplate) {
   if (!/\S/.test(body)) errors.push("Body is required.")
   if (body.length > BODY_MAX_LENGTH)
     errors.push(`Body must be at most ${BODY_MAX_LENGTH} characters.`)
-  const unknown = unknownVariables(template)
+  const unknown = unknownVariables(template, variables)
   if (unknown.length > 0)
     errors.push(
       `Unknown variables: ${unknown.map((name) => `{{${name}}}`).join(", ")}.`
@@ -47,15 +50,17 @@ export function validateTemplate(template: EmailTemplate) {
   return errors
 }
 
-function fill(
+export function fill(
   source: string,
-  values: TemplateValues,
+  values: Readonly<Record<string, string | null>>,
   format: (value: string) => string = (value) => value
 ) {
   return source.replace(VARIABLE, (_, name: string) => {
-    if (!isVariable(name)) throw new Error(`Unknown variable {{${name}}}`)
+    if (!Object.hasOwn(values, name))
+      throw new Error(`Unknown variable {{${name}}}`)
     const value = values[name]
-    if (value === null) throw new Error(`No value for {{${name}}}`)
+    if (value === null || value === undefined)
+      throw new Error(`No value for {{${name}}}`)
     return format(value)
   })
 }
@@ -67,19 +72,28 @@ function paragraphs(text: string) {
     .split(/\n[^\S\n]*\n\s*/)
 }
 
+export function renderBody(
+  body: string,
+  values: Readonly<Record<string, string | null>>
+) {
+  return {
+    text: paragraphs(fill(body, values)).join("\n\n"),
+    html: paragraphs(body).map((p) =>
+      p
+        .split("\n")
+        .map((line) => fill(escapeHtml(line), values, escapeHtml))
+        .join("<br>")
+    ),
+  }
+}
+
 export function renderStatusUpdate(
   template: EmailTemplate,
   values: TemplateValues,
   dashboardUrl: string
 ): RenderedEmail {
   const subject = fill(template.subject, values).trim()
-  const text = paragraphs(fill(template.body, values)).join("\n\n")
-  const html = paragraphs(template.body).map((p) =>
-    p
-      .split("\n")
-      .map((line) => fill(escapeHtml(line), values, escapeHtml))
-      .join("<br>")
-  )
+  const { text, html } = renderBody(template.body, values)
   return {
     subject,
     text: statusUpdateText(text, dashboardUrl),
