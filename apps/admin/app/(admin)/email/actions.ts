@@ -11,6 +11,7 @@ import {
   type RenderedEmail,
   type SendResult,
 } from "@workspace/email"
+import { formatDateRangeInZone } from "@workspace/forms"
 import { ROLES, type Role } from "@workspace/supabase/roles"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
@@ -190,10 +191,14 @@ export async function sendBroadcastBatch(
 
   const broadcast = await supabase
     .from("email_broadcasts")
-    .select("subject, body")
+    .select("subject, body, event:events(starts_at, ends_at)")
     .eq("id", id)
     .single()
   if (broadcast.error) return { error: broadcast.error.message }
+  const { subject, body, event } = broadcast.data
+  const eventDates = event.starts_at
+    ? formatDateRangeInZone(event.starts_at, event.ends_at)
+    : null
 
   const claimed = await supabase.rpc("admin_claim_broadcast_emails", {
     p_broadcast_id: id,
@@ -209,10 +214,14 @@ export async function sendBroadcastBatch(
       transport,
       (email) => ({
         to: email.email,
-        ...renderBroadcast(broadcast.data, {
-          name: email.full_name || "there",
-          event_name: email.event_name,
-        }),
+        ...renderBroadcast(
+          { subject, body },
+          {
+            name: email.full_name || "there",
+            event_name: email.event_name,
+            event_dates: eventDates,
+          }
+        ),
       }),
       async (result) => {
         const { error } = await supabase.rpc(
