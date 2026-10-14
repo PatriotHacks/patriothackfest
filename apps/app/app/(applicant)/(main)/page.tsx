@@ -1,4 +1,9 @@
-import { formatDateRangeInZone, formatInZone } from "@workspace/forms"
+import {
+  formatDateRangeInZone,
+  formatInZone,
+  hasEditableSections,
+  publishedSchemaSchema,
+} from "@workspace/forms"
 import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -35,7 +40,7 @@ export default async function DashboardPage() {
     supabase
       .from("forms")
       .select(
-        "id, event_id, role, status, submissions_close_at, edits_lock_at, decisions_released_at"
+        "id, event_id, role, status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema"
       ),
     supabase
       .from("applications")
@@ -100,7 +105,14 @@ export default async function DashboardPage() {
                   <span className="text-sm text-muted-foreground">
                     {phase === "declined"
                       ? declinedText(decision)
-                      : deadlineText(phase, form)}
+                      : deadlineText(
+                          phase,
+                          form,
+                          form.published_schema !== null &&
+                            hasEditableSections(
+                              publishedSchemaSchema.parse(form.published_schema)
+                            )
+                        )}
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {action?.kind === "decline" && (
