@@ -59,7 +59,7 @@ export async function GET(
       school: a.profiles.school,
       phone: a.profiles.phone,
       dateOfBirth: a.profiles.date_of_birth,
-      under18: a.under_18 === true,
+      under18: a.under_18,
       role: a.role,
       status: a.status,
       submittedAt: a.submitted_at,

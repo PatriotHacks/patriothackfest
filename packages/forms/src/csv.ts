@@ -9,7 +9,7 @@ export type ApplicationCsvRow = {
   school: string | null
   phone: string | null
   dateOfBirth: string | null
-  under18: boolean
+  under18: boolean | null
   role: "participant" | "volunteer" | "judge"
   status: "draft" | "submitted" | "withdrawn"
   submittedAt: string | null
@@ -91,7 +91,7 @@ export function buildApplicationsCsv(
       row.school ?? "",
       row.phone ?? "",
       row.dateOfBirth ?? "",
-      yesNo(row.under18),
+      row.under18 === null ? "" : yesNo(row.under18),
       row.role,
       row.status,
       timestamp(row.submittedAt),

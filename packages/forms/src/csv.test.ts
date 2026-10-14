@@ -115,6 +115,13 @@ describe("buildApplicationsCsv", () => {
     )
   })
 
+  it("leaves unknown under-18 status blank", () => {
+    const [, line] = parse(
+      buildApplicationsCsv({ fields: [] }, [row({ under18: null })])
+    )
+    expect(line!.split(",")[6]).toBe("")
+  })
+
   it("de-duplicates repeated labels, including fixed headers", () => {
     const fields = [
       field("short_text", { label: "Notes" }),
