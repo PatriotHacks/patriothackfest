@@ -97,7 +97,7 @@ export default async function ApplicationPage({
       ? supabase
           .from("email_log")
           .select(
-            "id, decision, status, recipient, attempts, created_at, sent_at, error"
+            "id, decision, status, recipient, attempts, created_at, sent_at, error, email_broadcasts(subject)"
           )
           .eq("application_id", id)
           .order("created_at", { ascending: false })
@@ -315,14 +315,14 @@ export default async function ApplicationPage({
           <CardContent>
             {emails.data.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No decision emails for this application.
+                No emails for this application.
               </p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Queued</TableHead>
-                    <TableHead>Decision</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Recipient</TableHead>
                     <TableHead>Attempts</TableHead>
@@ -334,7 +334,11 @@ export default async function ApplicationPage({
                   {emails.data.map((email) => (
                     <TableRow key={email.id}>
                       <TableCell>{formatInZone(email.created_at)}</TableCell>
-                      <TableCell>{DECISION_LABELS[email.decision]}</TableCell>
+                      <TableCell className="whitespace-normal">
+                        {email.decision
+                          ? DECISION_LABELS[email.decision]
+                          : `Broadcast: ${email.email_broadcasts?.subject}`}
+                      </TableCell>
                       <TableCell>{email.status}</TableCell>
                       <TableCell>{email.recipient}</TableCell>
                       <TableCell>{email.attempts}</TableCell>
