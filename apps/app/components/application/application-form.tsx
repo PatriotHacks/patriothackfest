@@ -225,7 +225,10 @@ export function ApplicationForm({
       pruneHiddenAnswers(schema, snapshot)
     )
     if (Object.keys(lockedErrors).length > 0) return showErrors(lockedErrors)
-    const local = validateAnswers(schema, snapshot, { mode: "submit" })
+    const local = validateAnswers(schema, snapshot, {
+      mode: "submit",
+      skip: locked,
+    })
     if (Object.keys(local).length > 0) return showErrors(local)
     setBusy(true)
     try {
