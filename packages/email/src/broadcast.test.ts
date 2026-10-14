@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest"
 import { BROADCAST_VARIABLES, renderBroadcast } from "./broadcast"
 import { unknownVariables, validateTemplate } from "./templates"
 
-const values = { name: "Ada", event_name: "Patriot HackFest 2026" }
+const values = {
+  name: "Ada",
+  event_name: "Patriot HackFest 2026",
+  event_dates: "Nov 14–15, 2026",
+}
 
 describe("renderBroadcast", () => {
   it("fills variables and uses the subject as the heading", () => {
@@ -56,6 +60,30 @@ describe("renderBroadcast", () => {
     expect(html).toContain("Stay Connected")
   })
 
+  it("fills event dates", () => {
+    const email = renderBroadcast(
+      { subject: "{{event_dates}}", body: "See you {{event_dates}}." },
+      values
+    )
+    expect(email.subject).toBe("Nov 14–15, 2026")
+    expect(email.text.startsWith("See you Nov 14–15, 2026.\n\n")).toBe(true)
+  })
+
+  it("throws when event dates are used without a value", () => {
+    expect(() =>
+      renderBroadcast(
+        { subject: "s", body: "{{event_dates}}" },
+        { ...values, event_dates: null }
+      )
+    ).toThrow("No value for {{event_dates}}")
+    expect(
+      renderBroadcast(
+        { subject: "s", body: "b" },
+        { ...values, event_dates: null }
+      ).subject
+    ).toBe("s")
+  })
+
   it("rejects variables outside the broadcast list", () => {
     expect(() =>
       renderBroadcast({ subject: "s", body: "{{role}}" }, values)
@@ -68,7 +96,7 @@ describe("validateTemplate with a variable list", () => {
     const template = { subject: "{{name}}", body: "{{event_dates}} {{role}}" }
     expect(validateTemplate(template)).toEqual([])
     expect(validateTemplate(template, BROADCAST_VARIABLES)).toEqual([
-      "Unknown variables: {{event_dates}}, {{role}}.",
+      "Unknown variables: {{role}}.",
     ])
     expect(unknownVariables(template, ["role"])).toEqual([
       "name",
