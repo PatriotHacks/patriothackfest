@@ -1,3 +1,4 @@
 export * from "./send"
+export * from "./status-update"
 export * from "./templates"
 export * from "./transport"

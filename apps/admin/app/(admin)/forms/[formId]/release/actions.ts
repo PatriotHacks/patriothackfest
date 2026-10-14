@@ -1,11 +1,9 @@
 "use server"
 
 import {
-  renderTemplate,
+  renderStatusUpdate,
   sendBatch,
   smtpTransport,
-  templateKey,
-  type EmailTemplate,
   type SendResult,
 } from "@workspace/email"
 import { formatDateRangeInZone } from "@workspace/forms"
@@ -56,13 +54,12 @@ export async function sendPendingEmails(formId: string): Promise<
   if (!isEmailConfigured()) return { error: EMAIL_NOT_CONFIGURED }
   const { smtp, portalUrl } = emailSettings()
 
-  const templateRows = await supabase
+  const template = await supabase
     .from("email_templates")
-    .select("key, subject, body")
-  if (templateRows.error) return { error: templateRows.error.message }
-  const templates = new Map<string, EmailTemplate>(
-    templateRows.data.map((t) => [t.key, t])
-  )
+    .select("subject, body")
+    .eq("key", "status_update")
+    .single()
+  if (template.error) return { error: template.error.message }
 
   const claimed = await supabase.rpc("admin_claim_emails", {
     p_form_id: id,
@@ -76,15 +73,11 @@ export async function sendPendingEmails(formId: string): Promise<
     results = await sendBatch(
       claimed.data,
       transport,
-      (email) => {
-        if (email.decision === "pending")
-          throw new Error("Pending decisions are not emailed")
-        const key = templateKey(email.decision, email.previous_decision)
-        const template = templates.get(key)
-        if (!template) throw new Error(`Email template "${key}" is missing`)
-        return {
-          to: email.email,
-          ...renderTemplate(template, {
+      (email) => ({
+        to: email.email,
+        ...renderStatusUpdate(
+          template.data,
+          {
             name: email.full_name || "there",
             event_name: email.event_name,
             event_dates: email.event_starts_at
@@ -94,10 +87,10 @@ export async function sendPendingEmails(formId: string): Promise<
                 )
               : null,
             role: email.role,
-            dashboard_url: portalUrl,
-          }),
-        }
-      },
+          },
+          portalUrl
+        ),
+      }),
       async (result) => {
         const { error } = await supabase.rpc(
           "admin_finish_email",

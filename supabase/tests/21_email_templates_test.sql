@@ -27,7 +27,7 @@ declare
   v_count integer;
 begin
   perform pg_temp.login(p_id, p_email, p_method);
-  update public.email_templates set subject = p_subject where key = 'accepted';
+  update public.email_templates set subject = p_subject where key = 'status_update';
   get diagnostics v_count = row_count;
   reset role;
   return v_count;
@@ -53,16 +53,14 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
   ('f2100000-0000-0000-0000-000000000001', 'e2100000-0000-0000-0000-000000000001', 'participant', 'Participant', 'published',
    now() + interval '1 day', now() + interval '2 days', '{"title": "Participant", "description": null, "fields": []}');
 
-select plan(22);
+select plan(23);
 
-select set_eq(
-  $$select key from public.email_templates$$,
-  array[
-    'accepted', 'accepted_from_waitlisted', 'accepted_from_rejected',
-    'waitlisted', 'waitlisted_from_accepted', 'waitlisted_from_rejected',
-    'rejected', 'rejected_from_accepted', 'rejected_from_waitlisted'
-  ],
-  'every decision template variant is seeded'
+select is(
+  (select array_agg(concat_ws('|', key, subject, body)) from public.email_templates),
+  array[concat_ws('|', 'status_update',
+    $t$There's an update on your Patriot HackFest application$t$,
+    E'Hi {{name}},\n\nThere''s an update on your application for {{event_name}}. Sign in to the portal to see your current status.')],
+  'only the status update template is seeded'
 );
 
 select pg_temp.login('d2100000-0000-0000-0000-000000000001', 'applicant@templates.test', 'otp');
@@ -82,7 +80,7 @@ select is(
 );
 
 select pg_temp.login('d2100000-0000-0000-0000-0000000000a0', 'templates-owner@example.test');
-select is((select count(*) from public.email_templates), 9::bigint, 'owners read templates');
+select is((select count(*) from public.email_templates), 1::bigint, 'owners read templates');
 reset role;
 select is(
   pg_temp.update_subject('d2100000-0000-0000-0000-0000000000a0', 'templates-owner@example.test', 'oauth', 'Owner subject'),
@@ -90,60 +88,65 @@ select is(
 );
 
 select pg_temp.login('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test');
-select is((select count(*) from public.email_templates), 9::bigint, 'organizers read templates');
+select is((select count(*) from public.email_templates), 1::bigint, 'organizers read templates');
 reset role;
 select is(
   pg_temp.update_subject('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test', 'oauth', 'Welcome to {{event_name}}'),
   1, 'organizers update templates'
 );
 select is(
-  (select subject || '|' || updated_by::text || '|' || (updated_at = now())::text from public.email_templates where key = 'accepted'),
+  (select subject || '|' || updated_by::text || '|' || (updated_at = now())::text from public.email_templates where key = 'status_update'),
   'Welcome to {{event_name}}|d2100000-0000-0000-0000-0000000000b0|true',
   'updates stamp the editor and time'
 );
 
 select pg_temp.login('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test');
 select throws_ok(
-  $$update public.email_templates set subject = E' \t ' where key = 'accepted'$$,
+  $$update public.email_templates set subject = E' \t ' where key = 'status_update'$$,
   '23514', null, 'subject cannot be blank'
 );
 select throws_ok(
-  $$update public.email_templates set subject = repeat('a', 201) where key = 'accepted'$$,
+  $$update public.email_templates set subject = repeat('a', 201) where key = 'status_update'$$,
   '23514', null, 'subject is capped at 200 characters'
 );
 select throws_ok(
-  $$update public.email_templates set subject = E'Line one\nBcc: x@example.test' where key = 'accepted'$$,
+  $$update public.email_templates set subject = E'Line one\nBcc: x@example.test' where key = 'status_update'$$,
   '23514', null, 'subject must be a single line'
 );
 select throws_ok(
-  $$update public.email_templates set body = E' \n ' where key = 'accepted'$$,
+  $$update public.email_templates set body = E' \n ' where key = 'status_update'$$,
   '23514', null, 'body cannot be blank'
 );
 select throws_ok(
-  $$update public.email_templates set body = repeat('a', 10001) where key = 'accepted'$$,
+  $$update public.email_templates set body = repeat('a', 10001) where key = 'status_update'$$,
   '23514', null, 'body is capped at 10000 characters'
 );
 select lives_ok(
-  $$update public.email_templates set body = repeat('a', 10000) where key = 'accepted'$$,
+  $$update public.email_templates set body = repeat('a', 10000) where key = 'status_update'$$,
   'body of exactly 10000 characters is allowed'
 );
 select throws_ok(
-  $$update public.email_templates set key = 'other' where key = 'accepted'$$,
+  $$update public.email_templates set key = 'other' where key = 'status_update'$$,
   '42501', null, 'template keys cannot be changed'
 );
 select throws_ok(
-  $$update public.email_templates set updated_by = null where key = 'accepted'$$,
+  $$update public.email_templates set updated_by = null where key = 'status_update'$$,
   '42501', null, 'updated_by cannot be set directly'
 );
 select throws_ok(
-  $$insert into public.email_templates (key, subject, body) values ('accepted', 'x', 'y')$$,
+  $$insert into public.email_templates (key, subject, body) values ('status_update', 'x', 'y')$$,
   '42501', null, 'templates cannot be inserted'
 );
 select throws_ok(
-  $$delete from public.email_templates where key = 'accepted'$$,
+  $$delete from public.email_templates where key = 'status_update'$$,
   '42501', null, 'templates cannot be deleted'
 );
 reset role;
+
+select throws_ok(
+  $$insert into public.email_templates (key, subject, body) values ('accepted', 'x', 'y')$$,
+  '23514', null, 'only the status_update key is allowed'
+);
 
 select pg_temp.login('d2100000-0000-0000-0000-000000000001', 'applicant@templates.test', 'otp');
 select set_config('test.app', public.start_application('f2100000-0000-0000-0000-000000000001')::text, true);

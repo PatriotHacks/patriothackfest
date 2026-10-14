@@ -2,11 +2,10 @@
 
 import {
   BODY_MAX_LENGTH,
-  renderTemplate,
+  renderStatusUpdate,
   SUBJECT_MAX_LENGTH,
   TEMPLATE_VARIABLES,
   validateTemplate,
-  type TemplateKey,
   type TemplateVariable,
 } from "@workspace/email/templates"
 import { Button } from "@workspace/ui/components/button"
@@ -23,10 +22,13 @@ import { Textarea } from "@workspace/ui/components/textarea"
 import { useId, useRef, useState, useTransition } from "react"
 
 import { saveEmailTemplate, sendTestEmail } from "@/app/(admin)/email/actions"
-import { SAMPLE_VALUES, VARIABLE_INFO } from "@/lib/email-templates"
+import {
+  SAMPLE_DASHBOARD_URL,
+  SAMPLE_VALUES,
+  VARIABLE_INFO,
+} from "@/lib/email-templates"
 
 type Props = {
-  templateKey: TemplateKey
   initialSubject: string
   initialBody: string
   adminEmail: string
@@ -35,14 +37,19 @@ type Props = {
 
 function preview(subject: string, body: string) {
   try {
-    return { email: renderTemplate({ subject, body }, SAMPLE_VALUES) }
+    return {
+      email: renderStatusUpdate(
+        { subject, body },
+        SAMPLE_VALUES,
+        SAMPLE_DASHBOARD_URL
+      ),
+    }
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) }
   }
 }
 
 export function EmailTemplateEditor({
-  templateKey,
   initialSubject,
   initialBody,
   adminEmail,
@@ -83,7 +90,7 @@ export function EmailTemplateEditor({
     setMessage(null)
     setError(null)
     startSave(async () => {
-      const result = await saveEmailTemplate(templateKey, subject, body)
+      const result = await saveEmailTemplate(subject, body)
       if (result.error) return setError(result.error)
       setSaved({ subject, body })
       setMessage("Template saved.")
@@ -94,7 +101,7 @@ export function EmailTemplateEditor({
     setMessage(null)
     setError(null)
     startTest(async () => {
-      const result = await sendTestEmail(templateKey, subject, body)
+      const result = await sendTestEmail(subject, body)
       if (result.error) return setError(result.error)
       setMessage(`Test email sent to ${adminEmail}.`)
     })
@@ -106,8 +113,9 @@ export function EmailTemplateEditor({
         <CardHeader>
           <CardTitle>Template</CardTitle>
           <CardDescription>
-            Plain text. A blank line starts a new paragraph, a single line break
-            stays a line break, and links are clickable.
+            Plain text. A blank line starts a new paragraph and a single line
+            break stays a line break. The heading, status button, and sign-off
+            are added automatically.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

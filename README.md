@@ -12,16 +12,18 @@ apps/
 packages/
   ui/                 shared shadcn/ui components and Tailwind v4 styles
   forms/              form field schemas, conditional visibility, answer and publish validation, CSV export
-  email/              SMTP transport, decision email templates, batch sending
+  email/              SMTP transport, status update email layout and rendering, batch sending
   supabase/           Supabase browser/server clients and generated database types
   eslint-config/      shared ESLint configs
   typescript-config/  shared tsconfig presets
 supabase/
   migrations/         schema, RLS policies, RPCs, storage bucket
+  templates/          sign-up and sign-in code email templates; `node supabase/templates/preview.mjs` writes previews to `.preview/`
   tests/              pgTAP tests (each file runs in a transaction and rolls back)
   seed.sql            the two events (idempotent upsert on slug)
 scripts/
   db-test.mjs         pgTAP runner used by `pnpm db:test`
+  push-auth-templates.mjs  pushes the OTP email templates, used by `pnpm email:push-auth`
 ```
 
 ## Prerequisites
@@ -45,6 +47,8 @@ cp apps/admin/.env.example apps/admin/.env.local
 | Variable                               | File                     | Value                                                                                                                                         |
 | -------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SUPABASE_DB_URL`                      | `.env`                   | Postgres connection string from the Supabase dashboard (Connect > Direct connection or Session pooler). The password must be percent-encoded. |
+| `SUPABASE_ACCESS_TOKEN`                | `.env`                   | Personal access token for `pnpm email:push-auth` (Account > Access Tokens)                                                                    |
+| `SUPABASE_PROJECT_REF`                 | `.env`                   | Project ref for `pnpm email:push-auth`, `bnfedivahjizlyplzbbz`                                                                                |
 | `NEXT_PUBLIC_SUPABASE_URL`             | `apps/app`, `apps/admin` | Project URL                                                                                                                                   |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `apps/app`, `apps/admin` | Publishable key (`sb_publishable_...`)                                                                                                        |
 | `NEXT_PUBLIC_APP_URL`                  | `apps/web`               | Applicant portal URL, e.g. `http://localhost:3001`                                                                                            |
@@ -74,12 +78,12 @@ Every new table must have RLS enabled and explicit grants; the initial migration
 
 ## Auth
 
-Applicants on `apps/app` sign in with an emailed 6-digit code (Supabase email OTP). Admins on `apps/admin` sign in with Google OAuth only. Supabase links identities that share a verified email into one user. Both are configured in the Supabase dashboard, not in `supabase/config.toml`.
+Applicants on `apps/app` sign in with an emailed 6-digit code (Supabase email OTP). Admins on `apps/admin` sign in with Google OAuth only. Supabase links identities that share a verified email into one user. Both are configured in the Supabase dashboard; only the OTP email templates are kept in the repo.
 
 ### Email OTP (app)
 
 1. Authentication > Emails > SMTP Settings: enable custom SMTP with host `smtp.gmail.com`, port `587`, username = the Google Workspace sending account (2-Step Verification on, password = an app password), sender email = that same address. Publish SPF and DKIM records for `patriothackfest.com`.
-2. Authentication > Emails > Templates: edit both **Magic Link** (returning users) and **Confirm signup** (first sign-in creates the user) to show `{{ .Token }}`, the 6-digit code. The app has no callback route, so the templates should not rely on `{{ .ConfirmationURL }}`.
+2. Run `pnpm email:push-auth` to set the **Confirm signup** (first sign-in creates the user) and **Magic Link** (returning users) subjects and templates from `[auth.email.template.*]` in `supabase/config.toml`. It needs `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` in `.env`. Both templates show `{{ .Token }}`, the 6-digit code; the app has no callback route, so they do not use `{{ .ConfirmationURL }}`.
 3. Authentication > Rate Limits: raise the email sending limit.
 4. Authentication > Sign In / Providers > Email: disable email+password signups.
 
@@ -131,7 +135,7 @@ What each level can do:
 - **Application detail** (`/applications/<id>`): status timeline (started, role changes, submitted, withdrawn, declined, decided, released), answers rendered from the form's `published_schema` with hidden conditional questions omitted, and file answers opened through 60-second signed URLs. Previous/Next keep the list filters. Archived answers from earlier roles are rendered with the schema snapshot taken at the change. Organizers also see the decision emails for the application.
 - **Role change** (organizers): moves the application to another role's form in the same event. The target form must be published and open, and declined or withdrawn applications cannot move. The current answers are archived, the decision is cleared, and the application returns to draft. The applicant is not emailed; contact them so they complete and submit the new form. Archives keep their schema snapshot even if the source form is later deleted.
 - **Release** (`/forms/<id>/release`, organizers): shows decision counts and releases the form's decisions in one irreversible step (the form must be published). Undecided applications show "Under review" to applicants until an organizer decides; any decision change after release queues a new email for that applicant.
-- **Decision emails**: release queues one email per decided, non-declined submission. "Send pending emails" sends batches of 10 over SMTP and repeats until the queue is empty, showing progress; each email is marked sent or failed as soon as it is attempted, and "Retry failed" queues failures again. Unsent emails are cancelled when the applicant declines, withdraws, or is moved to another role. An email that changes an earlier final decision (other than a waitlist promotion) is worded as an update. Emails stuck in sending are picked up again 10 minutes after they were claimed. Sending requires the `apps/admin` SMTP variables above: use the Google Workspace account with 2-Step Verification on and an app password as `SMTP_PASSWORD`. Google Workspace allows about 2,000 messages per user per day, so large releases may need to be sent over more than one day.
+- **Decision emails**: release queues one email per decided, non-declined submission. "Send pending emails" sends batches of 10 over SMTP and repeats until the queue is empty, showing progress; each email is marked sent or failed as soon as it is attempted, and "Retry failed" queues failures again. Unsent emails are cancelled when the applicant declines, withdraws, or is moved to another role. Every email is the same status update email, which asks the applicant to sign in to see their status; organizers edit its subject and body on the **Email** page (`/email`), with a live preview and a test send to themselves. Emails stuck in sending are picked up again 10 minutes after they were claimed. Sending requires the `apps/admin` SMTP variables above: use the Google Workspace account with 2-Step Verification on and an app password as `SMTP_PASSWORD`. Google Workspace allows about 2,000 messages per user per day, so large releases may need to be sent over more than one day.
 - **CSV export** (`/forms/<id>/export`, organizers): one row per application on the form with fixed columns and one column per published question, hidden answers blank, times in America/New_York, and file answers linking to the admin detail page. The file starts with a UTF-8 BOM so Excel reads it correctly, and cells that start with formula characters are prefixed with `'`. Export buttons are on the forms list, the release page, and the applications list when filtered to one event and role.
 
 ## Applicant portal
