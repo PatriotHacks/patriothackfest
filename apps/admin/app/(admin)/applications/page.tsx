@@ -49,7 +49,7 @@ export default async function ApplicationsPage({
         .from("applications")
         .select(
           filterEmbeds(
-            "id, role, status, submitted_at, declined_at, profiles(full_name, email), forms(decisions_released_at), application_decisions(decision)",
+            "id, role, status, submitted_at, declined_at, under_18, profiles(full_name, email), forms(decisions_released_at), application_decisions(decision)",
             filters
           ),
           { count: "exact" }
@@ -96,6 +96,7 @@ export default async function ApplicationsPage({
           href: `/applications/${a.id}${detailQuery}`,
           name: a.profiles.full_name ?? "No name",
           email: a.profiles.email,
+          under18: a.under_18 === true,
           role: ROLE_LABELS[a.role],
           status: STATUS_LABELS[a.status],
           submittedAt: a.submitted_at ? formatInZone(a.submitted_at) : "",

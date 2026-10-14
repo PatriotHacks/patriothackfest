@@ -26,6 +26,7 @@ export type ApplicationRow = {
   href: string
   name: string
   email: string
+  under18: boolean
   role: string
   status: string
   submittedAt: string
@@ -144,9 +145,12 @@ export function ApplicationsTable({ rows }: { rows: ApplicationRow[] }) {
                 />
               </TableCell>
               <TableCell>
-                <Link href={row.href} className="underline">
-                  {row.name}
-                </Link>
+                <div className="flex items-center gap-1">
+                  <Link href={row.href} className="underline">
+                    {row.name}
+                  </Link>
+                  {row.under18 && <Badge variant="destructive">Under 18</Badge>}
+                </div>
               </TableCell>
               <TableCell>{row.email}</TableCell>
               <TableCell>{row.role}</TableCell>
