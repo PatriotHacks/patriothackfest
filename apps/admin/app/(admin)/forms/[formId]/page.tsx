@@ -25,7 +25,7 @@ export default async function FormBuilderPage({
     supabase
       .from("form_fields")
       .select(
-        "id, type, label, help_text, required, options, validation, condition"
+        "id, type, label, help_text, required, options, validation, condition, editable_after_submit"
       )
       .eq("form_id", formId)
       .is("archived_at", null)
