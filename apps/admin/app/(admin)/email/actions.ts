@@ -1,9 +1,8 @@
 "use server"
 
 import {
-  renderTemplate,
+  renderStatusUpdate,
   smtpTransport,
-  TEMPLATE_KEYS,
   validateTemplate,
 } from "@workspace/email"
 import { revalidatePath } from "next/cache"
@@ -19,25 +18,23 @@ import {
 import { SAMPLE_VALUES } from "@/lib/email-templates"
 
 const templateInput = z.object({
-  key: z.enum(TEMPLATE_KEYS),
   subject: z.string(),
   body: z.string(),
 })
 
 export async function saveEmailTemplate(
-  key: string,
   subject: string,
   body: string
 ): Promise<ActionResult> {
-  const template = templateInput.parse({ key, subject, body })
+  const template = templateInput.parse({ subject, body })
   const { supabase } = await requireAdmin("organizer")
   const errors = validateTemplate(template)
   if (errors.length > 0) return { error: errors.join(" ") }
 
   const { data, error } = await supabase
     .from("email_templates")
-    .update({ subject: template.subject, body: template.body })
-    .eq("key", template.key)
+    .update(template)
+    .eq("key", "status_update")
     .select("key")
   if (error) return failure(error)
   if (data.length === 0) return { error: "Template not found" }
@@ -47,11 +44,10 @@ export async function saveEmailTemplate(
 }
 
 export async function sendTestEmail(
-  key: string,
   subject: string,
   body: string
 ): Promise<ActionResult> {
-  const template = templateInput.parse({ key, subject, body })
+  const template = templateInput.parse({ subject, body })
   const { email } = await requireAdmin("organizer")
   const errors = validateTemplate(template)
   if (errors.length > 0) return { error: errors.join(" ") }
@@ -59,10 +55,7 @@ export async function sendTestEmail(
   if (!email) return { error: "Your account has no email address" }
 
   const { smtp, portalUrl } = emailSettings()
-  const rendered = renderTemplate(template, {
-    ...SAMPLE_VALUES,
-    dashboard_url: portalUrl,
-  })
+  const rendered = renderStatusUpdate(template, SAMPLE_VALUES, portalUrl)
   const transport = smtpTransport(smtp)
   try {
     await transport.send({
