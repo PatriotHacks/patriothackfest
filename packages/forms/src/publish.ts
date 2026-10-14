@@ -17,6 +17,14 @@ export function conditionOperatorFor(source: Field) {
   return source.type === "multiple_choice" ? "includes" : "equals"
 }
 
+export function conditionSources(fields: readonly Field[], index: number) {
+  const sources: Field[] = []
+  for (let i = index - 1; i >= 0 && !isSection(fields[i]!); i--) {
+    if (isConditionSourceType(fields[i]!.type)) sources.unshift(fields[i]!)
+  }
+  return sources
+}
+
 function hasValidOptions(options: string[]) {
   return (
     options.every((o) => o.trim() !== "") &&
@@ -83,6 +91,11 @@ export function validateForPublish(
       if (!source) {
         add(
           `Question ${n} must depend on an earlier choice or checkbox question`,
+          field.id
+        )
+      } else if (!conditionSources(fields, index).includes(source)) {
+        add(
+          `Question ${n} must depend on a question in the same section`,
           field.id
         )
       } else if (!isValidConditionValue(source, field)) {
