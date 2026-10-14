@@ -13,6 +13,12 @@ export function lockedFieldIds(schema: { fields: readonly Field[] }) {
   return locked
 }
 
+export function hasEditableSections(schema: { fields: readonly Field[] }) {
+  return schema.fields.some(
+    (f) => f.type === "section" && f.editable_after_submit
+  )
+}
+
 function sameAnswer(a: unknown, b: unknown): boolean {
   if (a === b) return true
   if (typeof a !== "object" || typeof b !== "object" || !a || !b) return false

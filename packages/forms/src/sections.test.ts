@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  hasEditableSections,
   LOCKED_ANSWER_ERROR,
   lockedAnswerErrors,
   lockedFieldIds,
@@ -74,5 +75,12 @@ describe("lockedAnswerErrors", () => {
     expect(lockedAnswerErrors(schema, { [name.id]: null }, {})).toEqual({
       [name.id]: LOCKED_ANSWER_ERROR,
     })
+  })
+})
+
+describe("hasEditableSections", () => {
+  it("detects whether any section stays editable after submit", () => {
+    expect(hasEditableSections(schema)).toBe(true)
+    expect(hasEditableSections({ fields: [basics, name] })).toBe(false)
   })
 })
