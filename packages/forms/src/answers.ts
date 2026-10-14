@@ -4,8 +4,10 @@ import { fileMaxSizeMb } from "./files"
 import {
   DEFAULT_FILE_ACCEPT,
   fileAnswerSchema,
+  isSection,
   type Answers,
   type Field,
+  type Question,
 } from "./schema"
 import { isFieldVisible } from "./visibility"
 
@@ -24,7 +26,7 @@ export function isEmptyAnswer(field: Field, value: unknown) {
   return false
 }
 
-function validateValue(field: Field, value: unknown): string | null {
+function validateValue(field: Question, value: unknown): string | null {
   switch (field.type) {
     case "short_text":
     case "long_text": {
@@ -97,7 +99,7 @@ export function validateAnswers(
 ) {
   const errors: AnswerErrors = {}
   for (const field of schema.fields) {
-    if (!isFieldVisible(field, answers, schema)) continue
+    if (isSection(field) || !isFieldVisible(field, answers, schema)) continue
     const value = answers[field.id]
     if (isEmptyAnswer(field, value)) {
       if (mode === "submit" && field.required) errors[field.id] = "Required"

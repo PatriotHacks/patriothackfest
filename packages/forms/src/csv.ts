@@ -1,4 +1,4 @@
-import { fileAnswerSchema, type Answers, type Field } from "./schema"
+import { fileAnswerSchema, isSection, type Answers, type Field } from "./schema"
 import { formatInZone } from "./time-zone"
 import { pruneHiddenAnswers } from "./visibility"
 
@@ -69,9 +69,10 @@ export function buildApplicationsCsv(
   schema: { fields: readonly Field[] },
   rows: readonly ApplicationCsvRow[]
 ) {
+  const questions = schema.fields.filter((f) => !isSection(f))
   const header = uniqueHeaders([
     ...FIXED_HEADERS,
-    ...schema.fields.map((f) => f.label),
+    ...questions.map((f) => f.label),
   ])
   const lines = rows.map((row) => {
     const answers = pruneHiddenAnswers(schema, row.answers)
@@ -87,7 +88,7 @@ export function buildApplicationsCsv(
       yesNo(row.decisionsReleased),
       timestamp(row.declinedAt),
       timestamp(row.withdrawnAt),
-      ...schema.fields.map((f) =>
+      ...questions.map((f) =>
         formatAnswer(f, answers[f.id], row.applicationUrl)
       ),
     ]

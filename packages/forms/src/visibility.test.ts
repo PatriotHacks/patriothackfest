@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { field } from "./test-utils"
+import { field, section } from "./test-utils"
 import { isFieldVisible, pruneHiddenAnswers } from "./visibility"
 
 describe("isFieldVisible", () => {
@@ -84,5 +84,16 @@ describe("pruneHiddenAnswers", () => {
     expect(
       pruneHiddenAnswers(schema, { [size.id]: "XL", [why.id]: "big" })
     ).toEqual({ [size.id]: "XL", [why.id]: "big" })
+  })
+
+  it("drops answers keyed by sections", () => {
+    const heading = section()
+    const name = field("short_text")
+    expect(
+      pruneHiddenAnswers(
+        { fields: [heading, name] },
+        { [heading.id]: "x", [name.id]: "Ada" }
+      )
+    ).toEqual({ [name.id]: "Ada" })
   })
 })
