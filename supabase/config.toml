@@ -244,6 +244,14 @@ otp_expiry = 300
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+[auth.email.template.confirmation]
+subject = "Welcome to Patriot HackFest"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your Patriot HackFest sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
