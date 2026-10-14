@@ -12,6 +12,7 @@
     "db:push": "dotenv -e .env -- sh -c 'supabase db push --db-url \"$SUPABASE_DB_URL\"'",
     "db:seed": "dotenv -e .env -- sh -c 'supabase db query --db-url \"$SUPABASE_DB_URL\" -f supabase/seed.sql'",
     "db:test": "dotenv -e .env -- node scripts/db-test.mjs",
+    "email:push-auth": "dotenv -e .env -- node scripts/push-auth-templates.mjs",
     "gen:types": "pnpm --filter @workspace/supabase gen:types"
   },
   "devDependencies": {
