@@ -11,7 +11,13 @@ export const FIELD_TYPES = [
   "multiple_choice",
   "checkbox",
   "file",
+  "section",
 ] as const
+
+export const QUESTION_TYPES = FIELD_TYPES.filter(
+  (type): type is Exclude<(typeof FIELD_TYPES)[number], "section"> =>
+    type !== "section"
+)
 
 export const fieldTypeSchema = z.enum(FIELD_TYPES)
 export type FieldType = z.infer<typeof fieldTypeSchema>
@@ -27,6 +33,7 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   multiple_choice: "Multiple choice",
   checkbox: "Checkbox",
   file: "File upload",
+  section: "Section",
 }
 
 export const CHOICE_TYPES = ["single_choice", "multiple_choice"] as const
@@ -157,9 +164,25 @@ export const fieldSchema = z.discriminatedUnion("type", [
     type: z.literal("file"),
     validation: fileValidationSchema.nullable(),
   }),
+  z.object({
+    ...base,
+    ...noOptions,
+    ...noValidation,
+    type: z.literal("section"),
+    required: z.literal(false),
+    condition: z.null(),
+    editable_after_submit: z.boolean(),
+  }),
 ])
 
 export type Field = z.infer<typeof fieldSchema>
+export type Section = Extract<Field, { type: "section" }>
+export type Question = Exclude<Field, { type: "section" }>
+export type QuestionType = Question["type"]
+
+export function isSection(field: Field): field is Section {
+  return field.type === "section"
+}
 
 export const publishedSchemaSchema = z.object({
   title: z.string(),

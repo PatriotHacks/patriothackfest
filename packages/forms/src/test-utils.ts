@@ -26,3 +26,20 @@ export function field<T extends Field["type"]>(
     ...overrides,
   } as Extract<Field, { type: T }>
 }
+
+export function section(
+  overrides: Partial<Extract<Field, { type: "section" }>> = {}
+): Extract<Field, { type: "section" }> {
+  return {
+    id: fieldId(),
+    type: "section",
+    label: "Section",
+    help_text: null,
+    required: false,
+    options: null,
+    validation: null,
+    condition: null,
+    editable_after_submit: false,
+    ...overrides,
+  }
+}

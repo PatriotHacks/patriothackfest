@@ -86,6 +86,38 @@ describe("fieldSchema", () => {
   })
 })
 
+describe("section items", () => {
+  const section = {
+    id,
+    type: "section",
+    label: "About you",
+    help_text: "Tell us about yourself",
+    required: false,
+    options: null,
+    validation: null,
+    condition: null,
+    editable_after_submit: true,
+  }
+
+  it("parses a section", () => {
+    expect(fieldSchema.parse(section)).toEqual(section)
+  })
+
+  it("rejects required sections, conditions, and a missing editable flag", () => {
+    expect(fieldSchema.safeParse({ ...section, required: true }).success).toBe(
+      false
+    )
+    expect(
+      fieldSchema.safeParse({
+        ...section,
+        condition: { field_id: id, operator: "equals", value: true },
+      }).success
+    ).toBe(false)
+    const { editable_after_submit: _, ...withoutFlag } = section
+    expect(fieldSchema.safeParse(withoutFlag).success).toBe(false)
+  })
+})
+
 describe("publishedSchemaSchema", () => {
   it("parses a snapshot", () => {
     const schema = publishedSchemaSchema.parse({
