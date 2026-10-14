@@ -17,11 +17,13 @@ import {
 } from "@dnd-kit/sortable"
 import {
   FIELD_TYPE_LABELS,
-  FIELD_TYPES,
+  QUESTION_TYPES,
   type Field,
   isConditionSourceType,
+  isSection,
   validateForPublish,
   type FieldType,
+  type QuestionType,
 } from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
@@ -52,6 +54,7 @@ import { withType } from "./field-utils"
 import { PreviewPane } from "./preview-pane"
 import { QuestionEditor } from "./question-editor"
 import { SaveIndicator } from "./save-indicator"
+import { SectionEditor } from "./section-editor"
 import { SortableQuestion } from "./sortable-question"
 import { useAutosave } from "./use-autosave"
 
@@ -75,6 +78,12 @@ type Props = {
   canEdit: boolean
 }
 
+function numberItems(fields: Field[]) {
+  let sections = 0
+  let questions = 0
+  return fields.map((field) => (isSection(field) ? sections++ : questions++))
+}
+
 export function FormBuilder({
   form,
   eventName,
@@ -85,7 +94,7 @@ export function FormBuilder({
   const [title, setTitle] = useState(form.title)
   const [description, setDescription] = useState(form.description ?? "")
   const [fields, setFields] = useState(initialFields)
-  const [newType, setNewType] = useState<FieldType>("short_text")
+  const [newType, setNewType] = useState<QuestionType>("short_text")
   const [actionError, setActionError] = useState<string | null>(null)
   const [editedLocally, setEditedLocally] = useState(false)
   const autosave = useAutosave()
@@ -103,6 +112,7 @@ export function FormBuilder({
   )
   const visibleIssues = showIssues ? issues : []
   const formIssues = visibleIssues.filter((i) => i.field_id === null)
+  const itemNumbers = numberItems(fields)
   const dndId = useId()
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -198,9 +208,9 @@ export function FormBuilder({
     )
   }
 
-  async function add() {
+  async function add(type: FieldType) {
     setActionError(null)
-    const result = await addField(form.id, newType)
+    const result = await addField(form.id, type)
     if (result.error || !result.field) {
       setActionError(result.error)
       return
@@ -314,29 +324,46 @@ export function FormBuilder({
               items={fields.map((f) => f.id)}
               strategy={verticalListSortingStrategy}
             >
-              {fields.map((field, index) => (
-                <SortableQuestion
-                  key={field.id}
-                  id={field.id}
-                  index={index}
-                  draggable={canEdit}
-                >
-                  <QuestionEditor
-                    field={field}
-                    index={index}
-                    typeLocked={answeredFieldIds.includes(field.id)}
-                    conditionSources={fields
-                      .slice(0, index)
-                      .filter((f) => isConditionSourceType(f.type))}
-                    issues={visibleIssues
-                      .filter((i) => i.field_id === field.id)
-                      .map((i) => i.message)}
-                    onChange={changeField}
-                    onTypeChange={(type) => changeType(field, type)}
-                    onArchive={() => archive(field)}
-                  />
-                </SortableQuestion>
-              ))}
+              {fields.map((field, index) => {
+                const number = itemNumbers[index]!
+                const issues = visibleIssues
+                  .filter((i) => i.field_id === field.id)
+                  .map((i) => i.message)
+                return (
+                  <SortableQuestion
+                    key={field.id}
+                    id={field.id}
+                    label={`${isSection(field) ? "section" : "question"} ${number + 1}`}
+                    section={isSection(field)}
+                    draggable={canEdit}
+                  >
+                    {isSection(field) ? (
+                      <SectionEditor
+                        section={field}
+                        index={number}
+                        typeLocked={answeredFieldIds.includes(field.id)}
+                        issues={issues}
+                        onChange={changeField}
+                        onTypeChange={(type) => changeType(field, type)}
+                        onArchive={() => archive(field)}
+                      />
+                    ) : (
+                      <QuestionEditor
+                        field={field}
+                        index={number}
+                        typeLocked={answeredFieldIds.includes(field.id)}
+                        conditionSources={fields
+                          .slice(0, index)
+                          .filter((f) => isConditionSourceType(f.type))}
+                        issues={issues}
+                        onChange={changeField}
+                        onTypeChange={(type) => changeType(field, type)}
+                        onArchive={() => archive(field)}
+                      />
+                    )}
+                  </SortableQuestion>
+                )
+              })}
             </SortableContext>
           </DndContext>
 
@@ -344,21 +371,24 @@ export function FormBuilder({
             <div className="flex items-center gap-2">
               <Select
                 value={newType}
-                onValueChange={(value) => setNewType(value as FieldType)}
+                onValueChange={(value) => setNewType(value as QuestionType)}
               >
                 <SelectTrigger aria-label="New question type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {FIELD_TYPES.map((type) => (
+                  {QUESTION_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
                       {FIELD_TYPE_LABELS[type]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={add}>
+              <Button variant="outline" onClick={() => add(newType)}>
                 Add question
+              </Button>
+              <Button variant="outline" onClick={() => add("section")}>
+                Add section
               </Button>
             </div>
           )}

@@ -1,6 +1,10 @@
 "use client"
 
-import { conditionOperatorFor, type Field } from "@workspace/forms"
+import {
+  conditionOperatorFor,
+  type Field,
+  type Question,
+} from "@workspace/forms"
 import { Label } from "@workspace/ui/components/label"
 import {
   Select,
@@ -21,7 +25,7 @@ export function ConditionEditor({
   sources,
   onChange,
 }: {
-  field: Field
+  field: Question
   sources: Field[]
   onChange: (field: Field) => void
 }) {
