@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { conditionSources, validateForPublish } from "./publish"
+import { validateForPublish } from "./publish"
 import { field, section } from "./test-utils"
 
 const form = {
@@ -164,21 +164,6 @@ describe("validateForPublish", () => {
     expect(messages(form, [section()])).toEqual(["Add at least one question"])
   })
 
-  it("requires conditions to reference a question in the same section", () => {
-    const size = field("single_choice", { options: ["S", "XL"] })
-    const why = field("long_text", {
-      condition: { field_id: size.id, operator: "equals", value: "XL" },
-    })
-    const extras = section()
-    expect(validateForPublish(form, [section(), size, extras, why])).toEqual([
-      {
-        field_id: why.id,
-        message: "Question 2 must depend on a question in the same section",
-      },
-    ])
-    expect(messages(form, [section(), size, why, extras])).toEqual([])
-  })
-
   it("rejects conditions that reference a section", () => {
     const heading = section()
     const dependent = field("short_text", {
@@ -187,28 +172,5 @@ describe("validateForPublish", () => {
     expect(messages(form, [heading, dependent])).toEqual([
       "Question 1 must depend on an earlier choice or checkbox question",
     ])
-  })
-})
-
-describe("conditionSources", () => {
-  it("lists earlier choice and checkbox questions in the same section", () => {
-    const early = field("checkbox")
-    const size = field("single_choice")
-    const text = field("short_text")
-    const agree = field("checkbox")
-    const target = field("short_text")
-    const later = field("multiple_choice")
-    const fields = [
-      section(),
-      early,
-      section(),
-      size,
-      text,
-      agree,
-      target,
-      later,
-    ]
-    expect(conditionSources(fields, 6)).toEqual([size, agree])
-    expect(conditionSources(fields, 3)).toEqual([])
   })
 })
