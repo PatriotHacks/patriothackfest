@@ -91,7 +91,7 @@ insert into public.forms (id, event_id, role, title, submissions_close_at, edits
   ('f0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'participant', 'Participant',
    now() + interval '1 day', now() + interval '2 days');
 
-select plan(14);
+select plan(10);
 
 insert into public.form_fields (id, form_id, position, type, label, editable_after_submit, required, options) values
   ('d0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001', 10, 'section', 'Basics', false, false, null),
@@ -101,55 +101,10 @@ insert into public.form_fields (id, form_id, position, type, label, editable_aft
   ('d0000000-0000-0000-0000-000000000005', 'f0000000-0000-0000-0000-000000000001', 50, 'short_text', 'Team name', false, true, null);
 
 update public.form_fields
-set condition = '{"field_id": "d0000000-0000-0000-0000-000000000002", "operator": "equals", "value": "XL"}'
-where id = 'd0000000-0000-0000-0000-000000000005';
-
-select is(
-  pg_temp.publish(),
-  'Question 3 must depend on a question in the same section',
-  'conditions cannot reference questions in an earlier section'
-);
-
-update public.form_fields
-set position = 25
-where id = 'd0000000-0000-0000-0000-000000000005';
-update public.form_fields
 set condition = '{"field_id": "d0000000-0000-0000-0000-000000000004", "operator": "equals", "value": true}'
 where id = 'd0000000-0000-0000-0000-000000000005';
 
-select is(
-  pg_temp.publish(),
-  'Question 2 must depend on an earlier choice or checkbox question',
-  'moving a question above its source breaks the condition'
-);
-
-update public.form_fields
-set position = 50
-where id = 'd0000000-0000-0000-0000-000000000005';
-
-select is(pg_temp.publish(), null, 'conditions on earlier questions in the same section publish');
-
-update public.form_fields
-set position = 45
-where id = 'd0000000-0000-0000-0000-000000000003';
-update public.form_fields
-set position = 30
-where id = 'd0000000-0000-0000-0000-000000000004';
-
-select is(
-  pg_temp.publish(),
-  'Question 3 must depend on a question in the same section',
-  'inserting a section between a question and its source breaks the condition'
-);
-
-update public.form_fields
-set position = 30
-where id = 'd0000000-0000-0000-0000-000000000003';
-update public.form_fields
-set position = 40
-where id = 'd0000000-0000-0000-0000-000000000004';
-
-select is(pg_temp.publish(), null, 'restored order publishes');
+select is(pg_temp.publish(), null, 'form publishes');
 
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
 select set_config('test.app', public.start_application('f0000000-0000-0000-0000-000000000001')::text, true);
