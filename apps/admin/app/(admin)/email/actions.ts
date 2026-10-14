@@ -7,6 +7,7 @@ import {
   renderStatusUpdate,
   sendBatch,
   smtpTransport,
+  usedVariables,
   validateTemplate,
   type RenderedEmail,
   type SendResult,
@@ -152,6 +153,20 @@ export async function createBroadcast(
   const errors = validateTemplate(template, BROADCAST_VARIABLES)
   if (errors.length > 0) return { error: errors.join(" ") }
   if (!isEmailConfigured()) return { error: EMAIL_NOT_CONFIGURED }
+
+  if (usedVariables(template).includes("event_dates")) {
+    const event = await supabase
+      .from("events")
+      .select("starts_at")
+      .eq("id", target.eventId)
+      .single()
+    if (event.error) return { error: event.error.message }
+    if (!event.data.starts_at)
+      return {
+        error:
+          "This email uses {{event_dates}}, but the event has no start date. Set the event dates or remove the variable.",
+      }
+  }
 
   const budget = await supabase
     .rpc("admin_broadcast_recipient_count", {
