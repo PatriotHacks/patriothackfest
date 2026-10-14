@@ -73,7 +73,6 @@ export async function submitApplication(
   })
   if (error) return answerFailure(error)
 
-  refresh()
   return ok
 }
 

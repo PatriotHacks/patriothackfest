@@ -17,5 +17,5 @@ export async function startApplication(formId: string): Promise<ActionResult> {
     return { error: "You already have an application for this event." }
   if (error) return failure(error)
 
-  redirect(`/applications/${data}`)
+  redirect(`/draft/${data}`)
 }
