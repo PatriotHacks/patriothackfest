@@ -2,10 +2,12 @@
 
 import {
   isFieldVisible,
+  isSection,
   validateAnswers,
   type AnswerErrors,
   type Answers,
   type Field,
+  type Question,
 } from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
@@ -23,7 +25,7 @@ function PreviewInput({
   value,
   onChange,
 }: {
-  field: Field
+  field: Question
   value: unknown
   onChange: (value: unknown) => void
 }) {
@@ -166,27 +168,40 @@ export function PreviewPane({
           </p>
         )}
       </div>
-      {visible.map((field) => (
-        <div key={field.id} className="flex flex-col gap-1.5">
-          <Label htmlFor={field.id}>
-            {field.label || "Untitled question"}
-            {field.required && <span className="text-destructive">*</span>}
-          </Label>
-          {field.help_text && (
-            <p className="text-sm text-muted-foreground">{field.help_text}</p>
-          )}
-          <PreviewInput
-            field={field}
-            value={answers[field.id]}
-            onChange={(value) =>
-              setAnswers((current) => ({ ...current, [field.id]: value }))
-            }
-          />
-          {errors?.[field.id] && (
-            <p className="text-sm text-destructive">{errors[field.id]}</p>
-          )}
-        </div>
-      ))}
+      {visible.map((field) =>
+        isSection(field) ? (
+          <div key={field.id} className="mt-2 border-t pt-4">
+            <h3 className="text-lg font-semibold">
+              {field.label || "Untitled section"}
+            </h3>
+            {field.help_text && (
+              <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+                {field.help_text}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div key={field.id} className="flex flex-col gap-1.5">
+            <Label htmlFor={field.id}>
+              {field.label || "Untitled question"}
+              {field.required && <span className="text-destructive">*</span>}
+            </Label>
+            {field.help_text && (
+              <p className="text-sm text-muted-foreground">{field.help_text}</p>
+            )}
+            <PreviewInput
+              field={field}
+              value={answers[field.id]}
+              onChange={(value) =>
+                setAnswers((current) => ({ ...current, [field.id]: value }))
+              }
+            />
+            {errors?.[field.id] && (
+              <p className="text-sm text-destructive">{errors[field.id]}</p>
+            )}
+          </div>
+        )
+      )}
       <div className="flex items-center gap-2">
         <Button
           variant="outline"

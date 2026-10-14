@@ -2,6 +2,7 @@ import {
   fileAnswerSchema,
   isEmptyAnswer,
   isFieldVisible,
+  isSection,
   type Answers,
   type Field,
   type PublishedSchema,
@@ -50,23 +51,32 @@ export function AnswersView({
   const visible = schema.fields.filter((f) =>
     isFieldVisible(f, answers, schema)
   )
-  if (visible.length === 0)
+  if (!visible.some((f) => !isSection(f)))
     return <p className="text-sm text-muted-foreground">No questions.</p>
 
   return (
-    <dl className="flex flex-col gap-4">
-      {visible.map((field) => (
-        <div key={field.id} className="flex flex-col gap-1">
-          <dt className="text-sm font-medium">{field.label}</dt>
-          <dd className="text-sm">
-            <AnswerValue
-              applicationId={applicationId}
-              field={field}
-              value={answers[field.id]}
-            />
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <div className="flex flex-col gap-4">
+      {visible.map((field) =>
+        isSection(field) ? (
+          <h3
+            key={field.id}
+            className="mt-2 border-t pt-4 font-semibold first:mt-0 first:border-t-0 first:pt-0"
+          >
+            {field.label}
+          </h3>
+        ) : (
+          <dl key={field.id} className="flex flex-col gap-1">
+            <dt className="text-sm font-medium">{field.label}</dt>
+            <dd className="text-sm">
+              <AnswerValue
+                applicationId={applicationId}
+                field={field}
+                value={answers[field.id]}
+              />
+            </dd>
+          </dl>
+        )
+      )}
+    </div>
   )
 }
