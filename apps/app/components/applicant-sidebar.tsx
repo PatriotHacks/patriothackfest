@@ -63,7 +63,7 @@ export function ApplicantSidebar({ applicationId }: { applicationId: string }) {
                 <SidebarMenuButton
                   asChild
                   className={ITEM}
-                  data-active={pathname === item.href || undefined}
+                  isActive={pathname === item.href}
                 >
                   <Link href={item.href} onClick={() => setOpenMobile(false)}>
                     <item.icon />
@@ -75,7 +75,6 @@ export function ApplicantSidebar({ applicationId }: { applicationId: string }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 className={ITEM}
-                data-active={undefined}
                 onClick={() => {
                   setOpenMobile(false)
                   setSettingsOpen(true)
@@ -87,11 +86,7 @@ export function ApplicantSidebar({ applicationId }: { applicationId: string }) {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <form action={signOut}>
-                <SidebarMenuButton
-                  type="submit"
-                  className={ITEM}
-                  data-active={undefined}
-                >
+                <SidebarMenuButton type="submit" className={ITEM}>
                   <LogOutIcon />
                   <span>Log out</span>
                 </SidebarMenuButton>
