@@ -25,11 +25,13 @@ export const SAMPLE_VALUES: TemplateValues = {
 export const SAMPLE_DASHBOARD_URL = "https://example.com"
 
 export const BROADCAST_SAMPLE_VALUES: BroadcastValues = {
-  name: "Ada Lovelace",
-  event_name: "Patriot HackFest 2026",
+  name: SAMPLE_VALUES.name,
+  event_name: SAMPLE_VALUES.event_name,
+  event_dates: SAMPLE_VALUES.event_dates,
 }
 
 export const BROADCAST_VARIABLE_INFO: Record<BroadcastVariable, string> = {
   name: VARIABLE_INFO.name,
   event_name: VARIABLE_INFO.event_name,
+  event_dates: VARIABLE_INFO.event_dates,
 }

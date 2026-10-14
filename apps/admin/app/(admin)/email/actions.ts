@@ -7,10 +7,12 @@ import {
   renderStatusUpdate,
   sendBatch,
   smtpTransport,
+  usedVariables,
   validateTemplate,
   type RenderedEmail,
   type SendResult,
 } from "@workspace/email"
+import { formatDateRangeInZone } from "@workspace/forms"
 import { ROLES, type Role } from "@workspace/supabase/roles"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
@@ -152,6 +154,20 @@ export async function createBroadcast(
   if (errors.length > 0) return { error: errors.join(" ") }
   if (!isEmailConfigured()) return { error: EMAIL_NOT_CONFIGURED }
 
+  if (usedVariables(template).includes("event_dates")) {
+    const event = await supabase
+      .from("events")
+      .select("starts_at")
+      .eq("id", target.eventId)
+      .single()
+    if (event.error) return { error: event.error.message }
+    if (!event.data.starts_at)
+      return {
+        error:
+          "This email uses {{event_dates}}, but the event has no start date. Set the event dates or remove the variable.",
+      }
+  }
+
   const budget = await supabase
     .rpc("admin_broadcast_recipient_count", {
       p_event_id: target.eventId,
@@ -190,10 +206,14 @@ export async function sendBroadcastBatch(
 
   const broadcast = await supabase
     .from("email_broadcasts")
-    .select("subject, body")
+    .select("subject, body, event:events(starts_at, ends_at)")
     .eq("id", id)
     .single()
   if (broadcast.error) return { error: broadcast.error.message }
+  const { subject, body, event } = broadcast.data
+  const eventDates = event.starts_at
+    ? formatDateRangeInZone(event.starts_at, event.ends_at)
+    : null
 
   const claimed = await supabase.rpc("admin_claim_broadcast_emails", {
     p_broadcast_id: id,
@@ -209,10 +229,14 @@ export async function sendBroadcastBatch(
       transport,
       (email) => ({
         to: email.email,
-        ...renderBroadcast(broadcast.data, {
-          name: email.full_name || "there",
-          event_name: email.event_name,
-        }),
+        ...renderBroadcast(
+          { subject, body },
+          {
+            name: email.full_name || "there",
+            event_name: email.event_name,
+            event_dates: eventDates,
+          }
+        ),
       }),
       async (result) => {
         const { error } = await supabase.rpc(
