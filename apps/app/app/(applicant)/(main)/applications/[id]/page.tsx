@@ -1,7 +1,7 @@
 import {
   answersSchema,
   formatInZone,
-  isSection,
+  hasEditableSections,
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS } from "@workspace/supabase/roles"
@@ -43,7 +43,8 @@ function phaseNote(
     withdrawn_at: string | null
     declined_at: string | null
     decision: Decision | null
-  }
+  },
+  canEditSubmission: boolean
 ) {
   switch (phase) {
     case "withdrawn":
@@ -54,8 +55,12 @@ function phaseNote(
       return "Submissions are closed. This application was not submitted."
     case "locked_submission":
       return "Answers are locked and can no longer be changed."
+    case "editable_submission":
+      return canEditSubmission
+        ? deadlineText(phase, form, canEditSubmission)
+        : "Answers are locked and can no longer be changed."
     default:
-      return deadlineText(phase, form)
+      return deadlineText(phase, form, canEditSubmission)
   }
 }
 
@@ -92,14 +97,14 @@ export default async function ApplicationPage({
       ? null
       : publishedSchemaSchema.parse(form.published_schema)
   const answers = answersSchema.parse(application.answers)
-  const editable =
-    schema !== null &&
-    form.status === "published" &&
-    (phase === "draft" || phase === "editable_submission")
+  const canEditSubmission = schema !== null && hasEditableSections(schema)
+  const open =
+    phase === "draft" || (phase === "editable_submission" && canEditSubmission)
+  const editable = schema !== null && form.status === "published" && open
   const note =
-    !editable && (phase === "draft" || phase === "editable_submission")
+    open && !editable
       ? "This form is not accepting changes right now."
-      : phaseNote(phase, form, { ...application, decision })
+      : phaseNote(phase, form, { ...application, decision }, canEditSubmission)
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -147,11 +152,7 @@ export default async function ApplicationPage({
               initialAnswers={answers}
               updatedAt={application.updated_at}
               editNote={
-                phase === "draft" &&
-                form.edits_lock_at &&
-                schema.fields.some(
-                  (f) => isSection(f) && f.editable_after_submit
-                )
+                phase === "draft" && form.edits_lock_at && canEditSubmission
                   ? `After submitting, you can edit answers in some sections until ${formatInZone(form.edits_lock_at)}.`
                   : null
               }
