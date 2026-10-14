@@ -1,178 +1,102 @@
 import {
   answersSchema,
-  formatInZone,
   hasEditableSections,
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS } from "@workspace/supabase/roles"
-import type { Database } from "@workspace/supabase/types"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
-import Link from "next/link"
-import { notFound } from "next/navigation"
+import { cn } from "@workspace/ui/lib/utils"
+import { notFound, redirect } from "next/navigation"
 import * as z from "zod"
 
-import { ApplicationForm } from "@/components/application/application-form"
-import { AnswersView } from "@/components/application/answers-view"
-import { DeclineButton } from "@/components/application/decline-button"
-import { WithdrawButton } from "@/components/application/withdraw-button"
-import { ApplicationStatusBadge } from "@/components/application-status-badge"
-import {
-  applicantAction,
-  applicationPhase,
-  declinedText,
-  statusLabel,
-  type ApplicationPhase,
-  type FormTiming,
-} from "@/lib/application-status"
+import { BasicInfoView } from "@/components/application/basic-info-view"
+import { SubmittedApplication } from "@/components/application/submitted-application"
+import { PAPER, SERIF } from "@/components/paper"
+import { applicationPhase, statusLabel } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
 import { deadlineText } from "@/lib/deadline-text"
-
-type Decision = Database["public"]["Enums"]["decision"]
-
-function phaseNote(
-  phase: ApplicationPhase,
-  form: FormTiming,
-  application: {
-    withdrawn_at: string | null
-    declined_at: string | null
-    decision: Decision | null
-  },
-  canEditSubmission: boolean
-) {
-  switch (phase) {
-    case "withdrawn":
-      return `You withdrew this application on ${formatInZone(application.withdrawn_at!)}. You cannot apply to this event again.`
-    case "declined":
-      return `${declinedText(application.decision)} on ${formatInZone(application.declined_at!)}. This is final.`
-    case "closed_draft":
-      return "Submissions are closed. This application was not submitted."
-    case "locked_submission":
-      return "Answers are locked and can no longer be changed."
-    case "editable_submission":
-      return canEditSubmission
-        ? deadlineText(phase, form, canEditSubmission)
-        : "Answers are locked and can no longer be changed."
-    default:
-      return deadlineText(phase, form, canEditSubmission)
-  }
-}
 
 export default async function ApplicationPage({
   params,
 }: PageProps<"/applications/[id]">) {
   const { id } = await params
   if (!z.guid().safeParse(id).success) notFound()
-  const { supabase, userId } = await getNamedApplicant()
+  const { supabase, userId, email } = await getNamedApplicant()
 
-  const { data: application, error } = await supabase
-    .from("applications")
-    .select(
-      "id, role, status, answers, updated_at, withdrawn_at, declined_at, events(name), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
-    )
-    .eq("id", id)
-    .maybeSingle()
-  if (error) throw new Error(error.message)
-  if (!application) notFound()
+  const [application, profile] = await Promise.all([
+    supabase
+      .from("applications")
+      .select(
+        "id, role, status, answers, updated_at, declined_at, events(name), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
+      )
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("full_name, school, phone, date_of_birth")
+      .eq("id", userId)
+      .single(),
+  ])
+  if (application.error) throw new Error(application.error.message)
+  if (profile.error) throw new Error(profile.error.message)
+  if (!application.data) notFound()
+  const { data } = application
+  if (data.status === "draft") redirect(`/draft/${id}`)
 
-  const form = application.forms
-  const eventName = application.events.name
-  const decision = application.application_decisions?.decision ?? null
+  const form = data.forms
+  const decision = data.application_decisions?.decision ?? null
   const phase = applicationPhase(
-    application.status,
-    application.declined_at,
+    data.status,
+    data.declined_at,
     form,
     Date.now()
   )
-  const status = statusLabel(phase, form, decision)
-  const action = applicantAction(phase, form, decision)
   const schema =
     form.published_schema === null
       ? null
       : publishedSchemaSchema.parse(form.published_schema)
-  const answers = answersSchema.parse(application.answers)
-  const canEditSubmission = schema !== null && hasEditableSections(schema)
-  const open =
-    phase === "draft" || (phase === "editable_submission" && canEditSubmission)
-  const editable = schema !== null && form.status === "published" && open
-  const note =
-    open && !editable
-      ? "This form is not accepting changes right now."
-      : phaseNote(phase, form, { ...application, decision }, canEditSubmission)
+  const editable =
+    phase === "editable_submission" &&
+    form.status === "published" &&
+    schema !== null &&
+    hasEditableSections(schema)
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <Link href="/" className="text-sm text-muted-foreground underline">
-        Back to applications
-      </Link>
-      <Card>
-        <CardHeader>
-          <CardTitle>{eventName}</CardTitle>
-          <CardDescription>
-            {ROLE_LABELS[application.role]} application
-          </CardDescription>
-          <CardAction>
-            <ApplicationStatusBadge status={status} />
-          </CardAction>
-        </CardHeader>
-        {note && (
-          <CardContent>
-            <p className="text-sm text-muted-foreground">{note}</p>
-          </CardContent>
-        )}
-      </Card>
-
-      {schema === null ? (
-        <p className="text-sm text-muted-foreground">
-          This form is not available right now.
+    <article
+      className={cn(
+        PAPER,
+        "mx-auto flex max-w-[720px] flex-col gap-[28px] px-[20px] py-[28px] sm:px-[32px]"
+      )}
+    >
+      <header className="flex flex-col gap-[6px]">
+        <div className="flex flex-wrap items-start justify-between gap-[12px]">
+          <h1 className={cn(SERIF, "text-[38px] leading-[1.05]")}>
+            {schema?.title ?? data.events.name}
+          </h1>
+          <span className="rounded-full bg-[#3A4A2B] px-[12px] py-[4px] text-[13px] font-medium text-[#F8F7F2]">
+            {statusLabel(phase, form, decision)}
+          </span>
+        </div>
+        <p className="text-[14.5px] text-[#6E6E68]">
+          {data.events.name} · {ROLE_LABELS[data.role]}
         </p>
-      ) : (
-        <>
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-semibold">{schema.title}</h1>
-            {schema.description && (
-              <p className="whitespace-pre-wrap text-muted-foreground">
-                {schema.description}
-              </p>
-            )}
-          </div>
-          {editable ? (
-            <ApplicationForm
-              key={application.updated_at}
-              mode={phase === "draft" ? "draft" : "edit"}
-              applicationId={application.id}
-              userId={userId}
-              schema={schema}
-              initialAnswers={answers}
-              updatedAt={application.updated_at}
-              editNote={
-                phase === "draft" && form.edits_lock_at && canEditSubmission
-                  ? `After submitting, you can edit answers in some sections until ${formatInZone(form.edits_lock_at)}.`
-                  : null
-              }
-            />
-          ) : (
-            <AnswersView schema={schema} answers={answers} />
-          )}
-        </>
-      )}
-
-      {action?.kind === "withdraw" && (
-        <WithdrawButton applicationId={application.id} eventName={eventName} />
-      )}
-      {action?.kind === "decline" && (
-        <DeclineButton
-          applicationId={application.id}
-          eventName={eventName}
-          decision={action.decision}
+        {editable && (
+          <p className="text-[13px] text-[#6E6E68]">
+            {deadlineText(phase, form, true)}
+          </p>
+        )}
+      </header>
+      <BasicInfoView profile={profile.data} email={email} />
+      {schema && (
+        <SubmittedApplication
+          key={data.updated_at}
+          applicationId={data.id}
+          userId={userId}
+          schema={schema}
+          initialAnswers={answersSchema.parse(data.answers)}
+          updatedAt={data.updated_at}
+          editable={editable}
         />
       )}
-    </div>
+    </article>
   )
 }
