@@ -79,7 +79,7 @@ type Props = {
 }
 
 function numberItems(fields: Field[]) {
-  let sections = 0
+  let sections = 1
   let questions = 0
   return fields.map((field) => (isSection(field) ? sections++ : questions++))
 }
