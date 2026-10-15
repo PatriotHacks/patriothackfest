@@ -28,6 +28,8 @@ import {
 import type { ActionResult } from "@/lib/action-result"
 import { ADMIN_LEVELS, type AdminLevel } from "@/lib/levels"
 
+import { TableCard } from "./table-card"
+
 function LevelSelect({
   value,
   onChange,
@@ -120,52 +122,54 @@ export function AdminsManager({
         </p>
       )}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Email</TableHead>
-            <TableHead>Level</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {admins.map((admin) => {
-            const isSelf =
-              admin.email.toLowerCase() === currentEmail.toLowerCase()
-            const lastOwner = admin.level === "owner" && ownerCount === 1
-            return (
-              <TableRow key={admin.email}>
-                <TableCell>
-                  {admin.email}
-                  {isSelf && (
-                    <span className="text-muted-foreground"> (you)</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <LevelSelect
-                    value={admin.level}
-                    label={`Level for ${admin.email}`}
-                    disabled={pending || lastOwner}
-                    onChange={(next) =>
-                      run(() => updateAdminLevel(admin.email, next))
-                    }
-                  />
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={pending || lastOwner}
-                    onClick={() => run(() => removeAdmin(admin.email))}
-                  >
-                    Remove
-                  </Button>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
+      <TableCard>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead>Level</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {admins.map((admin) => {
+              const isSelf =
+                admin.email.toLowerCase() === currentEmail.toLowerCase()
+              const lastOwner = admin.level === "owner" && ownerCount === 1
+              return (
+                <TableRow key={admin.email}>
+                  <TableCell>
+                    {admin.email}
+                    {isSelf && (
+                      <span className="text-muted-foreground"> (you)</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <LevelSelect
+                      value={admin.level}
+                      label={`Level for ${admin.email}`}
+                      disabled={pending || lastOwner}
+                      onChange={(next) =>
+                        run(() => updateAdminLevel(admin.email, next))
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={pending || lastOwner}
+                      onClick={() => run(() => removeAdmin(admin.email))}
+                    >
+                      Remove
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </TableCard>
       {ownerCount === 1 && (
         <p className="text-sm text-muted-foreground">
           The last owner cannot be removed or demoted.
