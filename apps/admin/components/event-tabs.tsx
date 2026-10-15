@@ -13,7 +13,7 @@ export function EventTabs({
   return (
     <nav
       aria-label="Events"
-      className="inline-flex w-fit items-center gap-1 rounded-lg bg-muted p-1 text-sm text-muted-foreground"
+      className="inline-flex w-fit items-center gap-1 rounded-full border border-border bg-card p-1 text-[14px] text-muted-foreground"
     >
       {events.map((event) => {
         const active = event.slug === selected
@@ -23,8 +23,9 @@ export function EventTabs({
             href={`${basePath}?event=${encodeURIComponent(event.slug)}`}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "rounded-md px-3 py-1 font-medium transition-colors hover:text-foreground",
-              active && "bg-background text-foreground shadow-sm"
+              "rounded-full px-[14px] py-[5px] font-medium transition-colors hover:text-foreground",
+              active &&
+                "bg-primary text-primary-foreground hover:text-primary-foreground"
             )}
           >
             {event.name}
