@@ -11,12 +11,6 @@ export type RoleOption =
   | { role: Role; status: "open"; formId: string; closesAt: string }
   | { role: Role; status: "not_open" | "closed" }
 
-const ROLE_DESCRIPTIONS: Record<Role, string> = {
-  participant: "Build a project with a team over the weekend.",
-  volunteer: "Help run the event behind the scenes.",
-  judge: "Review projects and help pick the winners.",
-}
-
 const UNAVAILABLE_REASONS = {
   not_open: "Not open yet",
   closed: "Applications closed",
@@ -48,25 +42,14 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
             onClick={open ? () => start(option.role, option.formId) : undefined}
             className="flex w-full items-center justify-between gap-[16.5px] rounded-[11px] border-2 border-[#3A4A2B] bg-white px-[16.5px] py-[14px] text-left transition-colors outline-none hover:bg-[#3A4A2B]/5 focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/20 disabled:cursor-not-allowed disabled:border-[#DAD7CC] disabled:bg-[#F1EFE8] disabled:hover:bg-[#F1EFE8]"
           >
-            <span className="flex flex-col gap-[3px]">
-              <span
-                className={
-                  open
-                    ? "text-[17.5px] font-semibold text-[#3A4A2B]"
-                    : "text-[17.5px] font-semibold text-[#A3A39B]"
-                }
-              >
-                {ROLE_LABELS[option.role]}
-              </span>
-              <span
-                className={
-                  open
-                    ? "text-[14px] text-[#6E6E68]"
-                    : "text-[14px] text-[#A3A39B]"
-                }
-              >
-                {ROLE_DESCRIPTIONS[option.role]}
-              </span>
+            <span
+              className={
+                open
+                  ? "truncate text-[17.5px] font-semibold text-[#3A4A2B]"
+                  : "truncate text-[17.5px] font-semibold text-[#A3A39B]"
+              }
+            >
+              {ROLE_LABELS[option.role]}
             </span>
             <span
               className={
