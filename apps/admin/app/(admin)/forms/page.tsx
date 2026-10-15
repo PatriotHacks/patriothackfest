@@ -32,7 +32,7 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
     supabase
       .from("forms")
       .select(
-        "id, event_id, role, title, status, published_at, content_updated_at, submissions_close_at, edits_lock_at, decisions_released_at"
+        "id, event_id, role, status, published_at, content_updated_at, submissions_close_at, edits_lock_at, decisions_released_at"
       ),
   ])
   if (events.error) throw new Error(events.error.message)
@@ -73,16 +73,19 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
                       <h2
                         className={cn(SERIF, "w-32 text-[26px] leading-[1.1]")}
                       >
-                        {ROLE_LABELS[role]}
+                        {form ? (
+                          <Link
+                            href={`/forms/${form.id}`}
+                            className={cn(TEXT_LINK, "font-normal")}
+                          >
+                            {ROLE_LABELS[role]}
+                          </Link>
+                        ) : (
+                          ROLE_LABELS[role]
+                        )}
                       </h2>
                       {form ? (
                         <>
-                          <Link
-                            href={`/forms/${form.id}`}
-                            className={TEXT_LINK}
-                          >
-                            {form.title}
-                          </Link>
                           <FormStatusBadges form={form} />
                           {form.published_at && (
                             <span className="text-sm text-muted-foreground">
