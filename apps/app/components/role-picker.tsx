@@ -8,7 +8,7 @@ import { startApplication } from "@/app/(applicant)/(card)/apply/[eventSlug]/act
 import { AuthButton, AuthError } from "@/components/auth/auth-fields"
 
 export type RoleOption =
-  | { role: Role; status: "open"; formId: string; closesAt: string }
+  | { role: Role; status: "open"; formId: string }
   | { role: Role; status: "not_open" | "closed" }
 
 const UNAVAILABLE_REASONS = {
