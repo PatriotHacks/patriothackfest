@@ -4,7 +4,6 @@ import {
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
-import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -13,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
+import { Pill } from "@workspace/ui/components/pill"
 import {
   Table,
   TableBody,
@@ -218,23 +218,19 @@ export default async function ApplicationPage({
                 <dd className="flex items-center gap-2">
                   {value ?? "Not provided"}
                   {label === "Date of birth" && application.under_18 && (
-                    <Badge variant="destructive">Under 18</Badge>
+                    <Pill tone="brick" size="sm">
+                      Under 18
+                    </Pill>
                   )}
                 </dd>
               </div>
             ))}
           </dl>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">
-              {STATUS_LABELS[application.status]}
-            </Badge>
-            {application.declined_at && (
-              <Badge variant="outline">Declined</Badge>
-            )}
+            <Pill tone="sage">{STATUS_LABELS[application.status]}</Pill>
+            {application.declined_at && <Pill tone="outline">Declined</Pill>}
             <DecisionBadge decision={decision?.decision ?? null} />
-            {form.decisions_released_at && (
-              <Badge variant="outline">Released</Badge>
-            )}
+            {form.decisions_released_at && <Pill tone="outline">Released</Pill>}
           </div>
           <ol className="flex flex-col gap-1 text-sm">
             {timeline.map((event) => (

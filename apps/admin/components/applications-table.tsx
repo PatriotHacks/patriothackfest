@@ -1,9 +1,9 @@
 "use client"
 
-import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Label } from "@workspace/ui/components/label"
+import { Pill } from "@workspace/ui/components/pill"
 import {
   Table,
   TableBody,
@@ -145,26 +145,38 @@ export function ApplicationsTable({ rows }: { rows: ApplicationRow[] }) {
                 />
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <Link href={row.href} className="underline">
                     {row.name}
                   </Link>
-                  {row.under18 && <Badge variant="destructive">Under 18</Badge>}
+                  {row.under18 && (
+                    <Pill tone="brick" size="sm">
+                      Under 18
+                    </Pill>
+                  )}
                 </div>
               </TableCell>
               <TableCell>{row.email}</TableCell>
               <TableCell>{row.role}</TableCell>
               <TableCell>
-                <div className="flex gap-1">
+                <div className="flex items-center gap-2">
                   {row.status}
-                  {row.declined && <Badge variant="outline">Declined</Badge>}
+                  {row.declined && (
+                    <Pill tone="outline" size="sm">
+                      Declined
+                    </Pill>
+                  )}
                 </div>
               </TableCell>
               <TableCell>{row.submittedAt}</TableCell>
               <TableCell>
-                <div className="flex gap-1">
-                  <DecisionBadge decision={row.decision} />
-                  {row.released && <Badge variant="outline">Released</Badge>}
+                <div className="flex items-center gap-1.5">
+                  <DecisionBadge decision={row.decision} size="sm" />
+                  {row.released && (
+                    <Pill tone="outline" size="sm">
+                      Released
+                    </Pill>
+                  )}
                 </div>
               </TableCell>
             </TableRow>
