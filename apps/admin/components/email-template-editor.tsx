@@ -178,7 +178,7 @@ export function EmailTemplateEditor({
                 title="Email preview"
                 sandbox=""
                 srcDoc={rendered.email.html}
-                className="h-[600px] w-full rounded-lg border"
+                className="h-[600px] w-full rounded-[11px] border bg-white"
               />
             </>
           ) : (

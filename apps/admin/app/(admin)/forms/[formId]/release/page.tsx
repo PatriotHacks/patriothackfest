@@ -40,9 +40,9 @@ const EMAIL_STATUSES = [
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col rounded-lg border px-4 py-3">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
+    <div className="flex flex-col rounded-[11px] border bg-white px-4 py-3">
+      <dt className="text-[13.5px] text-muted-foreground">{label}</dt>
+      <dd className="text-[26px] font-semibold tabular-nums">{value}</dd>
     </div>
   )
 }
