@@ -18,9 +18,20 @@ import {
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group"
 import { Textarea } from "@workspace/ui/components/textarea"
+import { SERIF } from "@workspace/ui/lib/brand"
+import { cn } from "@workspace/ui/lib/utils"
 import { useId, useState } from "react"
 
+import {
+  PREVIEW_CHECK,
+  PREVIEW_INPUT,
+  PREVIEW_LABEL,
+  PREVIEW_TEXTAREA,
+} from "@/lib/styles"
+
 import { BASIC_INFO_FIELDS, BASIC_INFO_TITLE } from "./basic-info-item"
+
+const SECTION_TITLE = cn(SERIF, "text-[28px] leading-[1.1]")
 
 function PreviewInput({
   field,
@@ -41,6 +52,7 @@ function PreviewInput({
       return (
         <Input
           id={field.id}
+          className={PREVIEW_INPUT}
           type={
             field.type === "short_text"
               ? "text"
@@ -56,6 +68,7 @@ function PreviewInput({
       return (
         <Textarea
           id={field.id}
+          className={PREVIEW_TEXTAREA}
           value={(value as string | undefined) ?? ""}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -64,6 +77,7 @@ function PreviewInput({
       return (
         <Input
           id={field.id}
+          className={PREVIEW_INPUT}
           type="number"
           value={(value as number | undefined) ?? ""}
           onChange={(e) =>
@@ -81,7 +95,11 @@ function PreviewInput({
             .filter((o) => o !== "")
             .map((option, i) => (
               <div key={`${i}-${option}`} className="flex items-center gap-2">
-                <RadioGroupItem value={option} id={`${id}-${i}`} />
+                <RadioGroupItem
+                  value={option}
+                  id={`${id}-${i}`}
+                  className={PREVIEW_CHECK}
+                />
                 <Label htmlFor={`${id}-${i}`}>{option}</Label>
               </div>
             ))}
@@ -97,6 +115,7 @@ function PreviewInput({
               <div key={`${i}-${option}`} className="flex items-center gap-2">
                 <Checkbox
                   id={`${id}-${i}`}
+                  className={PREVIEW_CHECK}
                   checked={selected.includes(option)}
                   onCheckedChange={(checked) =>
                     onChange(
@@ -117,6 +136,7 @@ function PreviewInput({
         <div className="flex items-center gap-2">
           <Checkbox
             id={field.id}
+            className={PREVIEW_CHECK}
             checked={value === true}
             onCheckedChange={(checked) => onChange(checked === true)}
           />
@@ -127,6 +147,7 @@ function PreviewInput({
       return (
         <Input
           id={field.id}
+          className={PREVIEW_INPUT}
           type="file"
           onChange={(e) => {
             const file = e.target.files?.[0]
@@ -163,29 +184,36 @@ export function PreviewPane({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-xl font-semibold">{title || "Untitled form"}</h2>
+        <h2 className={cn(SERIF, "text-[30px] leading-[1.1]")}>
+          {title || "Untitled form"}
+        </h2>
         {description && (
-          <p className="whitespace-pre-wrap text-muted-foreground">
+          <p className="mt-1 text-[14.5px] whitespace-pre-wrap text-muted-foreground">
             {description}
           </p>
         )}
       </div>
       <div className="mt-2 border-t pt-4">
-        <h3 className="text-lg font-semibold">{BASIC_INFO_TITLE}</h3>
+        <h3 className={SECTION_TITLE}>{BASIC_INFO_TITLE}</h3>
       </div>
       {BASIC_INFO_FIELDS.map(({ label, type, required }, i) => (
         <div key={label} className="flex flex-col gap-1.5">
-          <Label htmlFor={`preview-basic-${i}`}>
+          <Label htmlFor={`preview-basic-${i}`} className={PREVIEW_LABEL}>
             {label}
             {required && <span className="text-destructive">*</span>}
           </Label>
-          <Input id={`preview-basic-${i}`} type={type} disabled />
+          <Input
+            id={`preview-basic-${i}`}
+            className={PREVIEW_INPUT}
+            type={type}
+            disabled
+          />
         </div>
       ))}
       {visible.map((field) =>
         isSection(field) ? (
           <div key={field.id} className="mt-2 border-t pt-4">
-            <h3 className="text-lg font-semibold">
+            <h3 className={SECTION_TITLE}>
               {field.label || "Untitled section"}
             </h3>
             {field.help_text && (
@@ -196,7 +224,7 @@ export function PreviewPane({
           </div>
         ) : (
           <div key={field.id} className="flex flex-col gap-1.5">
-            <Label htmlFor={field.id}>
+            <Label htmlFor={field.id} className={PREVIEW_LABEL}>
               {field.label || "Untitled question"}
               {field.required && <span className="text-destructive">*</span>}
             </Label>

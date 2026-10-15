@@ -22,6 +22,8 @@ import { Switch } from "@workspace/ui/components/switch"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useId } from "react"
 
+import { EYEBROW } from "@/lib/styles"
+
 import { ConditionEditor } from "./condition-editor"
 import { OptionsEditor } from "./options-editor"
 import { ValidationEditor } from "./validation-editor"
@@ -52,7 +54,7 @@ export function ItemHeader({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm font-medium">{heading}</span>
+      <span className={EYEBROW}>{heading}</span>
       <Select
         value={type}
         onValueChange={(value) => onTypeChange(value as FieldType)}

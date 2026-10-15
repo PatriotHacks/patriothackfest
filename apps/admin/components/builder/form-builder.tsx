@@ -27,7 +27,12 @@ import {
 } from "@workspace/forms"
 import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent } from "@workspace/ui/components/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import {
@@ -38,6 +43,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import { Textarea } from "@workspace/ui/components/textarea"
+import { cn } from "@workspace/ui/lib/utils"
 import { useId, useState, useTransition } from "react"
 
 import {
@@ -51,6 +57,7 @@ import {
 import { DeadlinesForm } from "@/components/deadlines-form"
 import { FormStatusBadges } from "@/components/form-status-badges"
 import { PageHeader } from "@/components/page-header"
+import { EYEBROW } from "@/lib/styles"
 
 import { BasicInfoItem } from "./basic-info-item"
 import { withType } from "./field-utils"
@@ -276,8 +283,10 @@ export function FormBuilder({
       )}
 
       <Card>
+        <CardHeader>
+          <CardTitle>Settings</CardTitle>
+        </CardHeader>
         <CardContent>
-          <h2 className="mb-3 font-medium">Settings</h2>
           <DeadlinesForm
             formId={form.id}
             submissionsCloseAt={form.submissions_close_at}
@@ -398,9 +407,7 @@ export function FormBuilder({
         </fieldset>
         <Card className="lg:sticky lg:top-6">
           <CardContent>
-            <p className="mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Preview (working copy)
-            </p>
+            <p className={cn(EYEBROW, "mb-4")}>Preview (working copy)</p>
             <PreviewPane
               title={title}
               description={description}
