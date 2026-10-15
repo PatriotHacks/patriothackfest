@@ -1,7 +1,7 @@
 import { ROLES } from "@workspace/supabase/roles"
+import { AuthCard } from "@workspace/ui/components/auth-card"
 import { notFound, redirect } from "next/navigation"
 
-import { AuthCard } from "@/components/auth/auth-card"
 import { SignOutLink } from "@/components/auth/sign-out-link"
 import { RolePicker, type RoleOption } from "@/components/role-picker"
 import { isFormOpen } from "@/lib/application-status"

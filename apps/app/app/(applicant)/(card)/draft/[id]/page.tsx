@@ -6,11 +6,11 @@ import {
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { AuthCard } from "@workspace/ui/components/auth-card"
 import { notFound, redirect } from "next/navigation"
 import * as z from "zod"
 
 import { DraftForm } from "@/components/application/draft-form"
-import { AuthCard } from "@/components/auth/auth-card"
 import { SignOutLink } from "@/components/auth/sign-out-link"
 import { applicationPhase } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"

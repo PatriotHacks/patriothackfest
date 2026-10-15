@@ -1,9 +1,9 @@
 "use client"
 
+import { AuthCard } from "@workspace/ui/components/auth-card"
 import { useEffect, useState, useTransition } from "react"
 
 import { sendCode, verifyCode } from "@/app/login/actions"
-import { AuthCard } from "@/components/auth/auth-card"
 import {
   AuthButton,
   AuthError,
