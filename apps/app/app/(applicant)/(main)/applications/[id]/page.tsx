@@ -64,7 +64,7 @@ export default async function ApplicationPage({
     <article
       className={cn(
         PAPER,
-        "flex max-w-[720px] flex-col gap-[28px] px-[20px] py-[28px] sm:px-[32px]"
+        "flex flex-col gap-[28px] px-[20px] py-[28px] sm:px-[32px]"
       )}
     >
       <header className="flex flex-col gap-[6px]">
