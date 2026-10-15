@@ -1,9 +1,6 @@
 "use client"
 
 import { AuthCard } from "@workspace/ui/components/auth-card"
-import { useEffect, useState, useTransition } from "react"
-
-import { sendCode, verifyCode } from "@/app/login/actions"
 import {
   AuthButton,
   AuthError,
@@ -11,7 +8,10 @@ import {
   AuthInput,
   AuthLabel,
   AuthTextButton,
-} from "@/components/auth/auth-fields"
+} from "@workspace/ui/components/auth-fields"
+import { useEffect, useState, useTransition } from "react"
+
+import { sendCode, verifyCode } from "@/app/login/actions"
 
 const RESEND_COOLDOWN_SECONDS = 60
 const CODE_LENGTH = 6

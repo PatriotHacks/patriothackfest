@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useTransition } from "react"
-
-import { saveFullName } from "@/app/(applicant)/(card)/welcome/actions"
 import {
   AuthButton,
   AuthError,
   AuthForm,
   AuthInput,
   AuthLabel,
-} from "@/components/auth/auth-fields"
+} from "@workspace/ui/components/auth-fields"
+import { useState, useTransition } from "react"
+
+import { saveFullName } from "@/app/(applicant)/(card)/welcome/actions"
 
 export function NameForm() {
   const [name, setName] = useState("")

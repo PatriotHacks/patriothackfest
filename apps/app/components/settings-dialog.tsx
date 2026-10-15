@@ -1,5 +1,6 @@
 "use client"
 
+import { AuthButton } from "@workspace/ui/components/auth-fields"
 import {
   Dialog,
   DialogClose,
@@ -8,8 +9,6 @@ import {
 } from "@workspace/ui/components/dialog"
 import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
-
-import { AuthButton } from "@/components/auth/auth-fields"
 
 export function SettingsDialog({
   open,
