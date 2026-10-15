@@ -37,7 +37,7 @@ export default async function MainLayout({ children }: LayoutProps<"/">) {
             className="h-[32px] w-auto"
           />
         </header>
-        <main className="flex-1 p-4 sm:p-8">{children}</main>
+        <main className="flex-1 p-4 sm:p-8 lg:px-12">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )
