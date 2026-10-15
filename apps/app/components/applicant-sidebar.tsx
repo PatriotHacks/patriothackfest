@@ -16,7 +16,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@workspace/ui/components/sidebar"
-import { OUTLINE_PILL } from "@workspace/ui/lib/brand"
+import {
+  OUTLINE_PILL,
+  SIDEBAR_ACCOUNT_ROW,
+  SIDEBAR_FOOTER,
+  SIDEBAR_ITEM,
+} from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ChevronsUpDownIcon,
@@ -32,9 +37,6 @@ import { useState } from "react"
 import { signOut } from "@/lib/auth-actions"
 
 import { SettingsDialog } from "./settings-dialog"
-
-const ITEM =
-  "h-9 rounded-lg text-[15px] text-[#6E6E68] hover:bg-[#3A4A2B]/6 hover:text-[#3A4A2B] data-active:bg-[#3A4A2B]/10 data-active:font-semibold data-active:text-[#3A4A2B]"
 
 export function ApplicantSidebar({
   applicationId,
@@ -77,7 +79,7 @@ export function ApplicantSidebar({
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  className={ITEM}
+                  className={SIDEBAR_ITEM}
                   isActive={pathname === item.href}
                 >
                   <Link href={item.href} onClick={() => setOpenMobile(false)}>
@@ -90,12 +92,15 @@ export function ApplicantSidebar({
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="gap-3 border-t border-[#E7E4D9] p-4 font-(family-name:--font-auth-sans)">
+      <SidebarFooter className={SIDEBAR_FOOTER}>
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex h-9 w-full items-center gap-2 rounded-lg px-2 text-left text-[14px] text-[#3A4A2B] outline-none hover:bg-[#3A4A2B]/6 focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/30 data-[state=open]:bg-[#3A4A2B]/10"
+              className={cn(
+                SIDEBAR_ACCOUNT_ROW,
+                "outline-none hover:bg-[#3A4A2B]/6 focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/30 data-[state=open]:bg-[#3A4A2B]/10"
+              )}
             >
               <span className="min-w-0 flex-1 truncate" title={email}>
                 {email}
