@@ -6,10 +6,10 @@ import {
   DialogContent,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
+import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { AuthButton } from "@/components/auth/auth-fields"
-import { PAPER, SERIF } from "@/components/paper"
 
 export function SettingsDialog({
   open,

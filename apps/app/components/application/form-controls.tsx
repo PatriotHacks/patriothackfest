@@ -1,8 +1,7 @@
 import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
+import { SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
-
-import { SERIF } from "@/components/paper"
 
 const CONTROL =
   "rounded-[8px] border-2 border-[#3A4A2B] bg-white px-[14px] text-[16px] text-[#2A2A26] outline-none placeholder:text-[#A3A39B] focus-visible:border-[#3A4A2B] focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/20 disabled:cursor-not-allowed disabled:border-[#DAD7CC] disabled:bg-[#F1EFE8] disabled:text-[#8A8A82] disabled:opacity-100 aria-invalid:border-destructive md:text-[16px] dark:bg-white"

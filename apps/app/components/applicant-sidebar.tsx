@@ -16,6 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@workspace/ui/components/sidebar"
+import { OUTLINE_PILL } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ChevronsUpDownIcon,
@@ -28,7 +29,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 
-import { OUTLINE_PILL } from "@/components/paper"
 import { signOut } from "@/lib/auth-actions"
 
 import { SettingsDialog } from "./settings-dialog"

@@ -4,12 +4,12 @@ import {
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { OUTLINE_PILL, PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 
 import { DeclineButton } from "@/components/application/decline-button"
 import { WithdrawButton } from "@/components/application/withdraw-button"
-import { OUTLINE_PILL, PAPER, SERIF } from "@/components/paper"
 import {
   applicantAction,
   applicationPhase,

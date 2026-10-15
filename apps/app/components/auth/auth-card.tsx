@@ -1,7 +1,6 @@
+import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Image from "next/image"
-
-import { PAPER, SERIF } from "@/components/paper"
 
 export function AuthCard({
   title,

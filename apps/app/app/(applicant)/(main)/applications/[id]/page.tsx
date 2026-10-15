@@ -4,13 +4,13 @@ import {
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import { notFound, redirect } from "next/navigation"
 import * as z from "zod"
 
 import { BasicInfoView } from "@/components/application/basic-info-view"
 import { SubmittedApplication } from "@/components/application/submitted-application"
-import { PAPER, SERIF } from "@/components/paper"
 import { applicationPhase, statusLabel } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
 import { deadlineText } from "@/lib/deadline-text"
