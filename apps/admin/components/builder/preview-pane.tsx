@@ -20,6 +20,8 @@ import {
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useId, useState } from "react"
 
+import { BASIC_INFO_FIELDS, BASIC_INFO_TITLE } from "./basic-info-item"
+
 function PreviewInput({
   field,
   value,
@@ -168,6 +170,18 @@ export function PreviewPane({
           </p>
         )}
       </div>
+      <div className="mt-2 border-t pt-4">
+        <h3 className="text-lg font-semibold">{BASIC_INFO_TITLE}</h3>
+      </div>
+      {BASIC_INFO_FIELDS.map(({ label, type, required }, i) => (
+        <div key={label} className="flex flex-col gap-1.5">
+          <Label htmlFor={`preview-basic-${i}`}>
+            {label}
+            {required && <span className="text-destructive">*</span>}
+          </Label>
+          <Input id={`preview-basic-${i}`} type={type} disabled />
+        </div>
+      ))}
       {visible.map((field) =>
         isSection(field) ? (
           <div key={field.id} className="mt-2 border-t pt-4">

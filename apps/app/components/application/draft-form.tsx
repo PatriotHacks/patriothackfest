@@ -233,6 +233,7 @@ export function DraftForm({
         errors={basicErrors}
         email={email}
         disabled={busy || basicLocked}
+        muted={basicLocked}
         onChange={updateBasic}
         onBlur={() => void basicSave.flush()}
       />

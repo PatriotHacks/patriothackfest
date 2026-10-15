@@ -35,7 +35,7 @@ export function BasicInfoView({
 
   return (
     <FormSection muted aria-labelledby="basic-information">
-      <SectionHeading id="basic-information" title="Basic information" />
+      <SectionHeading id="basic-information" title="Basic Information" />
       <dl className="flex flex-col gap-[16px]">
         {rows.map(([label, value]) => (
           <div key={label} className="flex flex-col gap-[4px]">
