@@ -3,6 +3,12 @@
 import { Button } from "@workspace/ui/components/button"
 import { Pill } from "@workspace/ui/components/pill"
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@workspace/ui/components/popover"
+import { SettingsDialog } from "@workspace/ui/components/settings-dialog"
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -15,19 +21,25 @@ import {
 } from "@workspace/ui/components/sidebar"
 import {
   SIDEBAR_ACCOUNT_ROW,
+  SIDEBAR_ACCOUNT_TRIGGER,
   SIDEBAR_FOOTER,
   SIDEBAR_ITEM,
+  SIDEBAR_MENU_ITEM,
 } from "@workspace/ui/lib/brand"
+import { cn } from "@workspace/ui/lib/utils"
 import {
+  ChevronsUpDownIcon,
   FileTextIcon,
   InboxIcon,
   MailIcon,
+  SettingsIcon,
   ShieldIcon,
   type LucideIcon,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 import { signOut } from "@/lib/auth-actions"
 import { hasLevel, type AdminLevel } from "@/lib/levels"
@@ -58,6 +70,8 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <Sidebar>
@@ -104,20 +118,47 @@ export function AdminSidebar({
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className={SIDEBAR_FOOTER}>
-        <div className={SIDEBAR_ACCOUNT_ROW}>
-          <span className="min-w-0 flex-1 truncate" title={email}>
-            {email}
-          </span>
-          <Pill tone="sage" size="sm" className="shrink-0 capitalize">
-            {level}
-          </Pill>
-        </div>
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(SIDEBAR_ACCOUNT_ROW, SIDEBAR_ACCOUNT_TRIGGER)}
+            >
+              <span className="min-w-0 flex-1 truncate" title={email}>
+                {email}
+              </span>
+              <Pill tone="sage" size="sm" className="shrink-0 capitalize">
+                {level}
+              </Pill>
+              <ChevronsUpDownIcon className="size-4 shrink-0 text-[#6E6E68]" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="start"
+            className="w-(--radix-popover-trigger-width) gap-0 p-1"
+          >
+            <button
+              type="button"
+              className={SIDEBAR_MENU_ITEM}
+              onClick={() => {
+                setMenuOpen(false)
+                setOpenMobile(false)
+                setSettingsOpen(true)
+              }}
+            >
+              <SettingsIcon />
+              Settings
+            </button>
+          </PopoverContent>
+        </Popover>
         <form action={signOut}>
           <Button type="submit" variant="outline" className="w-full">
             Sign out
           </Button>
         </form>
       </SidebarFooter>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </Sidebar>
   )
 }
