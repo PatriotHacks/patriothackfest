@@ -14,3 +14,9 @@ export const SIDEBAR_FOOTER =
 
 export const SIDEBAR_ACCOUNT_ROW =
   "flex h-9 w-full items-center gap-2 rounded-lg px-2 text-left text-[14px] text-[#3A4A2B]"
+
+export const SIDEBAR_ACCOUNT_TRIGGER =
+  "outline-none hover:bg-[#3A4A2B]/6 focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/30 data-[state=open]:bg-[#3A4A2B]/10"
+
+export const SIDEBAR_MENU_ITEM =
+  "flex h-9 w-full items-center gap-2 rounded-md px-2 text-left text-[14px] text-[#3A4A2B] outline-none hover:bg-[#3A4A2B]/6 focus-visible:bg-[#3A4A2B]/6 [&_svg]:size-4"

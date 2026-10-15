@@ -20,8 +20,10 @@ import {
 import {
   OUTLINE_PILL,
   SIDEBAR_ACCOUNT_ROW,
+  SIDEBAR_ACCOUNT_TRIGGER,
   SIDEBAR_FOOTER,
   SIDEBAR_ITEM,
+  SIDEBAR_MENU_ITEM,
 } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import {
@@ -96,10 +98,7 @@ export function ApplicantSidebar({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className={cn(
-                SIDEBAR_ACCOUNT_ROW,
-                "outline-none hover:bg-[#3A4A2B]/6 focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/30 data-[state=open]:bg-[#3A4A2B]/10"
-              )}
+              className={cn(SIDEBAR_ACCOUNT_ROW, SIDEBAR_ACCOUNT_TRIGGER)}
             >
               <span className="min-w-0 flex-1 truncate" title={email}>
                 {email}
@@ -114,7 +113,7 @@ export function ApplicantSidebar({
           >
             <button
               type="button"
-              className="flex h-9 w-full items-center gap-2 rounded-md px-2 text-left text-[14px] text-[#3A4A2B] outline-none hover:bg-[#3A4A2B]/6 focus-visible:bg-[#3A4A2B]/6 [&_svg]:size-4"
+              className={SIDEBAR_MENU_ITEM}
               onClick={() => {
                 setMenuOpen(false)
                 setOpenMobile(false)
