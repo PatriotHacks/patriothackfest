@@ -37,7 +37,7 @@ export function SortableQuestion({
         transition,
       }}
       className={cn(
-        section && "mt-4 border-l-4 border-l-primary bg-muted/50",
+        section && "mt-4 bg-secondary",
         isDragging && "relative z-10 shadow-lg"
       )}
     >
@@ -46,7 +46,7 @@ export function SortableQuestion({
           <button
             type="button"
             ref={setActivatorNodeRef}
-            className="h-fit cursor-grab rounded p-1 text-muted-foreground hover:bg-muted"
+            className="h-fit cursor-grab rounded-md p-1 text-muted-foreground hover:bg-primary/6 hover:text-foreground"
             aria-label={`Reorder ${label}`}
             {...attributes}
             {...listeners}

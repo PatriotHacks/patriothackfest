@@ -12,10 +12,10 @@ import {
   AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog"
 import { Button } from "@workspace/ui/components/button"
+import { OUTLINE_PILL } from "@workspace/ui/lib/brand"
 import { useState, useTransition } from "react"
 
 import { withdrawApplication } from "@/app/(applicant)/(main)/applications/[id]/actions"
-import { OUTLINE_PILL } from "@/components/paper"
 
 export function WithdrawButton({
   applicationId,

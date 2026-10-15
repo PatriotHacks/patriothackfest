@@ -3,6 +3,8 @@ import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { Separator } from "@workspace/ui/components/separator"
+import { SERIF } from "@workspace/ui/lib/brand"
+import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { Fragment } from "react"
 
@@ -10,9 +12,11 @@ import { CreateFormButton } from "@/components/create-form-button"
 import { DeadlinesForm } from "@/components/deadlines-form"
 import { EventTabs } from "@/components/event-tabs"
 import { FormStatusBadges } from "@/components/form-status-badges"
+import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
+import { TEXT_LINK } from "@/lib/styles"
 
 export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
   const { event: slug } = await searchParams
@@ -28,7 +32,7 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
     supabase
       .from("forms")
       .select(
-        "id, event_id, role, title, status, published_at, content_updated_at, submissions_close_at, edits_lock_at, decisions_released_at"
+        "id, event_id, role, status, published_at, content_updated_at, submissions_close_at, edits_lock_at, decisions_released_at"
       ),
   ])
   if (events.error) throw new Error(events.error.message)
@@ -41,7 +45,10 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Forms</h1>
+      <PageHeader
+        title="Forms"
+        description="Application forms, deadlines, and exports for each event."
+      />
       {event ? (
         <EventTabs
           events={events.data}
@@ -63,15 +70,22 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
                   {index > 0 && <Separator />}
                   <section className="flex flex-col gap-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="w-28 font-medium">{ROLE_LABELS[role]}</h2>
-                      {form ? (
-                        <>
+                      <h2
+                        className={cn(SERIF, "w-32 text-[26px] leading-[1.1]")}
+                      >
+                        {form ? (
                           <Link
                             href={`/forms/${form.id}`}
-                            className="underline"
+                            className={cn(TEXT_LINK, "font-normal")}
                           >
-                            {form.title}
+                            {ROLE_LABELS[role]}
                           </Link>
+                        ) : (
+                          ROLE_LABELS[role]
+                        )}
+                      </h2>
+                      {form ? (
+                        <>
                           <FormStatusBadges form={form} />
                           {form.published_at && (
                             <span className="text-sm text-muted-foreground">

@@ -5,6 +5,8 @@ import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { Switch } from "@workspace/ui/components/switch"
 import { Textarea } from "@workspace/ui/components/textarea"
+import { SERIF } from "@workspace/ui/lib/brand"
+import { cn } from "@workspace/ui/lib/utils"
 import { useId } from "react"
 
 import { ItemHeader } from "./question-editor"
@@ -42,7 +44,7 @@ export function SectionEditor({
       <Input
         id={`${id}-title`}
         aria-label="Section title"
-        className="h-10 text-lg font-semibold"
+        className={cn(SERIF, "h-11 text-[22px] md:text-[22px]")}
         value={section.label}
         placeholder="Section title"
         onChange={(e) => onChange({ ...section, label: e.target.value })}

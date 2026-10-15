@@ -225,7 +225,7 @@ export function BroadcastComposer({
           {error && <p className="text-sm text-destructive">{error}</p>}
           {message && <p className="text-sm">{message}</p>}
           {queued && (
-            <div className="flex flex-col gap-2 rounded-lg border p-3">
+            <div className="flex flex-col gap-2 rounded-[11px] border bg-white p-3">
               <p className="text-sm font-medium">
                 Broadcast queued for {queued.count} applicants
               </p>
@@ -259,7 +259,7 @@ export function BroadcastComposer({
                 title="Broadcast preview"
                 sandbox=""
                 srcDoc={rendered.email.html}
-                className="h-[600px] w-full rounded-lg border"
+                className="h-[600px] w-full rounded-[11px] border bg-white"
               />
             </>
           ) : (

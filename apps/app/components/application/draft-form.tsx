@@ -13,6 +13,7 @@ import {
   type PublishedSchema,
   type Question,
 } from "@workspace/forms"
+import { AuthButton, AuthError } from "@workspace/ui/components/auth-fields"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 
@@ -20,7 +21,6 @@ import {
   saveAnswers,
   submitApplication,
 } from "@/app/(applicant)/(main)/applications/[id]/actions"
-import { AuthButton, AuthError } from "@/components/auth/auth-fields"
 import {
   BASIC_INFO_KEYS,
   basicInfoDraftErrors,

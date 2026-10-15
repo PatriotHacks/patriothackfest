@@ -1,9 +1,9 @@
 "use client"
 
-import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Label } from "@workspace/ui/components/label"
+import { Pill } from "@workspace/ui/components/pill"
 import {
   Table,
   TableBody,
@@ -17,9 +17,11 @@ import { useState, useTransition } from "react"
 
 import { setDecisions } from "@/app/(admin)/applications/actions"
 import type { Decision } from "@/lib/roles"
+import { TEXT_LINK } from "@/lib/styles"
 
 import { DecisionBadge } from "./decision-badge"
 import { DecisionSelect } from "./decision-select"
+import { TableCard } from "./table-card"
 
 export type ApplicationRow = {
   id: string
@@ -105,79 +107,93 @@ export function ApplicationsTable({ rows }: { rows: ApplicationRow[] }) {
           </ul>
         </div>
       )}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-8">
-              <Checkbox
-                aria-label="Select all applications on this page"
-                checked={allSelected}
-                disabled={selectable.length === 0}
-                onCheckedChange={(checked) =>
-                  setSelected(
-                    checked === true
-                      ? new Set(selectable.map((r) => r.id))
-                      : new Set()
-                  )
-                }
-              />
-            </TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Submitted</TableHead>
-            <TableHead>Decision</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell>
+      <TableCard>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-8">
                 <Checkbox
-                  aria-label={`Select ${row.name}`}
-                  title={row.blockedReason ?? undefined}
-                  disabled={row.blockedReason !== null}
-                  checked={selected.has(row.id)}
+                  aria-label="Select all applications on this page"
+                  checked={allSelected}
+                  disabled={selectable.length === 0}
                   onCheckedChange={(checked) =>
-                    toggle(row.id, checked === true)
+                    setSelected(
+                      checked === true
+                        ? new Set(selectable.map((r) => r.id))
+                        : new Set()
+                    )
                   }
                 />
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  <Link href={row.href} className="underline">
-                    {row.name}
-                  </Link>
-                  {row.under18 && <Badge variant="destructive">Under 18</Badge>}
-                </div>
-              </TableCell>
-              <TableCell>{row.email}</TableCell>
-              <TableCell>{row.role}</TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  {row.status}
-                  {row.declined && <Badge variant="outline">Declined</Badge>}
-                </div>
-              </TableCell>
-              <TableCell>{row.submittedAt}</TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <DecisionBadge decision={row.decision} />
-                  {row.released && <Badge variant="outline">Released</Badge>}
-                </div>
-              </TableCell>
+              </TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Submitted</TableHead>
+              <TableHead>Decision</TableHead>
             </TableRow>
-          ))}
-          {rows.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={7} className="text-muted-foreground">
-                No applications match these filters.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell>
+                  <Checkbox
+                    aria-label={`Select ${row.name}`}
+                    title={row.blockedReason ?? undefined}
+                    disabled={row.blockedReason !== null}
+                    checked={selected.has(row.id)}
+                    onCheckedChange={(checked) =>
+                      toggle(row.id, checked === true)
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Link href={row.href} className={TEXT_LINK}>
+                      {row.name}
+                    </Link>
+                    {row.under18 && (
+                      <Pill tone="brick" size="sm">
+                        Under 18
+                      </Pill>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>{row.email}</TableCell>
+                <TableCell>{row.role}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {row.status}
+                    {row.declined && (
+                      <Pill tone="outline" size="sm">
+                        Declined
+                      </Pill>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>{row.submittedAt}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1.5">
+                    <DecisionBadge decision={row.decision} size="sm" />
+                    {row.released && (
+                      <Pill tone="outline" size="sm">
+                        Released
+                      </Pill>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {rows.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-muted-foreground">
+                  No applications match these filters.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableCard>
     </div>
   )
 }

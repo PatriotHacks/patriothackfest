@@ -1,4 +1,5 @@
-import { AuthTextButton } from "@/components/auth/auth-fields"
+import { AuthTextButton } from "@workspace/ui/components/auth-fields"
+
 import { signOut } from "@/lib/auth-actions"
 
 export function SignOutLink() {

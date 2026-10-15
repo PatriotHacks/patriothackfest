@@ -1,4 +1,4 @@
-import { Badge } from "@workspace/ui/components/badge"
+import { Pill } from "@workspace/ui/components/pill"
 
 import { hasUnpublishedChanges } from "@/lib/form-status"
 
@@ -15,14 +15,14 @@ export function FormStatusBadges({
   }
 }) {
   return (
-    <div className="flex gap-2">
-      <Badge variant={form.status === "published" ? "default" : "secondary"}>
+    <div className="flex flex-wrap gap-2">
+      <Pill tone={form.status === "published" ? "olive" : "muted"}>
         {form.status === "published" ? "Published" : "Draft"}
-      </Badge>
+      </Pill>
       {(unpublishedChanges || hasUnpublishedChanges(form)) && (
-        <Badge variant="outline">Unpublished changes</Badge>
+        <Pill tone="amber">Unpublished changes</Pill>
       )}
-      {form.decisions_released_at && <Badge>Released</Badge>}
+      {form.decisions_released_at && <Pill tone="outline">Released</Pill>}
     </div>
   )
 }

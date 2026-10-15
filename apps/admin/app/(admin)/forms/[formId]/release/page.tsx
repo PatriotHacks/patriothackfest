@@ -22,6 +22,7 @@ import {
   sendPendingEmails,
 } from "@/app/(admin)/forms/[formId]/release/actions"
 import { EmailSender } from "@/components/email-sender"
+import { PageHeader } from "@/components/page-header"
 import { ReleaseButton } from "@/components/release-button"
 import { getAdmin } from "@/lib/admin"
 import { EMAIL_NOT_CONFIGURED, isEmailConfigured } from "@/lib/email"
@@ -39,9 +40,9 @@ const EMAIL_STATUSES = [
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col rounded-lg border px-4 py-3">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
+    <div className="flex flex-col rounded-[11px] border bg-white px-4 py-3">
+      <dt className="text-[13.5px] text-muted-foreground">{label}</dt>
+      <dd className="text-[26px] font-semibold tabular-nums">{value}</dd>
     </div>
   )
 }
@@ -75,22 +76,17 @@ export default async function ReleasePage({
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Release decisions</h1>
-          <p className="text-muted-foreground">
-            {form.events.name} · {ROLE_LABELS[form.role]} · {form.title}
-          </p>
-        </div>
-        <div className="ml-auto flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={listHref}>Applications</Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <a href={`/forms/${form.id}/export`}>Export CSV</a>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Release decisions"
+        description={`${form.events.name} · ${ROLE_LABELS[form.role]} · ${form.title}`}
+      >
+        <Button asChild variant="outline" size="sm">
+          <Link href={listHref}>Applications</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <a href={`/forms/${form.id}/export`}>Export CSV</a>
+        </Button>
+      </PageHeader>
 
       <Card>
         <CardHeader>

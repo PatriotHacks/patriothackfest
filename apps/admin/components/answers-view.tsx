@@ -7,6 +7,8 @@ import {
   type Field,
   type PublishedSchema,
 } from "@workspace/forms"
+import { SERIF } from "@workspace/ui/lib/brand"
+import { cn } from "@workspace/ui/lib/utils"
 
 import { FileLink } from "./file-link"
 
@@ -60,13 +62,16 @@ export function AnswersView({
         isSection(field) ? (
           <h3
             key={field.id}
-            className="mt-2 border-t pt-4 font-semibold first:mt-0 first:border-t-0 first:pt-0"
+            className={cn(
+              SERIF,
+              "mt-2 border-t pt-4 text-[24px] leading-[1.1] first:mt-0 first:border-t-0 first:pt-0"
+            )}
           >
             {field.label}
           </h3>
         ) : (
           <dl key={field.id} className="flex flex-col gap-1">
-            <dt className="text-sm font-medium">{field.label}</dt>
+            <dt className="text-sm font-semibold">{field.label}</dt>
             <dd className="text-sm">
               <AnswerValue
                 applicationId={applicationId}

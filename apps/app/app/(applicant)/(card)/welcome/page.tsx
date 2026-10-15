@@ -1,6 +1,6 @@
+import { AuthCard } from "@workspace/ui/components/auth-card"
 import { redirect } from "next/navigation"
 
-import { AuthCard } from "@/components/auth/auth-card"
 import { SignOutLink } from "@/components/auth/sign-out-link"
 import { NameForm } from "@/components/name-form"
 import { getFullName } from "@/lib/applicant"

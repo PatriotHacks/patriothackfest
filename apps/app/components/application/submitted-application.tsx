@@ -11,11 +11,11 @@ import {
   type Question,
   type SectionGroup,
 } from "@workspace/forms"
+import { AuthButton, AuthError } from "@workspace/ui/components/auth-fields"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 import { saveAnswers } from "@/app/(applicant)/(main)/applications/[id]/actions"
-import { AuthButton, AuthError } from "@/components/auth/auth-fields"
 
 import { useFileCleanup, useStaleCheck } from "./application-hooks"
 import { AnswerList } from "./answers-view"

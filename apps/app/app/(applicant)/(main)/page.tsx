@@ -4,12 +4,13 @@ import {
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { Pill } from "@workspace/ui/components/pill"
+import { OUTLINE_PILL, PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 
 import { DeclineButton } from "@/components/application/decline-button"
 import { WithdrawButton } from "@/components/application/withdraw-button"
-import { OUTLINE_PILL, PAPER, SERIF } from "@/components/paper"
 import {
   applicantAction,
   applicationPhase,
@@ -78,9 +79,7 @@ export default async function DashboardPage() {
                   {ROLE_LABELS[application.role]}
                 </p>
               </div>
-              <span className="rounded-full bg-[#3A4A2B] px-[12px] py-[4px] text-[13px] font-medium text-[#F8F7F2]">
-                {statusLabel(phase, form, decision)}
-              </span>
+              <Pill>{statusLabel(phase, form, decision)}</Pill>
             </div>
             {note && <p className="text-[14.5px] text-[#6E6E68]">{note}</p>}
             <div className="flex flex-wrap gap-[10px]">

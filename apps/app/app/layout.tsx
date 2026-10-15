@@ -2,9 +2,8 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 
 import "@workspace/ui/globals.css"
+import { brandFontVariables } from "@workspace/ui/lib/fonts"
 import { cn } from "@workspace/ui/lib/utils"
-
-import { authSans, authSerif } from "@/lib/auth-fonts"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
@@ -25,8 +24,7 @@ export default function RootLayout({
         "font-sans antialiased",
         geist.variable,
         geistMono.variable,
-        authSerif.variable,
-        authSans.variable
+        brandFontVariables
       )}
     >
       <body>{children}</body>

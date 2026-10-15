@@ -1,11 +1,11 @@
 "use client"
 
 import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
+import { AuthButton, AuthError } from "@workspace/ui/components/auth-fields"
 import Link from "next/link"
 import { useState, useTransition } from "react"
 
 import { startApplication } from "@/app/(applicant)/(card)/apply/[eventSlug]/actions"
-import { AuthButton, AuthError } from "@/components/auth/auth-fields"
 
 export type RoleOption =
   | { role: Role; status: "open"; formId: string }
