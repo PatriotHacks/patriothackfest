@@ -5,6 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@workspace/ui/components/popover"
+import { SettingsDialog } from "@workspace/ui/components/settings-dialog"
 import {
   Sidebar,
   SidebarContent,
@@ -35,8 +36,6 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 import { signOut } from "@/lib/auth-actions"
-
-import { SettingsDialog } from "./settings-dialog"
 
 export function ApplicantSidebar({
   applicationId,
