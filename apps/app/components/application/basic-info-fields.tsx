@@ -58,7 +58,7 @@ export function BasicInfoFields({
 
   return (
     <FormSection aria-labelledby="basic-information">
-      <SectionHeading id="basic-information" title="Basic information" />
+      <SectionHeading id="basic-information" title="Basic Information" />
       {field(
         "full_name",
         "Full name",
