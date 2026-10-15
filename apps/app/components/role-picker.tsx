@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 
 import { startApplication } from "@/app/(applicant)/(card)/apply/[eventSlug]/actions"
-import { AuthError } from "@/components/auth/auth-fields"
+import { AuthButton, AuthError } from "@/components/auth/auth-fields"
 
 export type RoleOption =
   | { role: Role; status: "open"; formId: string; closesAt: string }
@@ -35,12 +35,13 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
       {options.map((option) => {
         const open = option.status === "open"
         return (
-          <button
+          <div
             key={option.role}
-            type="button"
-            disabled={!open || pending}
-            onClick={open ? () => start(option.role, option.formId) : undefined}
-            className="flex w-full items-center justify-between gap-[16.5px] rounded-[11px] border-2 border-[#3A4A2B] bg-white px-[16.5px] py-[14px] text-left transition-colors outline-none hover:bg-[#3A4A2B]/5 focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/20 disabled:cursor-not-allowed disabled:border-[#DAD7CC] disabled:bg-[#F1EFE8] disabled:hover:bg-[#F1EFE8]"
+            className={
+              open
+                ? "flex h-[62px] items-center justify-between gap-[16.5px] rounded-[11px] border-2 border-[#3A4A2B] bg-white px-[16.5px]"
+                : "flex h-[62px] items-center justify-between gap-[16.5px] rounded-[11px] border-2 border-[#DAD7CC] bg-[#F1EFE8] px-[16.5px]"
+            }
           >
             <span
               className={
@@ -51,20 +52,22 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
             >
               {ROLE_LABELS[option.role]}
             </span>
-            <span
-              className={
-                open
-                  ? "shrink-0 text-right text-[12px] text-[#6E6E68]"
-                  : "shrink-0 text-right text-[12px] font-medium tracking-[0.12em] text-[#8A8A82] uppercase"
-              }
-            >
-              {open
-                ? pending && selected === option.role
-                  ? "Starting..."
-                  : `Closes ${option.closesAt}`
-                : UNAVAILABLE_REASONS[option.status]}
-            </span>
-          </button>
+            {open ? (
+              <AuthButton
+                type="button"
+                disabled={pending}
+                onClick={() => start(option.role, option.formId)}
+                aria-label={`Apply as ${ROLE_LABELS[option.role]}`}
+                className="mt-0 h-[36px] w-auto px-[20px] text-[15px]"
+              >
+                {pending && selected === option.role ? "Starting..." : "Apply"}
+              </AuthButton>
+            ) : (
+              <span className="shrink-0 text-right text-[12px] font-medium tracking-[0.12em] text-[#8A8A82] uppercase">
+                {UNAVAILABLE_REASONS[option.status]}
+              </span>
+            )}
+          </div>
         )
       })}
       <p className="mt-[5.5px] text-center text-[14px] text-[#6E6E68]">
