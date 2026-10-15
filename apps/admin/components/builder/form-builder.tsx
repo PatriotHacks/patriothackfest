@@ -50,6 +50,7 @@ import {
 import { DeadlinesForm } from "@/components/deadlines-form"
 import { FormStatusBadges } from "@/components/form-status-badges"
 
+import { BasicInfoItem } from "./basic-info-item"
 import { withType } from "./field-utils"
 import { PreviewPane } from "./preview-pane"
 import { QuestionEditor } from "./question-editor"
@@ -314,6 +315,7 @@ export function FormBuilder({
             </CardContent>
           </Card>
 
+          <BasicInfoItem />
           <DndContext
             id={dndId}
             sensors={sensors}
