@@ -17,6 +17,7 @@ import { useState, useTransition } from "react"
 
 import { setDecisions } from "@/app/(admin)/applications/actions"
 import type { Decision } from "@/lib/roles"
+import { TEXT_LINK } from "@/lib/styles"
 
 import { DecisionBadge } from "./decision-badge"
 import { DecisionSelect } from "./decision-select"
@@ -148,7 +149,7 @@ export function ApplicationsTable({ rows }: { rows: ApplicationRow[] }) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Link href={row.href} className="underline">
+                    <Link href={row.href} className={TEXT_LINK}>
                       {row.name}
                     </Link>
                     {row.under18 && (

@@ -9,3 +9,6 @@ export const PREVIEW_TEXTAREA =
 export const PREVIEW_CHECK = "size-[18px]"
 
 export const PREVIEW_LABEL = "text-[15.5px] leading-snug font-semibold"
+
+export const TEXT_LINK =
+  "font-medium underline decoration-primary/30 underline-offset-4 hover:decoration-primary"

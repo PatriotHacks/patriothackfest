@@ -3,6 +3,8 @@ import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { Separator } from "@workspace/ui/components/separator"
+import { SERIF } from "@workspace/ui/lib/brand"
+import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { Fragment } from "react"
 
@@ -14,6 +16,7 @@ import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
+import { TEXT_LINK } from "@/lib/styles"
 
 export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
   const { event: slug } = await searchParams
@@ -67,12 +70,16 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
                   {index > 0 && <Separator />}
                   <section className="flex flex-col gap-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="w-28 font-medium">{ROLE_LABELS[role]}</h2>
+                      <h2
+                        className={cn(SERIF, "w-32 text-[26px] leading-[1.1]")}
+                      >
+                        {ROLE_LABELS[role]}
+                      </h2>
                       {form ? (
                         <>
                           <Link
                             href={`/forms/${form.id}`}
-                            className="underline"
+                            className={TEXT_LINK}
                           >
                             {form.title}
                           </Link>
