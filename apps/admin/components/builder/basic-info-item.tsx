@@ -4,11 +4,11 @@ import { LockIcon } from "lucide-react"
 export const BASIC_INFO_TITLE = "Basic Information"
 
 export const BASIC_INFO_FIELDS = [
-  { label: "Full name", type: "text" },
-  { label: "Email", type: "email" },
-  { label: "School", type: "text" },
-  { label: "Phone number", type: "tel" },
-  { label: "Date of birth", type: "date" },
+  { label: "Full name", type: "text", required: true },
+  { label: "Email", type: "email", required: false },
+  { label: "School", type: "text", required: true },
+  { label: "Phone number", type: "tel", required: true },
+  { label: "Date of birth", type: "date", required: true },
 ] as const
 
 export function BasicInfoItem() {
