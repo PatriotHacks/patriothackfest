@@ -4,6 +4,7 @@ import { Button } from "@workspace/ui/components/button"
 import { createClient } from "@workspace/supabase/client"
 import { useState } from "react"
 
+import { FormError } from "@/components/form-error"
 import { AUTH_COOKIE } from "@/lib/auth-cookie"
 
 export function GoogleSignInButton() {
@@ -24,11 +25,11 @@ export function GoogleSignInButton() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Button onClick={signIn} disabled={pending}>
+    <div className="flex flex-col gap-3">
+      {error && <FormError>{error}</FormError>}
+      <Button size="lg" className="w-full" onClick={signIn} disabled={pending}>
         Sign in with Google
       </Button>
-      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }

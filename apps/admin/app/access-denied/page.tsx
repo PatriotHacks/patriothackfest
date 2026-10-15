@@ -1,3 +1,4 @@
+import { AuthCard } from "@workspace/ui/components/auth-card"
 import { Button } from "@workspace/ui/components/button"
 import { createClient } from "@workspace/supabase/server"
 import { redirect } from "next/navigation"
@@ -14,17 +15,17 @@ export default async function AccessDeniedPage() {
   if (level) redirect("/")
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
-      <h1 className="text-2xl font-semibold">Access denied</h1>
-      <p className="text-muted-foreground">
-        {data.claims.email} is not an admin, or this session was not signed in
-        with Google.
-      </p>
-      <form action={signOut}>
-        <Button type="submit" variant="outline">
-          Sign out
-        </Button>
-      </form>
+    <main className="flex min-h-svh items-center justify-center bg-white p-4 sm:p-6">
+      <AuthCard
+        title="Access denied"
+        description={`${data.claims.email} is not an admin, or this session was not signed in with Google.`}
+      >
+        <form action={signOut}>
+          <Button type="submit" variant="outline" size="lg" className="w-full">
+            Sign out
+          </Button>
+        </form>
+      </AuthCard>
     </main>
   )
 }
