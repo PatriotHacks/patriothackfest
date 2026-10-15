@@ -26,6 +26,7 @@ export function BasicInfoFields({
   errors,
   email,
   disabled,
+  muted,
   onChange,
   onBlur,
 }: {
@@ -33,6 +34,7 @@ export function BasicInfoFields({
   errors: BasicInfoErrors
   email: string
   disabled: boolean
+  muted: boolean
   onChange: (next: BasicInfoDraft, key: BasicInfoKey) => void
   onBlur: () => void
 }) {
@@ -57,7 +59,7 @@ export function BasicInfoFields({
   }
 
   return (
-    <FormSection aria-labelledby="basic-information">
+    <FormSection muted={muted} aria-labelledby="basic-information">
       <SectionHeading id="basic-information" title="Basic Information" />
       {field(
         "full_name",
