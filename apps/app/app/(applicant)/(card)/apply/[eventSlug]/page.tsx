@@ -1,4 +1,3 @@
-import { formatInZone } from "@workspace/forms"
 import { ROLES } from "@workspace/supabase/roles"
 import { notFound, redirect } from "next/navigation"
 
@@ -51,12 +50,7 @@ export default async function ApplyPage({
     const form = forms.data.find((f) => f.role === role)
     if (!form) return { role, status: "not_open" }
     if (!isFormOpen(form, now)) return { role, status: "closed" }
-    return {
-      role,
-      status: "open",
-      formId: form.id,
-      closesAt: formatInZone(form.submissions_close_at!),
-    }
+    return { role, status: "open", formId: form.id }
   })
 
   return (
