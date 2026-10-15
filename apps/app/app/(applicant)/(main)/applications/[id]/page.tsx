@@ -4,6 +4,7 @@ import {
   publishedSchemaSchema,
 } from "@workspace/forms"
 import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { Pill } from "@workspace/ui/components/pill"
 import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import { notFound, redirect } from "next/navigation"
@@ -72,9 +73,7 @@ export default async function ApplicationPage({
           <h1 className={cn(SERIF, "text-[38px] leading-[1.05]")}>
             {schema?.title ?? data.events.name}
           </h1>
-          <span className="rounded-full bg-[#3A4A2B] px-[12px] py-[4px] text-[13px] font-medium text-[#F8F7F2]">
-            {statusLabel(phase, form, decision)}
-          </span>
+          <Pill>{statusLabel(phase, form, decision)}</Pill>
         </div>
         <p className="text-[14.5px] text-[#6E6E68]">
           {data.events.name} · {ROLE_LABELS[data.role]}
