@@ -181,7 +181,7 @@
         border-radius: 13.5px;
         box-shadow: 0 0 0 1px var(--border), var(--paper-shadow);
     }
-    .theme-olive :is([data-slot="card-title"], [data-slot="alert-dialog-title"], [data-slot="dialog-title"]) {
+    .theme-olive :is([data-slot="card-title"], [data-slot="alert-dialog-title"]) {
         font-family: var(--font-auth-serif);
         font-style: italic;
         font-weight: 400;
@@ -191,7 +191,7 @@
     .theme-olive [data-slot="card-description"] {
         font-size: 14.5px;
     }
-    .theme-olive :is([data-slot="alert-dialog-content"], [data-slot="dialog-content"]) {
+    .theme-olive [data-slot="alert-dialog-content"] {
         border-radius: 13.5px;
         background-color: var(--card);
         box-shadow: 0 0 0 1px var(--border), var(--paper-shadow);
