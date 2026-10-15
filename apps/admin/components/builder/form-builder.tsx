@@ -25,6 +25,7 @@ import {
   type FieldType,
   type QuestionType,
 } from "@workspace/forms"
+import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
@@ -49,6 +50,7 @@ import {
 } from "@/app/(admin)/forms/[formId]/actions"
 import { DeadlinesForm } from "@/components/deadlines-form"
 import { FormStatusBadges } from "@/components/form-status-badges"
+import { PageHeader } from "@/components/page-header"
 
 import { BasicInfoItem } from "./basic-info-item"
 import { withType } from "./field-utils"
@@ -61,7 +63,7 @@ import { useAutosave } from "./use-autosave"
 
 export type BuilderForm = {
   id: string
-  role: string
+  role: Role
   title: string
   description: string | null
   status: string
@@ -233,25 +235,24 @@ export function FormBuilder({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">
-          {eventName}: {form.role}
-        </h1>
-        <FormStatusBadges
-          form={form}
-          unpublishedChanges={editedLocally && form.published_at !== null}
-        />
-        <div className="ml-auto flex items-center gap-3">
-          {canEdit && (
-            <>
-              <SaveIndicator status={autosave.status} error={autosave.error} />
-              <Button onClick={publish} disabled={publishing}>
-                {form.status === "published" ? "Save" : "Publish"}
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title={`${eventName}: ${ROLE_LABELS[form.role]}`}
+        description={
+          <FormStatusBadges
+            form={form}
+            unpublishedChanges={editedLocally && form.published_at !== null}
+          />
+        }
+      >
+        {canEdit && (
+          <>
+            <SaveIndicator status={autosave.status} error={autosave.error} />
+            <Button onClick={publish} disabled={publishing}>
+              {form.status === "published" ? "Save" : "Publish"}
+            </Button>
+          </>
+        )}
+      </PageHeader>
 
       {!canEdit && (
         <p className="text-sm text-muted-foreground">

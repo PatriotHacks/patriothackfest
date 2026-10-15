@@ -7,6 +7,7 @@ import { redirect } from "next/navigation"
 import { ApplicationFiltersForm } from "@/components/application-filters-form"
 import { ApplicationsTable } from "@/components/applications-table"
 import { EventTabs } from "@/components/event-tabs"
+import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
 import {
   applyFilters,
@@ -73,14 +74,16 @@ export default async function ApplicationsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">Applications</h1>
+      <PageHeader
+        title="Applications"
+        description="Review submitted applications and set decisions."
+      >
         {form && isOrganizer && (
-          <Button asChild variant="outline" size="sm" className="ml-auto">
+          <Button asChild variant="outline" size="sm">
             <a href={`/forms/${form.id}/export`}>Export CSV</a>
           </Button>
         )}
-      </div>
+      </PageHeader>
       {event && (
         <EventTabs
           events={events.data}

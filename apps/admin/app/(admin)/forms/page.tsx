@@ -10,6 +10,7 @@ import { CreateFormButton } from "@/components/create-form-button"
 import { DeadlinesForm } from "@/components/deadlines-form"
 import { EventTabs } from "@/components/event-tabs"
 import { FormStatusBadges } from "@/components/form-status-badges"
+import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
@@ -41,7 +42,10 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Forms</h1>
+      <PageHeader
+        title="Forms"
+        description="Application forms, deadlines, and exports for each event."
+      />
       {event ? (
         <EventTabs
           events={events.data}

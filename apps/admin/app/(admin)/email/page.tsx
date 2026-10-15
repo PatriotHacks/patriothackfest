@@ -4,6 +4,7 @@ import { BroadcastComposer } from "@/components/broadcast-composer"
 import { BroadcastHistory } from "@/components/broadcast-history"
 import { EmailTemplateEditor } from "@/components/email-template-editor"
 import { EventTabs } from "@/components/event-tabs"
+import { PageHeader, SectionHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
 import { EMAIL_NOT_CONFIGURED, isEmailConfigured } from "@/lib/email"
 import { selectEvent } from "@/lib/events"
@@ -45,14 +46,10 @@ export default async function EmailPage({ searchParams }: PageProps<"/email">) {
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Email</h1>
-          <p className="text-muted-foreground">
-            The status update email sent when decisions are released. Edits
-            apply to every email sent afterward, including emails already
-            queued.
-          </p>
-        </div>
+        <PageHeader
+          title="Email"
+          description="The status update email sent when decisions are released. Edits apply to every email sent afterward, including emails already queued."
+        />
         <EmailTemplateEditor
           initialSubject={template.data.subject}
           initialBody={template.data.body}
@@ -61,12 +58,10 @@ export default async function EmailPage({ searchParams }: PageProps<"/email">) {
         />
       </section>
       <section className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-xl font-semibold">Broadcasts</h2>
-          <p className="text-muted-foreground">
-            Send a one-off email to applicants of an event.
-          </p>
-        </div>
+        <SectionHeader
+          title="Broadcasts"
+          description="Send a one-off email to applicants of an event."
+        />
         {event ? (
           <>
             <EventTabs

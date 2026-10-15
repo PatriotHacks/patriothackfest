@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { AdminsManager } from "@/components/admins-manager"
+import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
 
 export default async function AdminsPage() {
@@ -16,7 +17,10 @@ export default async function AdminsPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Admins</h1>
+      <PageHeader
+        title="Admins"
+        description="Who can sign in to the admin console, and at what level."
+      />
       <AdminsManager admins={data} currentEmail={email} />
     </div>
   )
