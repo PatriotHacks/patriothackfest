@@ -70,10 +70,6 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
           </div>
         )
       })}
-      <p className="mt-[5.5px] text-center text-[14px] text-[#6E6E68]">
-        You can apply for one role per event. Your role is final once you choose
-        it.
-      </p>
       {error && (
         <AuthError>
           {error}{" "}
