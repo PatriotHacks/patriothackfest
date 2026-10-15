@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   const now = Date.now()
 
   return (
-    <div className="mx-auto flex max-w-[720px] flex-col gap-[24px] font-(family-name:--font-auth-sans) text-[#3A4A2B]">
+    <div className="flex max-w-[720px] flex-col gap-[24px] font-(family-name:--font-auth-sans) text-[#3A4A2B]">
       <div className="flex flex-col gap-[6px]">
         <h1 className={cn(SERIF, "text-[40px] leading-[1.05]")}>Dashboard</h1>
         <p className="text-[15px] text-[#6E6E68]">Welcome, {fullName}.</p>

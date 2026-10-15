@@ -10,7 +10,7 @@ import { ApplicantSidebar } from "@/components/applicant-sidebar"
 import { getNamedApplicant } from "@/lib/applicant"
 
 export default async function MainLayout({ children }: LayoutProps<"/">) {
-  const { supabase, userId } = await getNamedApplicant()
+  const { supabase, userId, email } = await getNamedApplicant()
 
   const { data, error } = await supabase
     .from("applications")
@@ -25,7 +25,7 @@ export default async function MainLayout({ children }: LayoutProps<"/">) {
 
   return (
     <SidebarProvider>
-      <ApplicantSidebar applicationId={data.id} />
+      <ApplicantSidebar applicationId={data.id} email={email} />
       <SidebarInset className="bg-white">
         <header className="flex items-center gap-3 border-b border-[#E7E4D9] px-4 py-2 md:hidden">
           <SidebarTrigger />
@@ -37,7 +37,7 @@ export default async function MainLayout({ children }: LayoutProps<"/">) {
             className="h-[32px] w-auto"
           />
         </header>
-        <main className="flex-1 p-4 sm:p-8">{children}</main>
+        <main className="flex-1 p-4 sm:p-8 lg:px-12">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )
