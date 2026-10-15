@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist_Mono } from "next/font/google"
 
 import "@workspace/ui/globals.css"
+import { brandFontVariables } from "@workspace/ui/lib/fonts"
 import { cn } from "@workspace/ui/lib/utils"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 export const metadata: Metadata = {
@@ -20,9 +20,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn(
-        "font-sans antialiased",
-        geist.variable,
-        geistMono.variable
+        "theme-olive font-sans antialiased",
+        geistMono.variable,
+        brandFontVariables
       )}
     >
       <body>{children}</body>
