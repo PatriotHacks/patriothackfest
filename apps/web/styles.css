@@ -152,6 +152,14 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   box-shadow: none;
 }
 .bar--float .bar__nav a { font-size: 17px; }
+.bar--float .bar__login {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 50%;
+}
 @media (min-width: 900px) {
   .bar__in { display: grid; grid-template-columns: 1fr auto 1fr; }
   .bar__logo { justify-self: start; }
