@@ -124,19 +124,6 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 }
 .bar__nav a:hover, .bar__nav a:focus-visible { background-color: rgba(255, 255, 255, .55); }
 .bar__login { margin-left: auto; }
-.bar__menu {
-  display: none;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 18px;
-  font: 500 15px/1 var(--font);
-  color: #1c1a24;
-  background: rgba(214, 214, 204, .62);
-  border: 2px solid rgba(255, 255, 255, .55);
-  border-radius: 999px;
-  box-shadow: 0 6px 18px rgba(10, 6, 25, .35);
-  cursor: pointer;
-}
 .bar--float {
   position: fixed;
   top: 14px;
@@ -646,39 +633,9 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 
 @media (max-width: 720px) {
   .hero .skyline { height: 44%; }
-  .bar__in { gap: 8px; padding-top: 14px; width: calc(100% - 32px); position: relative; }
-  .bar__logo { min-height: 44px; display: inline-flex; align-items: center; }
-  .bar__logo img { width: 52px; }
-  .bar__menu { display: inline-flex; margin-left: auto; }
-  .bar__in .bar__nav {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    width: min(240px, 100%);
-    flex-direction: column;
-    gap: 2px;
-    padding: 6px;
-    border-radius: 16px;
-    background: rgba(236, 234, 242, .97);
-    border: 2px solid rgba(255, 255, 255, .55);
-    box-shadow: 0 10px 24px rgba(10, 6, 25, .35);
-  }
-  .bar--menu-open .bar__in .bar__nav { display: flex; }
-  .bar__in .bar__nav a {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 0 14px;
-    font-size: 16px;
-    border-radius: 10px;
-  }
-  .bar__login { margin-left: 0; min-height: 44px; display: inline-flex; align-items: center; padding: 0 18px; }
-  .bar--float .bar__in { width: calc(100% - 16px); padding: 4px 8px 4px 10px; gap: 8px; flex-wrap: nowrap; }
-  .bar--float .bar__logo img { width: 36px; }
-  .bar--float .bar__login { padding: 0 16px; min-height: 44px; }
-  .bar--float .bar__menu { min-height: 44px; }
-  .bar--float .bar__in .bar__nav { background: rgba(236, 234, 242, .97); backdrop-filter: none; -webkit-backdrop-filter: none; border: 2px solid rgba(255, 255, 255, .55); box-shadow: 0 10px 24px rgba(10, 6, 25, .35); }
+  .bar__in { flex-wrap: wrap; gap: 14px 16px; padding-top: 14px; }
+  .bar__nav { order: 3; width: 100%; justify-content: space-between; gap: 8px; }
+  .bar__nav a { font-size: 15px; }
   .hero { padding-top: 150px; min-height: 720px; justify-content: flex-start; }
   .btn--big { padding: 16px 22px; font-size: 17px; }
   .roles { grid-template-columns: 1fr; }
