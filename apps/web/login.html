@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login - Patriot HackFest</title>
+<link rel="preload" href="fonts/Satoshi-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar__in">
+    <a class="bar__logo ink" href="index.html" aria-label="Patriot HackFest home"><img src="logo.png" alt="Patriot HackFest" width="400" height="211"></a>
+    <nav class="bar__nav" aria-label="Sections">
+      <a href="index.html#about">About</a>
+      <a href="index.html#sponsors">Sponsors</a>
+      <a href="index.html#timeline">Timeline</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+    <a class="btn btn--pink btn--small bar__login" href="login.html" aria-current="page">Login</a>
+  </div>
+</header>
+
+<main class="login">
+  <div class="skyline" aria-hidden="true">
+    <img class="skyline__layer skyline__layer--far" src="art/skyline-far.svg" alt="">
+    <img class="skyline__layer skyline__layer--mid" src="art/skyline-mid.svg" alt="">
+    <img class="skyline__layer skyline__layer--near" src="art/skyline-near.svg" alt="">
+    <img class="skyline__layer skyline__layer--rubble" src="art/rubble.svg" alt="">
+  </div>
+  <form class="login__card ink" action="#" onsubmit="return false">
+    <p class="eyebrow">Mockup only &middot; not connected</p>
+    <h1>Log in</h1>
+    <label>Email<input type="email" name="email" autocomplete="email"></label>
+    <label>Password<input type="password" name="password" autocomplete="current-password"></label>
+    <button class="btn btn--yellow btn--big" type="submit">Log in</button>
+    <a class="login__back" href="index.html">Back to Patriot HackFest</a>
+  </form>
+</main>
+
+</body>
+</html>
