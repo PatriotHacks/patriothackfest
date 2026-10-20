@@ -645,7 +645,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .hero .skyline { height: 44%; }
   .foot__nav a, .foot__meta a, .faqs__mail a, .sponsor-table__mail { display: inline-flex; align-items: center; min-height: 44px; }
   .bar__in { padding-top: 14px; }
-  .bar__nav, .bar__login { display: none; }
+  .bar__nav, .bar__login, .bar--float { display: none; }
   .hero { padding-top: 150px; min-height: 720px; justify-content: flex-start; }
   .btn--big { padding: 16px 22px; font-size: 17px; }
   .roles { grid-template-columns: 1fr; }
@@ -804,6 +804,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .sponsor-table img[src$="sponsor-drums.png"],
   .sponsor-table img[src$="sponsor-metrostar-dark.svg"] { max-width: 80%; max-height: none; height: 56px; width: auto; }
   .sponsor-table img[src$="sponsor-metrostar-dark.svg"] { height: 90px; }
+  .sponsor-table img[src$="sponsor-caelon-full.png"] { height: 46px; }
   .sponsor-card { padding: 18px 16px; }
   .sponsor-card__line { white-space: normal; overflow-wrap: anywhere; }
 }
