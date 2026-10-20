@@ -288,13 +288,17 @@
 <script>
 (() => {
   const bar = document.querySelector(".bar");
+  const hero = document.querySelector(".hero");
   let last = scrollY;
-  addEventListener("scroll", () => {
+  const update = () => {
     const y = scrollY;
-    if (y <= 0 || y < last) bar.classList.remove("bar--hidden");
-    else if (y > last) bar.classList.add("bar--hidden");
+    const pastHero = y > hero.offsetHeight - 120;
+    bar.classList.toggle("bar--float", pastHero);
+    bar.classList.toggle("bar--hidden", pastHero && y > last);
     last = y;
-  }, { passive: true });
+  };
+  addEventListener("scroll", update, { passive: true });
+  update();
 })();
 </script>
 </body>
