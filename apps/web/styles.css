@@ -422,7 +422,8 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   border-radius: 2px;
   box-shadow: 0 14px 30px rgba(8, 3, 20, .55);
 }
-.snap--a { left: 0; top: 8%; transform: rotate(-6deg); z-index: 1; }
+.snap--a { left: 0; top: 8%; width: 96%; transform: rotate(-6deg); z-index: 1; }
+.snap--a .snap__pic img.snap__photo { padding: 0; object-fit: cover; }
 .snap--b { left: 45%; transform: rotate(4deg); z-index: 2; }
 .snap__pic {
   position: relative;
@@ -716,7 +717,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   border-radius: 48px 48px 0 0;
   box-shadow: 0 -30px 60px -12px rgba(0, 0, 0, .75);
 }
-#sponsors { background-color: #dcd6e8; }
+#sponsors { background-color: #cfcbd6; }
 #timeline { background-color: #3b2b6b; }
 .faqs { padding-bottom: 72px; background-color: #2c1f55; }
 .stack .section { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; }
