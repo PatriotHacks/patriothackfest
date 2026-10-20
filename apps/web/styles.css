@@ -645,7 +645,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .hero .skyline { height: 44%; }
   .foot__nav a, .foot__meta a, .faqs__mail a, .sponsor-table__mail { display: inline-flex; align-items: center; min-height: 44px; }
   .bar__in { padding-top: 14px; }
-  .bar__nav, .bar__login { display: none; }
+  .bar__nav, .bar__login, .bar--float { display: none; }
   .hero { padding-top: 150px; min-height: 720px; justify-content: flex-start; }
   .btn--big { padding: 16px 22px; font-size: 17px; }
   .roles { grid-template-columns: 1fr; }
