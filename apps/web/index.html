@@ -130,13 +130,54 @@
       <h2 id="sponsors-title">Supported By</h2>
       <img class="squiggle" src="art/squiggle.svg" alt="">
     </header>
-    <ul class="sponsor-monitors" aria-label="Supported by">
-      <li><a href="https://microsoft.com" target="_blank" rel="noopener"><img src="art/sponsors-monitor-microsoft.svg" alt="Microsoft" width="400" height="480"></a></li>
-      <li><a href="https://aws.amazon.com" target="_blank" rel="noopener"><img src="art/sponsors-monitor-aws.svg" alt="AWS" width="400" height="480"></a></li>
-      <li><a href="https://metrostar.com" target="_blank" rel="noopener"><img src="art/sponsors-monitor-metrostar.svg" alt="MetroStar" width="400" height="480"></a></li>
-      <li><a href="https://caelon.co" target="_blank" rel="noopener"><img src="art/sponsors-monitor-caelon.svg" alt="Caelon" width="400" height="480"></a></li>
-      <li><a href="https://drums.run" target="_blank" rel="noopener"><img src="art/sponsors-monitor-drums.svg" alt="Drums" width="400" height="480"></a></li>
-    </ul>
+    <svg class="pc-defs" width="0" height="0" aria-hidden="true" focusable="false"><filter id="pc-grain" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="37" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="g"/><feComposite in="SourceGraphic" in2="g" operator="arithmetic" k1="0" k2="1" k3=".25" k4="0"/></filter></svg>
+    <div class="pcs" aria-label="Supported by">
+      <div class="pc" tabindex="0" aria-label="Microsoft computer">
+        <div class="pc-case">
+          <div class="pc-vents"></div>
+          <div class="pc-bezel"><div class="pc-glass"><img class="pc-logo" src="art/sponsor-microsoft.png" alt="Microsoft"><div class="pc-text"></div></div></div>
+          <div class="pc-front"><span class="pc-slot"></span><span class="pc-grille"></span><span class="pc-led"></span></div>
+        </div>
+        <div class="pc-kbd"></div>
+        <a class="pc-plate" href="https://microsoft.com" target="_blank" rel="noopener">Microsoft</a>
+      </div>
+      <div class="pc" tabindex="0" aria-label="AWS computer">
+        <div class="pc-case">
+          <div class="pc-vents"></div>
+          <div class="pc-bezel"><div class="pc-glass"><img class="pc-logo" src="art/sponsor-aws.png" alt="AWS"><div class="pc-text"></div></div></div>
+          <div class="pc-front"><span class="pc-slot"></span><span class="pc-grille"></span><span class="pc-led"></span></div>
+        </div>
+        <div class="pc-kbd"></div>
+        <a class="pc-plate" href="https://aws.amazon.com" target="_blank" rel="noopener">AWS</a>
+      </div>
+      <div class="pc" tabindex="0" aria-label="MetroStar computer">
+        <div class="pc-case">
+          <div class="pc-vents"></div>
+          <div class="pc-bezel"><div class="pc-glass"><img class="pc-logo" src="art/sponsor-metrostar.svg" alt="MetroStar"><div class="pc-text"></div></div></div>
+          <div class="pc-front"><span class="pc-slot"></span><span class="pc-grille"></span><span class="pc-led"></span></div>
+        </div>
+        <div class="pc-kbd"></div>
+        <a class="pc-plate" href="https://metrostar.com" target="_blank" rel="noopener">MetroStar</a>
+      </div>
+      <div class="pc" tabindex="0" aria-label="Caelon computer">
+        <div class="pc-case">
+          <div class="pc-vents"></div>
+          <div class="pc-bezel"><div class="pc-glass"><img class="pc-logo" src="art/sponsor-caelon.png" alt="Caelon"><div class="pc-text"></div></div></div>
+          <div class="pc-front"><span class="pc-slot"></span><span class="pc-grille"></span><span class="pc-led"></span></div>
+        </div>
+        <div class="pc-kbd"></div>
+        <a class="pc-plate" href="https://caelon.co" target="_blank" rel="noopener">Caelon</a>
+      </div>
+      <div class="pc" tabindex="0" aria-label="Drums computer">
+        <div class="pc-case">
+          <div class="pc-vents"></div>
+          <div class="pc-bezel"><div class="pc-glass"><img class="pc-logo" src="art/sponsor-drums.png" alt="Drums"><div class="pc-text"></div></div></div>
+          <div class="pc-front"><span class="pc-slot"></span><span class="pc-grille"></span><span class="pc-led"></span></div>
+        </div>
+        <div class="pc-kbd"></div>
+        <a class="pc-plate" href="https://drums.run" target="_blank" rel="noopener">Drums</a>
+      </div>
+    </div>
     <div class="sponsor-cta">
       <p>Interested in supporting future events?</p>
       <a class="btn btn--yellow" href="mailto:sponsor@patriothackfest.com">Contact us at sponsor@patriothackfest.com</a>
@@ -317,6 +358,64 @@
   };
   addEventListener("scroll", update, { passive: true });
   update();
+})();
+</script>
+<script>
+(() => {
+  const ROWS = [["1","2","3","4","5","6","7","8","9","0"], ["Q","W","E","R","T","Y","U","I","O","P"], ["A","S","D","F","G","H","J","K","L"], ["Z","X","C","V","B","N","M"], ["SPACE"]];
+  const pcs = [...document.querySelectorAll(".pc")];
+  let active = null;
+  pcs.forEach((pc) => {
+    const kbd = pc.querySelector(".pc-kbd");
+    ROWS.forEach((keys) => {
+      const row = document.createElement("div");
+      row.className = "pc-row";
+      keys.forEach((k) => {
+        const key = document.createElement("div");
+        key.className = "pc-key";
+        key.dataset.k = k;
+        key.textContent = k === "SPACE" ? "" : k;
+        row.appendChild(key);
+      });
+      kbd.appendChild(row);
+    });
+    pc.addEventListener("pointerdown", () => setActive(pc));
+    pc.addEventListener("focus", () => setActive(pc));
+  });
+  function setActive(pc) {
+    if (active) active.classList.remove("is-active");
+    active = pc;
+    pc.classList.add("is-active");
+  }
+  document.addEventListener("pointerdown", (e) => {
+    if (active && !e.target.closest(".pc")) { active.classList.remove("is-active"); active = null; }
+  });
+  function flash(key) {
+    const el = [...active.querySelectorAll(".pc-key")].find((k) => k.dataset.k === key);
+    if (!el) return;
+    el.classList.add("is-down");
+    setTimeout(() => el.classList.remove("is-down"), 140);
+  }
+  document.addEventListener("keydown", (e) => {
+    if (!active || e.ctrlKey || e.metaKey || e.altKey) return;
+    const text = active.querySelector(".pc-text");
+    let value = text.dataset.v || "";
+    if (e.key.length === 1) {
+      value = (value + e.key).slice(-26);
+      flash(e.key === " " ? "SPACE" : e.key.toUpperCase());
+      if (e.key === " ") e.preventDefault();
+    } else if (e.key === "Backspace") {
+      value = value.slice(0, -1);
+      e.preventDefault();
+    } else if (e.key === "Enter") {
+      value = "";
+    } else {
+      return;
+    }
+    text.dataset.v = value;
+    text.textContent = value;
+    active.classList.toggle("is-typing", value.length > 0);
+  });
 })();
 </script>
 </body>
