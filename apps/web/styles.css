@@ -717,7 +717,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   border-radius: 48px 48px 0 0;
   box-shadow: 0 -30px 60px -12px rgba(0, 0, 0, .75);
 }
-#sponsors { background-color: #cfcbd6; }
+#sponsors { background-color: #eeebf3; }
 #timeline { background-color: #3b2b6b; }
 .faqs { padding-bottom: 72px; background-color: #2c1f55; }
 .stack .section { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; }
