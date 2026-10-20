@@ -710,6 +710,9 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .about__row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .about__row .about__text { grid-column: 1 / -1; order: -1; }
 }
+@media (max-width: 720px) {
+  .about__pic { display: none; }
+}
 
 /* stacked sheets: each sheet pins when its bottom meets the viewport bottom and the next one slides over it */
 .section {
