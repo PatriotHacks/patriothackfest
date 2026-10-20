@@ -169,7 +169,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 /* hero */
 .hero {
   position: relative;
-  min-height: clamp(700px, 100svh, 1000px);
+  min-height: clamp(700px, 100svh, 880px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -264,7 +264,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 }
 .bb { position: absolute; display: block; }
 .bb img { width: 100%; height: auto; }
-.bb--cd { left: 12.695%; top: 42.729%; width: 13.875%; container-type: inline-size; }
+.bb--cd { left: 12.695%; top: 42.729%; width: 22%; container-type: inline-size; }
 .bb--apply { left: 74.33%; top: 40.719%; width: 10.25%; pointer-events: auto; container-type: inline-size; }
 .bb .cd {
   position: absolute;
@@ -274,7 +274,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   justify-content: center;
   gap: 3.4cqw;
 }
-.bb .cd__label, .bb .cd small { font-size: 3.6cqw; letter-spacing: .08em; }
+.bb .cd__label, .bb .cd small { font-size: max(12px, 3.6cqw); letter-spacing: .08em; }
 .bb .cd b { font-size: 9.6cqw; }
 .bb .cd__nums { gap: 5cqw; }
 .bb .cd__nums span { gap: 1.8cqw; }
@@ -509,7 +509,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   object-position: 50% 100%;
 }
 .foot__sky img:last-child { transform: scaleX(-1); }
-.foot__stage { position: absolute; left: 0; bottom: -1.25cqw; width: 100%; aspect-ratio: 8 / 3; pointer-events: none; }
+.foot__stage { position: absolute; left: 50%; transform: translateX(-50%); bottom: -1.25cqw; width: min(100%, 1440px); aspect-ratio: 8 / 3; pointer-events: none; }
 .bb--brought { left: 70.743%; top: 44.729%; width: 19.25%; opacity: .92; container-type: inline-size; }
 .bb__credit {
   position: absolute;
@@ -695,7 +695,9 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .pola .snap__pic img.snap__photo { padding: 0; object-fit: cover; }
 
 .polas { gap: 36px; }
-.roll { isolation: isolate; contain: paint; transform: translateZ(0); margin-top: 48px; overflow: hidden;  }
+.roll { isolation: isolate; contain: paint; transform: translateZ(0); margin-top: 48px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
 .roll__track { display: flex; width: max-content; animation: roll 42s linear infinite; will-change: transform; contain: layout paint; }
 .roll .roll__photo { transition: none; }
 .roll__track img { height: 120px; width: auto; margin-right: 28px; padding: 12px; background: rgba(184, 174, 242, .06); border: 1px solid rgba(184, 174, 242, .22); border-radius: 6px; }
@@ -743,9 +745,12 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .section { --lap: 56px; border-radius: 36px 36px 0 0; }
 }
 
-#about { min-height: 125svh; }
-#sponsors { min-height: 115svh; }
-#timeline { min-height: 115svh; }
+#about { min-height: min(125svh, 1100px); }
+#sponsors { min-height: min(115svh, 1000px); }
+#timeline { min-height: min(115svh, 1000px); }
+@media (max-width: 1919px) {
+  #about, #sponsors, #timeline { min-height: 0; }
+}
 .roll__track img.roll__photo { height: 200px; width: auto; padding: 0; background: none; border: 0; border-radius: 6px; }
 .sponsor-cta { margin-top: 56px; display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; color: var(--text); }
 .sponsor-cta p { margin: 0; font-size: 18px; }
@@ -808,4 +813,16 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .bb .cd b { font-size: 11cqw; }
   .bb__credit span { font-size: max(12px, 6cqw); }
   .bb__credit b { font-size: 6.8cqw; }
+}
+
+@media (min-width: 1800px) {
+  .wrap { width: min(1280px, 100% - 32px); }
+  .bar__in { width: min(1280px, 100% - 96px); }
+  .bar--float .bar__in { width: min(1280px, 100% - 32px); }
+  .hero__in { max-width: 1200px; }
+  .hero__lockup { width: clamp(200px, 26vw, 480px); }
+  .hero__title, .hero__meta { font-size: clamp(30px, 4.8vw, 80px); }
+  .hero__meta { font-size: clamp(14px, 1.8vw, 30px); }
+  .sponsor-table, .sponsor-card, .slots, .sponsor-monitors { max-width: 1280px; }
+  .sponsor-table { width: min(100%, 1280px); }
 }
