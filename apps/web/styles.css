@@ -756,3 +756,4 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 #sponsors .sponsor-table__mail { color: #2a1d4f; }
 #sponsors .sponsor-table__mail:hover { color: #6a4fc0; }
 .sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0); }
+#sponsors .sponsor-table td { background-color: #dcd6e8; }
