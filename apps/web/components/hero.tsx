@@ -10,11 +10,11 @@ export function Hero() {
   return (
     <section
       aria-labelledby="hero-heading"
-      className="flex flex-col items-center gap-6 px-6 py-24 text-center sm:py-32"
+      className="flex flex-col items-center gap-6 px-6 pt-24 pb-16 text-center sm:pt-32 sm:pb-20"
     >
       <h1
         id="hero-heading"
-        className="text-4xl font-semibold tracking-tight sm:text-6xl"
+        className="text-4xl font-semibold tracking-tight sm:text-6xl xl:text-7xl 2xl:text-8xl"
       >
         {site.name}
       </h1>
