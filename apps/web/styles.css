@@ -738,7 +738,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .sponsor-monitors a:hover, .sponsor-monitors a:focus-visible { transform: translateY(-6px); }
 .sponsor-monitors img { display: block; width: 100%; height: auto; }
 
-.sponsor-table { width: min(100%, 900px); margin: 0 auto; border-collapse: collapse; table-layout: fixed; border: none; }
+.sponsor-table { width: min(100%, 640px); margin: 0 auto; border-collapse: collapse; table-layout: fixed; border: none; }
 .sponsor-table td { border: none; height: 120px; padding: 16px; text-align: center; vertical-align: middle; }
 .sponsor-table td a { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 .sponsor-table img { display: block; max-width: 70%; max-height: 88px; width: auto; height: auto; object-fit: contain; }
