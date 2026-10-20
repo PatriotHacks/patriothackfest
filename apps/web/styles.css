@@ -133,7 +133,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 }
 .bar--float .bar__in {
   width: min(1180px, 100% - 32px);
-  padding: 10px 14px 10px 20px;
+  padding: 6px 12px 6px 18px;
   border-radius: 28px;
   background: linear-gradient(180deg, rgba(247, 245, 228, .5), rgba(238, 235, 212, .42));
   backdrop-filter: blur(14px) saturate(1.2);
@@ -141,7 +141,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   border: 1px solid rgba(255, 255, 255, .6);
   box-shadow: 0 10px 30px rgba(10, 6, 25, .2);
 }
-.bar--float .bar__logo img { width: 52px; }
+.bar--float .bar__logo img { width: 44px; }
 .bar--float .bar__nav {
   gap: 4px;
   padding: 0;
@@ -153,13 +153,12 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 }
 .bar--float .bar__nav a { font-size: 17px; }
 .bar--float .bar__login {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  padding: 0;
-  border-radius: 50%;
+  padding: 9px 24px;
+  border-radius: 999px;
+  box-shadow: none;
 }
+.bar--float a.bar__login:hover { box-shadow: none; }
+.bar--float a.bar__login:active { box-shadow: none; }
 @media (min-width: 900px) {
   .bar__in { display: grid; grid-template-columns: 1fr auto 1fr; }
   .bar__logo { justify-self: start; }
