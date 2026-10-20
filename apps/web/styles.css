@@ -744,3 +744,5 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .sponsor-table img { display: block; max-width: 70%; max-height: 88px; width: auto; height: auto; object-fit: contain; }
 .sponsor-table img[src$="sponsor-aws.png"], .sponsor-table img[src$="sponsor-caelon.png"] { max-width: 45%; max-height: 56px; }
 .sponsor-table img[src$="sponsor-caelon.png"] { max-width: 32%; max-height: 40px; }
+.sponsor-table__cta { padding: 24px 16px; }
+.sponsor-table__cta p { margin: 0 0 16px; font-size: 18px; color: var(--text); }
