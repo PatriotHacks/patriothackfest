@@ -645,6 +645,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 }
 
 @media (max-width: 720px) {
+  .hero .skyline { height: 44%; }
   .bar__in { gap: 8px; padding-top: 14px; width: calc(100% - 32px); position: relative; }
   .bar__logo { min-height: 44px; display: inline-flex; align-items: center; }
   .bar__logo img { width: 52px; }
