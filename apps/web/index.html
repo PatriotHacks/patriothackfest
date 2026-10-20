@@ -285,5 +285,17 @@
   });
 })();
 </script>
+<script>
+(() => {
+  const bar = document.querySelector(".bar");
+  let last = scrollY;
+  addEventListener("scroll", () => {
+    const y = scrollY;
+    if (y <= 0 || y < last) bar.classList.remove("bar--hidden");
+    else if (y > last) bar.classList.add("bar--hidden");
+    last = y;
+  }, { passive: true });
+})();
+</script>
 </body>
 </html>
