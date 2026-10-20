@@ -746,3 +746,5 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .sponsor-table img[src$="sponsor-caelon.png"] { max-width: 32%; max-height: 40px; }
 .sponsor-table__cta { padding: 24px 16px; }
 .sponsor-table__cta p { margin: 0 0 16px; font-size: 18px; color: var(--text); }
+.sponsor-table__mail { color: var(--text); font-size: 18px; text-decoration: underline; text-underline-offset: 4px; }
+.sponsor-table__mail:hover { color: var(--yellow); }
