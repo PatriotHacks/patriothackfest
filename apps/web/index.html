@@ -16,7 +16,8 @@
 <header class="bar">
   <div class="bar__in">
     <a class="bar__logo ink" href="#top" aria-label="Patriot HackFest home"><img src="logo.png" alt="Patriot HackFest" width="400" height="211"></a>
-    <nav class="bar__nav" aria-label="Sections">
+    <button class="bar__menu" type="button" aria-expanded="false" aria-controls="bar-nav">Menu</button>
+    <nav id="bar-nav" class="bar__nav" aria-label="Sections">
       <a href="#about">About</a>
       <a href="#sponsors">Supported By</a>
       <a href="#timeline">Timeline</a>
@@ -300,7 +301,19 @@
     void bar.offsetHeight;
     bar.style.transition = "";
   };
-  const hide = () => bar.classList.add("bar--hidden");
+  const menu = bar.querySelector(".bar__menu");
+  const nav = document.getElementById("bar-nav");
+  const setMenu = (open) => {
+    menu.setAttribute("aria-expanded", String(open));
+    bar.classList.toggle("bar--menu-open", open);
+  };
+  menu.addEventListener("click", () => setMenu(menu.getAttribute("aria-expanded") !== "true"));
+  nav.addEventListener("click", (e) => { if (e.target.closest("a")) setMenu(false); });
+  document.addEventListener("pointerdown", (e) => { if (!e.target.closest(".bar")) setMenu(false); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && menu.getAttribute("aria-expanded") === "true") { setMenu(false); menu.focus(); }
+  });
+  const hide = () => { setMenu(false); bar.classList.add("bar--hidden"); };
   const sponsors = document.getElementById("sponsors");
   const update = () => {
     const y = scrollY;
