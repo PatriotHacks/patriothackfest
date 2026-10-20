@@ -756,3 +756,5 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 #sponsors .sponsor-table__mail { color: #2a1d4f; }
 #sponsors .sponsor-table__mail:hover { color: #6a4fc0; }
 .sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0); }
+.sponsor-table img { filter: drop-shadow(2px 0 0 #ffffff) drop-shadow(-2px 0 0 #ffffff) drop-shadow(0 2px 0 #ffffff) drop-shadow(0 -2px 0 #ffffff); }
+.sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0) drop-shadow(2px 0 0 #ffffff) drop-shadow(-2px 0 0 #ffffff) drop-shadow(0 2px 0 #ffffff) drop-shadow(0 -2px 0 #ffffff); }
