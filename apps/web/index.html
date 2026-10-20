@@ -290,11 +290,21 @@
   const bar = document.querySelector(".bar");
   const hero = document.querySelector(".hero");
   let last = scrollY;
+  let timer;
+  const hide = () => bar.classList.add("bar--hidden");
   const update = () => {
     const y = scrollY;
     const pastHero = y > hero.offsetHeight - 120;
-    bar.classList.toggle("bar--float", pastHero);
-    bar.classList.toggle("bar--hidden", pastHero && y > last);
+    clearTimeout(timer);
+    if (!pastHero) {
+      bar.classList.remove("bar--float", "bar--hidden");
+    } else if (y < last) {
+      bar.classList.add("bar--float");
+      bar.classList.remove("bar--hidden");
+      timer = setTimeout(hide, 1000);
+    } else {
+      bar.classList.add("bar--float", "bar--hidden");
+    }
     last = y;
   };
   addEventListener("scroll", update, { passive: true });
