@@ -629,6 +629,11 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .cd--row b { font-size: 20px; }
   .cd--row small { font-size: 12px; }
 }
+@media (max-width: 379px) {
+  .cd--row { gap: 10px; }
+  .cd--row .cd__nums { gap: 8px; }
+  .cd--row b { font-size: 18px; }
+}
 
 @media (max-width: 860px) {
   .roles, .slots { grid-template-columns: 1fr 1fr; }
