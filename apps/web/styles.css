@@ -758,3 +758,9 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0); }
 .sponsor-table img { filter: drop-shadow(2px 0 0 #ffffff) drop-shadow(-2px 0 0 #ffffff) drop-shadow(0 2px 0 #ffffff) drop-shadow(0 -2px 0 #ffffff); }
 .sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0) drop-shadow(2px 0 0 #ffffff) drop-shadow(-2px 0 0 #ffffff) drop-shadow(0 2px 0 #ffffff) drop-shadow(0 -2px 0 #ffffff); }
+.sponsor-card { max-width: 900px; margin: 40px auto 0; padding: 28px 32px; border: 1px solid rgba(42, 29, 79, .35); border-radius: 24px; background: rgba(255, 255, 255, .35); text-align: left; }
+.sponsor-card p { margin: 0; color: #2a1d4f; }
+.sponsor-card__title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+.sponsor-card__text { font-size: 17px; margin-bottom: 14px; }
+.sponsor-card__line { font-size: 18px; white-space: nowrap; }
+#sponsors .sponsor-card .sponsor-table__mail { color: #2a1d4f; }
