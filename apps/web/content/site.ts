@@ -88,5 +88,5 @@ export const site: SiteContent = {
       answer: "Use the contact information at the bottom of this page.",
     },
   ],
-  contactEmail: null,
+  contactEmail: "hello@patriothackfest.com",
 }
