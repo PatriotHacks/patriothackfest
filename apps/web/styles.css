@@ -715,6 +715,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 @media (max-width: 860px) {
   .about__row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .about__row .about__text { grid-column: 1 / -1; order: -1; }
+  .about__pic { margin-top: 24px; }
 }
 @media (max-width: 720px) {
   .about__pic { display: none; }
@@ -793,3 +794,18 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 }
 #sponsors .sponsor-card .sponsor-table__mail { color: #2a1d4f; }
 .bar--float.bar--on-sponsors .bar__logo img { filter: brightness(0); }
+
+@media (min-width: 768px) and (max-width: 899px) and (orientation: portrait) {
+  .hero__lockup { width: clamp(240px, 36vw, 330px); }
+  #sponsors { min-height: 0; }
+  #about { min-height: 0; }
+  .sponsor-table img[src$="sponsor-caelon-full.png"] { max-width: 65%; }
+}
+@media (min-width: 900px) and (max-width: 1279px) {
+  .hero__lockup { width: clamp(300px, 36vw, 440px); }
+  .bb--cd { width: 20%; }
+  .bb .cd__label, .bb .cd small { font-size: max(12px, 4.6cqw); }
+  .bb .cd b { font-size: 11cqw; }
+  .bb__credit span { font-size: max(12px, 6cqw); }
+  .bb__credit b { font-size: 6.8cqw; }
+}
