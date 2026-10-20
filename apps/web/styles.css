@@ -749,3 +749,4 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .sponsor-table__mail { color: var(--text); font-size: 18px; text-decoration: underline; text-underline-offset: 4px; }
 .sponsor-table__mail:hover { color: var(--yellow); }
 .sponsor-table img[src$="sponsor-drums.png"] { max-width: 60%; max-height: 72px; }
+.sponsor-table__line { display: block; white-space: nowrap; font-size: 18px; color: var(--text); }
