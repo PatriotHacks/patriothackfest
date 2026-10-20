@@ -716,7 +716,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   border-radius: 48px 48px 0 0;
   box-shadow: 0 -30px 60px -12px rgba(0, 0, 0, .75);
 }
-#sponsors { background-color: #efeaff; }
+#sponsors { background-color: #dcd6e8; }
 #timeline { background-color: #3b2b6b; }
 .faqs { padding-bottom: 72px; background-color: #2c1f55; }
 .stack .section { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; }
@@ -750,8 +750,9 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .sponsor-table__mail:hover { color: var(--yellow); }
 .sponsor-table img[src$="sponsor-drums.png"] { max-width: 60%; max-height: 72px; }
 .sponsor-table__line { display: block; white-space: nowrap; font-size: 18px; color: var(--text); }
-#sponsors { background-image: linear-gradient(rgba(42, 29, 79, .1) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 29, 79, .1) 1px, transparent 1px); background-size: 48px 48px; }
+#sponsors { background-image: linear-gradient(rgba(42, 29, 79, .22) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 29, 79, .22) 1px, transparent 1px); background-size: 48px 48px; }
 #sponsors h2 { color: #2a1d4f; }
 #sponsors .sponsor-table__line { color: #2a1d4f; }
 #sponsors .sponsor-table__mail { color: #2a1d4f; }
 #sponsors .sponsor-table__mail:hover { color: #6a4fc0; }
+.sponsor-table img[src$="sponsor-aws.png"], .sponsor-table img[src$="sponsor-caelon.png"], .sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0); }
