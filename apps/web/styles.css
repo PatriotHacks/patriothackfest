@@ -684,8 +684,8 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .pola .snap__pic img.snap__photo { padding: 0; object-fit: cover; }
 
 .polas { gap: 36px; }
-.roll { isolation: isolate; transform: translateZ(0); margin-top: 48px; overflow: hidden;  }
-.roll__track { display: flex; width: max-content; animation: roll 42s linear infinite; will-change: transform; backface-visibility: hidden; }
+.roll { isolation: isolate; contain: paint; transform: translateZ(0); margin-top: 48px; overflow: hidden;  }
+.roll__track { display: flex; width: max-content; animation: roll 42s linear infinite; will-change: transform; contain: layout paint; }
 .roll .roll__photo { transition: none; }
 .roll__track img { height: 120px; width: auto; margin-right: 28px; padding: 12px; background: rgba(184, 174, 242, .06); border: 1px solid rgba(184, 174, 242, .22); border-radius: 6px; }
 @keyframes roll { to { transform: translateX(-50%); } }
