@@ -299,8 +299,11 @@
     bar.style.transition = "";
   };
   const hide = () => bar.classList.add("bar--hidden");
+  const sponsors = document.getElementById("sponsors");
   const update = () => {
     const y = scrollY;
+    const sr = sponsors.getBoundingClientRect();
+    bar.classList.toggle("bar--on-sponsors", sr.top < 80 && sr.bottom > 80);
     const pastHero = y > hero.offsetHeight - 120;
     clearTimeout(timer);
     if (!pastHero) {

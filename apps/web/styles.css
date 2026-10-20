@@ -764,3 +764,4 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .sponsor-card__text { font-size: 16px; }
 .sponsor-card__line { font-size: 18px; white-space: nowrap; }
 #sponsors .sponsor-card .sponsor-table__mail { color: #2a1d4f; }
+.bar--float.bar--on-sponsors .bar__logo img { filter: brightness(0); }
