@@ -5,7 +5,7 @@ import {
   hasEditableSections,
   publishedSchemaSchema,
 } from "@workspace/forms"
-import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { roleLabel } from "@workspace/supabase/roles"
 import { AuthCard } from "@workspace/ui/components/auth-card"
 import { notFound, redirect } from "next/navigation"
 import * as z from "zod"
@@ -25,7 +25,7 @@ export default async function DraftPage({ params }: PageProps<"/draft/[id]">) {
     supabase
       .from("applications")
       .select(
-        "id, role, status, answers, updated_at, declined_at, events(name), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema)"
+        "id, role, status, answers, updated_at, declined_at, events(name, slug), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema)"
       )
       .eq("id", id)
       .maybeSingle(),
@@ -58,7 +58,7 @@ export default async function DraftPage({ params }: PageProps<"/draft/[id]">) {
     form.published_schema === null
       ? null
       : publishedSchemaSchema.parse(form.published_schema)
-  const subtitle = `${data.events.name} · ${ROLE_LABELS[data.role]}`
+  const subtitle = `${data.events.name} · ${roleLabel(data.role, data.events.slug)}`
 
   if (
     phase === "closed_draft" ||

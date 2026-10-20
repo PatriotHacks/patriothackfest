@@ -1,4 +1,4 @@
-import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
+import { ROLES, roleLabel } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -75,7 +75,10 @@ export function ApplicationFiltersForm({
         name="role"
         label="Role"
         value={filters.role}
-        options={ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+        options={ROLES.map((r) => ({
+          value: r,
+          label: roleLabel(r, filters.event),
+        }))}
       />
       <FilterSelect
         name="status"

@@ -9,3 +9,9 @@ export const ROLE_LABELS: Record<Role, string> = {
   volunteer: "Volunteer",
   judge: "Judge",
 }
+
+export function roleLabel(role: Role, eventSlug: string | undefined) {
+  return role === "volunteer" && eventSlug === "fall-2026"
+    ? "Mentor"
+    : ROLE_LABELS[role]
+}

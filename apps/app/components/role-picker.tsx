@@ -1,6 +1,6 @@
 "use client"
 
-import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
+import { roleLabel, type Role } from "@workspace/supabase/roles"
 import { AuthButton, AuthError } from "@workspace/ui/components/auth-fields"
 import Link from "next/link"
 import { useState, useTransition } from "react"
@@ -16,7 +16,13 @@ const UNAVAILABLE_REASONS = {
   closed: "Applications closed",
 }
 
-export function RolePicker({ options }: { options: RoleOption[] }) {
+export function RolePicker({
+  options,
+  eventSlug,
+}: {
+  options: RoleOption[]
+  eventSlug: string
+}) {
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<Role | null>(null)
   const [pending, startTransition] = useTransition()
@@ -50,14 +56,14 @@ export function RolePicker({ options }: { options: RoleOption[] }) {
                   : "truncate text-[17.5px] font-semibold text-[#A3A39B]"
               }
             >
-              {ROLE_LABELS[option.role]}
+              {roleLabel(option.role, eventSlug)}
             </span>
             {open ? (
               <AuthButton
                 type="button"
                 disabled={pending}
                 onClick={() => start(option.role, option.formId)}
-                aria-label={`Apply as ${ROLE_LABELS[option.role]}`}
+                aria-label={`Apply as ${roleLabel(option.role, eventSlug)}`}
                 className="mt-0 h-[36px] w-auto px-[20px] text-[15px]"
               >
                 {pending && selected === option.role ? "Starting..." : "Apply"}

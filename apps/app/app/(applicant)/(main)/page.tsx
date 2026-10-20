@@ -3,7 +3,7 @@ import {
   hasEditableSections,
   publishedSchemaSchema,
 } from "@workspace/forms"
-import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { roleLabel } from "@workspace/supabase/roles"
 import { Pill } from "@workspace/ui/components/pill"
 import { OUTLINE_PILL, PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   const { data: applications, error } = await supabase
     .from("applications")
     .select(
-      "id, role, status, declined_at, events(name, starts_at, ends_at), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
+      "id, role, status, declined_at, events(name, slug, starts_at, ends_at), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
                   {event.starts_at
                     ? `${formatDateRangeInZone(event.starts_at, event.ends_at)} · `
                     : ""}
-                  {ROLE_LABELS[application.role]}
+                  {roleLabel(application.role, application.events.slug)}
                 </p>
               </div>
               <Pill>{statusLabel(phase, form, decision)}</Pill>

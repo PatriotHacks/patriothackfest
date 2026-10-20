@@ -1,5 +1,5 @@
 import { formatInZone } from "@workspace/forms"
-import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { roleLabel } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -100,7 +100,7 @@ export default async function ApplicationsPage({
           name: a.profiles.full_name ?? "No name",
           email: a.profiles.email,
           under18: a.under_18 === true,
-          role: ROLE_LABELS[a.role],
+          role: roleLabel(a.role, filters.event),
           status: STATUS_LABELS[a.status],
           submittedAt: a.submitted_at ? formatInZone(a.submitted_at) : "",
           declined: a.declined_at !== null,
