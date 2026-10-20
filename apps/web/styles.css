@@ -601,7 +601,8 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .foot__nav { justify-content: flex-start; gap: 10px 20px; }
   .foot__addr { text-align: left; }
   .foot__stage { display: none; }
-  .fog { opacity: .7; --text-y: 230px; -webkit-mask-image: radial-gradient(ellipse 62vw 150px at 50% var(--text-y), rgba(0,0,0,.3) 35%, #000 100%); mask-image: radial-gradient(ellipse 62vw 150px at 50% var(--text-y), rgba(0,0,0,.3) 35%, #000 100%); }
+  .fog { opacity: .7; --text-y: 230px; -webkit-mask-image: none; mask-image: none; }
+  .fog__l { will-change: auto; }
   .fog__l--bank-a { --h: 150px; }
   .fog__l--bank-b { --h: 130px; }
   .fog__l--bank-c { --h: 170px; }
