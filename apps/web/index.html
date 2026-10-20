@@ -291,19 +291,27 @@
   const hero = document.querySelector(".hero");
   let last = scrollY;
   let timer;
+  const snap = (change) => {
+    bar.style.transition = "none";
+    change();
+    void bar.offsetHeight;
+    bar.style.transition = "";
+  };
   const hide = () => bar.classList.add("bar--hidden");
   const update = () => {
     const y = scrollY;
     const pastHero = y > hero.offsetHeight - 120;
     clearTimeout(timer);
     if (!pastHero) {
-      bar.classList.remove("bar--float", "bar--hidden");
-    } else if (y < last) {
-      bar.classList.add("bar--float");
+      snap(() => bar.classList.remove("bar--float", "bar--hidden"));
+    } else if (!bar.classList.contains("bar--float")) {
+      snap(() => bar.classList.add("bar--float", "bar--hidden"));
+    }
+    if (pastHero && y < last) {
       bar.classList.remove("bar--hidden");
       timer = setTimeout(hide, 1000);
-    } else {
-      bar.classList.add("bar--float", "bar--hidden");
+    } else if (pastHero) {
+      bar.classList.add("bar--hidden");
     }
     last = y;
   };
