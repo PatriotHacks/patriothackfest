@@ -527,6 +527,18 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 }
 .bb__credit span { font-weight: 500; font-size: 5.2cqw; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
 .bb__credit b { font-weight: 700; font-size: 7cqw; letter-spacing: .01em; white-space: nowrap; }
+.foot__bot {
+  position: absolute;
+  left: max(16px, 14%);
+  top: 6%;
+  width: clamp(24px, 2.6vw, 40px);
+  opacity: .1;
+  rotate: -6deg;
+  filter: blur(1px);
+  animation: bot-bob 5s ease-in-out infinite;
+}
+.foot__bot img { display: block; width: 100%; height: auto; }
+@keyframes bot-bob { 50% { translate: 0 -8px; } }
 .foot__bar { position: relative; z-index: 1; background: #1a0f2e; color: #fff; }
 .foot__in {
   display: flex;
