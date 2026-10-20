@@ -648,7 +648,7 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 }
 
 .legal { min-height: 100vh; margin: 0; background: #1a0f2e; color: #fff; font: 16px/1.6 var(--font); }
-.legal__in { max-width: 760px; margin: 0 auto; padding: 48px 16px; }
+.legal__in { max-width: 680px; margin: 0 auto; padding: 48px 16px; }
 .legal__in a { color: var(--cream); }
 .legal__in > p > a { display: inline-flex; align-items: center; min-height: 44px; }
 .legal h1 { font-size: 36px; margin: 24px 0; }
