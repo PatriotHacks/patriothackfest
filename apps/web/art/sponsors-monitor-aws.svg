@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 400 480">
+<defs>
+<filter id="grain" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="37" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="g"/><feComposite in="SourceGraphic" in2="g" operator="arithmetic" k1="0" k2="1" k3=".3" k4="0"/></filter>
+<linearGradient id="scr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2f70"/><stop offset="1" stop-color="#1d1236"/></linearGradient>
+<pattern id="lines" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1.3" fill="#1d1236" opacity=".35"/></pattern>
+</defs>
+<g filter="url(#grain)">
+<path d="M46 40 L84 12 L366 12 L328 40Z" fill="#b3a8e4" stroke="#251a4c" stroke-width="4" stroke-linejoin="round"/>
+<path d="M328 40 L366 12 L366 276 L328 304Z" fill="#6f64a8" stroke="#251a4c" stroke-width="4" stroke-linejoin="round"/>
+<rect x="40" y="40" width="288" height="264" rx="34" fill="#8a7fc8" stroke="#251a4c" stroke-width="4"/>
+<rect x="66" y="64" width="236" height="196" rx="26" fill="url(#scr)" stroke="#251a4c" stroke-width="4"/>
+<rect x="66" y="64" width="236" height="196" rx="26" fill="url(#lines)"/>
+<path d="M88 92 Q140 74 196 88 L118 166 Z" fill="#b8aef2" opacity=".18"/>
+<image href="sponsor-aws.png" x="98" y="112" width="172" height="100" preserveAspectRatio="xMidYMid meet"/>
+<rect x="66" y="268" width="62" height="8" rx="3" fill="#4b3f86"/>
+<circle cx="296" cy="272" r="6" fill="#ffd58a" stroke="#251a4c" stroke-width="2"/>
+<circle cx="316" cy="272" r="6" fill="#4b3f86" stroke="#251a4c" stroke-width="2"/>
+<path d="M148 304 L252 304 L274 344 L126 344Z" fill="#6f64a8" stroke="#251a4c" stroke-width="4" stroke-linejoin="round"/>
+<rect x="112" y="342" width="176" height="22" rx="7" fill="#4b3f86" stroke="#251a4c" stroke-width="4"/>
+<path d="M50 396 L92 376 L340 376 L370 396 L330 420 L60 420Z" fill="#b3a8e4" stroke="#251a4c" stroke-width="4" stroke-linejoin="round"/>
+<path d="M92 388 L326 388 M84 398 L330 398 M76 408 L334 408" stroke="#4b3f86" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+<ellipse cx="30" cy="300" rx="26" ry="16" fill="#4f8786" stroke="#251a4c" stroke-width="3"/>
+<circle cx="366" cy="40" r="16" fill="#6f9a8a" stroke="#251a4c" stroke-width="3"/>
+</g>
+</svg>
