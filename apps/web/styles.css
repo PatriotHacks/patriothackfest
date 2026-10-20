@@ -646,8 +646,8 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 
 .polas { gap: 36px; }
 .roll { margin-top: 48px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
-.roll__track { display: flex; gap: 28px; width: max-content; animation: roll 42s linear infinite; }
-.roll__track img { height: 120px; width: auto; padding: 12px; background: rgba(184, 174, 242, .06); border: 1px solid rgba(184, 174, 242, .22); border-radius: 6px; }
+.roll__track { display: flex; width: max-content; animation: roll 42s linear infinite; }
+.roll__track img { height: 120px; width: auto; margin-right: 28px; padding: 12px; background: rgba(184, 174, 242, .06); border: 1px solid rgba(184, 174, 242, .22); border-radius: 6px; }
 @keyframes roll { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .roll__track { animation: none; } }
 
