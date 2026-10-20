@@ -4,7 +4,6 @@
 <linearGradient id="scr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2f70"/><stop offset="1" stop-color="#1d1236"/></linearGradient>
 <pattern id="lines" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1.3" fill="#1d1236" opacity=".35"/></pattern>
 <linearGradient id="top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a4a8c"/><stop offset="1" stop-color="#6e5fa6"/></linearGradient>
-<radialGradient id="lamp"><stop offset="0" stop-color="#ffad4a" stop-opacity=".75"/><stop offset=".4" stop-color="#ffad4a" stop-opacity=".2"/><stop offset="1" stop-color="#ffad4a" stop-opacity="0"/></radialGradient>
 </defs>
 <g filter="url(#grain)"><path d="M-60 560 L1260 560 L1260 620 L-60 620Z" fill="#2c2257" stroke="#251a4c" stroke-width="4"/><path d="M-60 560 L1260 560" stroke="#b3a8e4" stroke-width="3" opacity=".5"/></g>
 <g filter="url(#grain)"><path d="M0 300 L1200 300 L1260 560 L-60 560Z" fill="url(#top)" stroke="#251a4c" stroke-width="4" stroke-linejoin="round"/><path d="M0 300 L1200 300 L1260 560 L-60 560Z" fill="#fff" opacity=".04"/></g>
