@@ -756,8 +756,8 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 #sponsors .sponsor-table__mail { color: #2a1d4f; }
 #sponsors .sponsor-table__mail:hover { color: #6a4fc0; }
 .sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0); }
-.sponsor-table img { filter: drop-shadow(2px 0 0 #ffffff) drop-shadow(-2px 0 0 #ffffff) drop-shadow(0 2px 0 #ffffff) drop-shadow(0 -2px 0 #ffffff); }
-.sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0) drop-shadow(2px 0 0 #ffffff) drop-shadow(-2px 0 0 #ffffff) drop-shadow(0 2px 0 #ffffff) drop-shadow(0 -2px 0 #ffffff); }
+.sponsor-table img { filter: drop-shadow(3px 0 0 #ffffff) drop-shadow(-3px 0 0 #ffffff) drop-shadow(0 3px 0 #ffffff) drop-shadow(0 -3px 0 #ffffff) drop-shadow(2px 2px 0 #ffffff) drop-shadow(-2px -2px 0 #ffffff) drop-shadow(2px -2px 0 #ffffff) drop-shadow(-2px 2px 0 #ffffff) drop-shadow(0 0 5px rgba(255,255,255,.55)); }
+.sponsor-table img[src$="sponsor-drums.png"] { filter: brightness(0) drop-shadow(3px 0 0 #ffffff) drop-shadow(-3px 0 0 #ffffff) drop-shadow(0 3px 0 #ffffff) drop-shadow(0 -3px 0 #ffffff) drop-shadow(2px 2px 0 #ffffff) drop-shadow(-2px -2px 0 #ffffff) drop-shadow(2px -2px 0 #ffffff) drop-shadow(-2px 2px 0 #ffffff) drop-shadow(0 0 5px rgba(255,255,255,.55)); }
 .sponsor-card { max-width: 900px; margin: 40px auto 0; padding: 28px 32px; border: 1px solid rgba(42, 29, 79, .35); border-radius: 24px; background: rgba(255, 255, 255, .35); text-align: left; }
 .sponsor-card p { margin: 0; color: #2a1d4f; }
 .sponsor-card__title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
