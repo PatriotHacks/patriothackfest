@@ -32,8 +32,15 @@ export function Roles() {
               </CardHeader>
               <CardFooter className="mt-auto">
                 {site.event.applicationsOpen ? (
-                  <Button asChild variant="outline" size="sm">
-                    <a href={appUrl}>Apply as {role.title.toLowerCase()}</a>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11"
+                  >
+                    <a href={`${appUrl}/start`}>
+                      Apply as {role.title.toLowerCase()}
+                    </a>
                   </Button>
                 ) : (
                   <p className="text-muted-foreground">Opening soon</p>

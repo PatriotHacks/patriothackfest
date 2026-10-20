@@ -34,8 +34,8 @@ export function Hero() {
         </div>
       </dl>
       {event.applicationsOpen ? (
-        <Button asChild size="lg">
-          <a href={appUrl}>Apply now</a>
+        <Button asChild size="lg" className="min-h-11">
+          <a href={`${appUrl}/start`}>Apply now</a>
         </Button>
       ) : (
         <p className="text-sm font-medium">Applications open soon</p>
