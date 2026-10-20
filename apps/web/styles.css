@@ -798,9 +798,12 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
   .sponsor-table td { display: block; flex: 1 1 100%; height: auto; min-height: 110px; padding: 10px 0; }
   .sponsor-table td:empty { display: none; }
   .sponsor-table td a { height: auto; }
-  .sponsor-table img { max-width: 80%; max-height: 90px; }
-  .sponsor-table img[src$="sponsor-aws-dark.png"], .sponsor-table img[src$="sponsor-caelon-full.png"] { max-width: 80%; max-height: 90px; }
-  .sponsor-table img[src$="sponsor-drums.png"] { max-width: 80%; max-height: 150px; }
+  .sponsor-table img,
+  .sponsor-table img[src$="sponsor-aws-dark.png"],
+  .sponsor-table img[src$="sponsor-caelon-full.png"],
+  .sponsor-table img[src$="sponsor-drums.png"],
+  .sponsor-table img[src$="sponsor-metrostar-dark.svg"] { max-width: 80%; max-height: none; height: 56px; width: auto; }
+  .sponsor-table img[src$="sponsor-metrostar-dark.svg"] { height: 90px; }
   .sponsor-card { padding: 18px 16px; }
   .sponsor-card__line { white-space: normal; overflow-wrap: anywhere; }
 }
