@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add("js");</script>
 <title>Patriot HackFest</title>
 <meta name="description" content="Patriot HackFest is George Mason University's premier hackathon, organized by PatriotHacks, CS Club and HackOverflow.">
 <link rel="preload" href="fonts/Satoshi-Bold.woff2" as="font" type="font/woff2" crossorigin>
@@ -238,6 +239,15 @@
   };
   tick();
   timer = setInterval(tick, 1000);
+})();
+</script>
+<script>
+(() => {
+  document.querySelectorAll("img").forEach((img) => {
+    const show = () => img.classList.add("is-loaded");
+    if (img.complete) show();
+    else { img.addEventListener("load", show); img.addEventListener("error", show); }
+  });
 })();
 </script>
 <script>

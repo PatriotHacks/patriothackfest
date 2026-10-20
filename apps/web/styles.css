@@ -33,6 +33,8 @@ body {
   overflow-x: hidden;
 }
 img { display: block; max-width: 100%; }
+.js img { transition: opacity .6s ease; }
+.js img:not(.is-loaded) { opacity: 0; }
 a { color: inherit; }
 h1, h2, h3 { margin: 0; line-height: 1.05; }
 p { margin: 0; }
