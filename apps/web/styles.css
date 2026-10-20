@@ -738,13 +738,13 @@ a.bar__logo:hover { transform: rotate(1deg) scale(1.04); }
 .sponsor-monitors a:hover, .sponsor-monitors a:focus-visible { transform: translateY(-6px); }
 .sponsor-monitors img { display: block; width: 100%; height: auto; }
 
-.sponsor-table { width: min(100%, 640px); margin: 0 auto; border-collapse: collapse; table-layout: fixed; border: 2px solid #b8aef2; }
-.sponsor-table td { border: 2px solid #b8aef2; height: 120px; padding: 16px; text-align: center; vertical-align: middle; }
+.sponsor-table { width: min(100%, 900px); margin: 0 auto; border-collapse: collapse; table-layout: fixed; border: none; }
+.sponsor-table td { border: none; height: 120px; padding: 16px; text-align: center; vertical-align: middle; }
 .sponsor-table td a { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 .sponsor-table img { display: block; max-width: 70%; max-height: 88px; width: auto; height: auto; object-fit: contain; }
 .sponsor-table img[src$="sponsor-aws.png"], .sponsor-table img[src$="sponsor-caelon.png"] { max-width: 45%; max-height: 56px; }
 .sponsor-table img[src$="sponsor-caelon.png"] { max-width: 32%; max-height: 40px; }
-.sponsor-table__cta { padding: 16px; }
+.sponsor-table__cta { padding: 16px 0; }
 .sponsor-table__cta p { margin: 0 0 4px; font-size: 18px; line-height: 1.3; color: var(--text); }
 .sponsor-table__mail { color: var(--text); font-size: 18px; text-decoration: underline; text-underline-offset: 4px; }
 .sponsor-table__mail:hover { color: var(--yellow); }
