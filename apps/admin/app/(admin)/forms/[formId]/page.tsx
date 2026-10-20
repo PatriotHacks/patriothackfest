@@ -14,7 +14,7 @@ export default async function FormBuilderPage({
   const { data: form, error } = await supabase
     .from("forms")
     .select(
-      "id, role, title, description, status, published_at, content_updated_at, submissions_close_at, edits_lock_at, events (name)"
+      "id, role, title, description, status, published_at, content_updated_at, submissions_close_at, edits_lock_at, events (name, slug)"
     )
     .eq("id", formId)
     .maybeSingle()
@@ -42,6 +42,7 @@ export default async function FormBuilderPage({
       key={form.id}
       form={form}
       eventName={form.events.name}
+      eventSlug={form.events.slug}
       initialFields={fields.data.map((f) => fieldSchema.parse(f))}
       answeredFieldIds={answered.data}
       canEdit={hasLevel(level, "organizer")}

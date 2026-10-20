@@ -7,6 +7,7 @@ import {
   type SendResult,
 } from "@workspace/email"
 import { formatDateRangeInZone } from "@workspace/forms"
+import { roleLabel } from "@workspace/supabase/roles"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -56,6 +57,13 @@ export async function sendPendingEmails(
     .single()
   if (template.error) return { error: template.error.message }
 
+  const form = await supabase
+    .from("forms")
+    .select("events(slug)")
+    .eq("id", id)
+    .single()
+  if (form.error) return { error: form.error.message }
+
   const claimed = await supabase.rpc("admin_claim_emails", {
     p_form_id: id,
     p_limit: BATCH_SIZE,
@@ -81,7 +89,7 @@ export async function sendPendingEmails(
                   email.event_ends_at
                 )
               : null,
-            role: email.role,
+            role: roleLabel(email.role, form.data.events.slug).toLowerCase(),
           },
           portalUrl
         ),

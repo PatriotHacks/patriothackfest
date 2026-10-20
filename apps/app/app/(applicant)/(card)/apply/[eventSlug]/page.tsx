@@ -58,7 +58,7 @@ export default async function ApplyPage({
       title={`Apply to ${event.name}`}
       description="Choose the role you want to apply for."
     >
-      <RolePicker options={options} />
+      <RolePicker options={options} eventSlug={eventSlug} />
       <SignOutLink />
     </AuthCard>
   )

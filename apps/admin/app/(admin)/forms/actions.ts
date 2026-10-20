@@ -1,18 +1,13 @@
 "use server"
 
 import { fromZonedInputValue } from "@workspace/forms"
+import { roleLabel } from "@workspace/supabase/roles"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import * as z from "zod"
 
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
-
-const ROLE_TITLES = {
-  participant: "Participant application",
-  volunteer: "Volunteer application",
-  judge: "Judge application",
-} as const
 
 const createFormInput = z.object({
   eventId: z.guid(),
@@ -23,12 +18,19 @@ export async function createForm(eventId: string, role: string) {
   const input = createFormInput.parse({ eventId, role })
   const { supabase } = await requireAdmin("organizer")
 
+  const event = await supabase
+    .from("events")
+    .select("slug")
+    .eq("id", input.eventId)
+    .single()
+  if (event.error) return failure(event.error)
+
   const { data, error } = await supabase
     .from("forms")
     .insert({
       event_id: input.eventId,
       role: input.role,
-      title: ROLE_TITLES[input.role],
+      title: `${roleLabel(input.role, event.data.slug)} application`,
     })
     .select("id")
     .single()

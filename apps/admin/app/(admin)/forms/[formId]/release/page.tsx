@@ -1,5 +1,5 @@
 import { formatInZone } from "@workspace/forms"
-import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { roleLabel } from "@workspace/supabase/roles"
 import {
   Alert,
   AlertDescription,
@@ -78,7 +78,7 @@ export default async function ReleasePage({
     <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="Release decisions"
-        description={`${form.events.name} · ${ROLE_LABELS[form.role]} · ${form.title}`}
+        description={`${form.events.name} · ${roleLabel(form.role, form.events.slug)} · ${form.title}`}
       >
         <Button asChild variant="outline" size="sm">
           <Link href={listHref}>Applications</Link>
