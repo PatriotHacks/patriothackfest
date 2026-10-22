@@ -1,6 +1,6 @@
 import "server-only"
 
-import { ROLES } from "@workspace/supabase/roles"
+import type { Role } from "@workspace/supabase/roles"
 import * as z from "zod"
 
 import { DECISIONS, STATUSES } from "./roles"
@@ -10,7 +10,6 @@ const optional = <T extends z.ZodType>(schema: T) =>
 
 const filtersSchema = z.object({
   event: optional(z.string().trim().min(1).max(100)),
-  role: optional(z.enum(ROLES)),
   status: optional(z.enum(STATUSES)),
   decision: optional(z.enum(DECISIONS)),
   released: optional(z.enum(["yes", "no"])),
@@ -76,10 +75,11 @@ type Filterable<Query> = {
 
 export function applyFilters<Query extends Filterable<Query>>(
   query: Query,
-  filters: ApplicationFilters
+  filters: ApplicationFilters,
+  role: Role
 ) {
+  query = query.eq("role", role)
   if (filters.event) query = query.eq("filter_event.slug", filters.event)
-  if (filters.role) query = query.eq("role", filters.role)
   if (filters.status) query = query.eq("status", filters.status)
   if (filters.declined === "yes") query = query.not("declined_at", "is", null)
   if (filters.declined === "no") query = query.is("declined_at", null)
