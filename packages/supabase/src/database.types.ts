@@ -170,8 +170,9 @@ export type Database = {
           user_id: string
           withdrawn_at: string | null
           under_18: boolean | null
+          status_rank: number | null
         }
-        ComputedFields: "under_18"
+        ComputedFields: "under_18" | "status_rank"
         Insert: {
           answers?: NonNullable<Json>
           created_at?: string
@@ -742,6 +743,15 @@ export type Database = {
         Returns: string
       }
       start_application: { Args: { p_form_id: string }; Returns: string }
+      status_rank: {
+        Args: {
+          p_application: Omit<
+            Database["public"]["Tables"]["applications"]["Row"],
+            Database["public"]["Tables"]["applications"]["ComputedFields"]
+          >
+        }
+        Returns: number
+      }
       submit_application: {
         Args: { p_application_id: string }
         Returns: undefined

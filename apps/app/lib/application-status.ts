@@ -35,9 +35,9 @@ export function applicationPhase(
   if (declinedAt !== null) return "declined"
   if (status === "draft")
     return isFormOpen(form, now) ? "draft" : "closed_draft"
-  return form.edits_lock_at !== null && now < Date.parse(form.edits_lock_at)
-    ? "editable_submission"
-    : "locked_submission"
+  return form.edits_lock_at !== null && now >= Date.parse(form.edits_lock_at)
+    ? "locked_submission"
+    : "editable_submission"
 }
 
 export function statusLabel(
