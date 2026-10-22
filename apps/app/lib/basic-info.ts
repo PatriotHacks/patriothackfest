@@ -48,6 +48,14 @@ function todayInEventZone() {
   return toZonedInputValue(new Date().toISOString()).slice(0, 10)
 }
 
+export function isValidDateOfBirth(dob: string) {
+  return (
+    isoDate.safeParse(dob).success &&
+    dob >= "1900-01-01" &&
+    dob < todayInEventZone()
+  )
+}
+
 export function basicInfoErrors(
   info: BasicInfo,
   mode: "draft" | "submit"
@@ -74,11 +82,7 @@ export function basicInfoErrors(
   const dob = info.dateOfBirth
   if (dob === "") {
     if (required) errors.date_of_birth = required
-  } else if (
-    !isoDate.safeParse(dob).success ||
-    dob < "1900-01-01" ||
-    dob >= todayInEventZone()
-  )
+  } else if (!isValidDateOfBirth(dob))
     errors.date_of_birth = "Enter a valid date of birth"
 
   return errors
