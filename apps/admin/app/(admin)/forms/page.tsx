@@ -14,6 +14,7 @@ import { EventTabs } from "@/components/event-tabs"
 import { FormStatusBadges } from "@/components/form-status-badges"
 import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
+import { tabForRole, tabPath } from "@/lib/application-tabs"
 import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
 import { TEXT_LINK } from "@/lib/styles"
@@ -105,7 +106,7 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
                       <div className="flex flex-wrap gap-2">
                         <Button asChild variant="outline" size="sm">
                           <Link
-                            href={`/applications?event=${encodeURIComponent(event.slug)}&role=${role}`}
+                            href={`${tabPath(tabForRole(role))}?event=${encodeURIComponent(event.slug)}`}
                           >
                             Applications
                           </Link>
