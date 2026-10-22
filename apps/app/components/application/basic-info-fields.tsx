@@ -26,6 +26,7 @@ export function BasicInfoFields({
   errors,
   email,
   disabled,
+  dateOfBirthDisabled,
   muted,
   onChange,
   onBlur,
@@ -34,6 +35,7 @@ export function BasicInfoFields({
   errors: BasicInfoErrors
   email: string
   disabled: boolean
+  dateOfBirthDisabled: boolean
   muted: boolean
   onChange: (next: BasicInfoDraft, key: BasicInfoKey) => void
   onBlur: () => void
@@ -123,7 +125,7 @@ export function BasicInfoFields({
             onChange({ ...value, dateOfBirth: e.target.value }, "date_of_birth")
           }
           onBlur={onBlur}
-          disabled={disabled}
+          disabled={dateOfBirthDisabled}
           aria-invalid={a11y("date_of_birth").invalid}
           aria-describedby={a11y("date_of_birth").describedBy}
         />
