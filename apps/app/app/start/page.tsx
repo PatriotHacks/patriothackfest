@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { isFormOpen } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
 
-export async function GET() {
+export default async function StartPage() {
   const { supabase, userId } = await getNamedApplicant()
 
   const [events, forms, applications] = await Promise.all([
