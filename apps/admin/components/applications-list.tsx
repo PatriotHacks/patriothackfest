@@ -66,6 +66,8 @@ export async function ApplicationsList({
       filters,
       role
     )
+      .order("status_rank")
+      .order("submitted_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .range(from, from + PAGE_SIZE - 1),
