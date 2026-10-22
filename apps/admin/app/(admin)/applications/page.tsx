@@ -91,7 +91,7 @@ export default async function ApplicationsPage({
           basePath="/applications"
         />
       )}
-      <ApplicationFiltersForm filters={filters} />
+      <ApplicationFiltersForm filters={filters} basePath="/applications" />
       <ApplicationsTable
         key={detailQuery}
         rows={applications.data.map((a) => ({
