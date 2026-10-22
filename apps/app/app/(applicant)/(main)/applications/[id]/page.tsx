@@ -13,6 +13,10 @@ import * as z from "zod"
 import { BasicInfoView } from "@/components/application/basic-info-view"
 import { SubmittedApplication } from "@/components/application/submitted-application"
 import { applicationPhase, statusLabel } from "@/lib/application-status"
+import {
+  BASIC_INFO_APPLICATION_COLUMNS,
+  basicInfoAccess,
+} from "@/lib/basic-info-access"
 import { getNamedApplicant } from "@/lib/applicant"
 import { deadlineText } from "@/lib/deadline-text"
 
@@ -23,7 +27,7 @@ export default async function ApplicationPage({
   if (!z.guid().safeParse(id).success) notFound()
   const { supabase, userId, email } = await getNamedApplicant()
 
-  const [application, profile] = await Promise.all([
+  const [application, profile, applications] = await Promise.all([
     supabase
       .from("applications")
       .select(
@@ -36,21 +40,22 @@ export default async function ApplicationPage({
       .select("full_name, school, phone, date_of_birth")
       .eq("id", userId)
       .single(),
+    supabase
+      .from("applications")
+      .select(BASIC_INFO_APPLICATION_COLUMNS)
+      .eq("user_id", userId),
   ])
   if (application.error) throw new Error(application.error.message)
   if (profile.error) throw new Error(profile.error.message)
+  if (applications.error) throw new Error(applications.error.message)
   if (!application.data) notFound()
   const { data } = application
   if (data.status === "draft") redirect(`/draft/${id}`)
 
   const form = data.forms
   const decision = data.application_decisions?.decision ?? null
-  const phase = applicationPhase(
-    data.status,
-    data.declined_at,
-    form,
-    Date.now()
-  )
+  const now = Date.now()
+  const phase = applicationPhase(data.status, data.declined_at, form, now)
   const schema =
     form.published_schema === null
       ? null
@@ -84,7 +89,14 @@ export default async function ApplicationPage({
           </p>
         )}
       </header>
-      <BasicInfoView profile={profile.data} email={email} />
+      <BasicInfoView
+        profile={profile.data}
+        email={email}
+        dateOfBirthEditable={
+          data.status === "submitted" &&
+          basicInfoAccess(applications.data, now).dateOfBirth
+        }
+      />
       {schema && (
         <SubmittedApplication
           key={data.updated_at}
