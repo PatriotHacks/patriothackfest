@@ -1,4 +1,3 @@
-import { ROLES, roleLabel } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -59,27 +58,20 @@ const yesNo = [
 
 export function ApplicationFiltersForm({
   filters,
+  basePath,
 }: {
   filters: ApplicationFilters
+  basePath: string
 }) {
   const clearHref = filters.event
-    ? `/applications?event=${encodeURIComponent(filters.event)}`
-    : "/applications"
+    ? `${basePath}?event=${encodeURIComponent(filters.event)}`
+    : basePath
 
   return (
-    <form className="flex flex-wrap items-end gap-3" action="/applications">
+    <form className="flex flex-wrap items-end gap-3" action={basePath}>
       {filters.event && (
         <input type="hidden" name="event" value={filters.event} />
       )}
-      <FilterSelect
-        name="role"
-        label="Role"
-        value={filters.role}
-        options={ROLES.map((r) => ({
-          value: r,
-          label: roleLabel(r, filters.event),
-        }))}
-      />
       <FilterSelect
         name="status"
         label="Status"

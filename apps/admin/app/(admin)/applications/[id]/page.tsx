@@ -37,6 +37,7 @@ import {
   parseFilters,
   parsePage,
 } from "@/lib/application-filters"
+import { tabForRole, tabPath } from "@/lib/application-tabs"
 import { decisionBlockedReason } from "@/lib/decisions"
 import { hasLevel } from "@/lib/levels"
 import { DECISION_LABELS, STATUS_LABELS } from "@/lib/roles"
@@ -70,7 +71,8 @@ export default async function ApplicationPage({
   const [newer, older, archives, emails, eventForms] = await Promise.all([
     applyFilters(
       supabase.from("applications").select(filterEmbeds("id", filters)),
-      filters
+      filters,
+      application.role
     )
       .or(after("gt"))
       .order("created_at", { ascending: true })
@@ -79,7 +81,8 @@ export default async function ApplicationPage({
       .maybeSingle(),
     applyFilters(
       supabase.from("applications").select(filterEmbeds("id", filters)),
-      filters
+      filters,
+      application.role
     )
       .or(after("lt"))
       .order("created_at", { ascending: false })
@@ -174,7 +177,9 @@ export default async function ApplicationPage({
         className="flex flex-wrap items-center gap-2"
       >
         <Button asChild variant="ghost" size="sm">
-          <Link href={`/applications${listQuery}`}>Back to list</Link>
+          <Link href={`${tabPath(tabForRole(application.role))}${listQuery}`}>
+            Back to list
+          </Link>
         </Button>
         <div className="ml-auto flex gap-2">
           {newer.data && (

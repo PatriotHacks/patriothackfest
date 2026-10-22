@@ -25,6 +25,7 @@ import { EmailSender } from "@/components/email-sender"
 import { PageHeader } from "@/components/page-header"
 import { ReleaseButton } from "@/components/release-button"
 import { getAdmin } from "@/lib/admin"
+import { tabForRole, tabPath } from "@/lib/application-tabs"
 import { EMAIL_NOT_CONFIGURED, isEmailConfigured } from "@/lib/email"
 import { hasLevel } from "@/lib/levels"
 
@@ -72,7 +73,7 @@ export default async function ReleasePage({
   if (!form) notFound()
 
   const configured = isEmailConfigured()
-  const listHref = `/applications?event=${encodeURIComponent(form.events.slug)}&role=${form.role}`
+  const listHref = `${tabPath(tabForRole(form.role))}?event=${encodeURIComponent(form.events.slug)}`
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
