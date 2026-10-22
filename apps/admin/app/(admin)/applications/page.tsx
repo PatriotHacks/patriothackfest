@@ -102,6 +102,7 @@ export default async function ApplicationsPage({
           under18: a.under_18 === true,
           role: roleLabel(a.role, filters.event),
           status: STATUS_LABELS[a.status],
+          draft: a.status === "draft",
           submittedAt: a.submitted_at ? formatInZone(a.submitted_at) : "",
           declined: a.declined_at !== null,
           decision: a.application_decisions?.decision ?? null,

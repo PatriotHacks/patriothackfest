@@ -31,6 +31,7 @@ export type ApplicationRow = {
   under18: boolean
   role: string
   status: string
+  draft: boolean
   submittedAt: string
   declined: boolean
   decision: Decision | null
@@ -163,7 +164,13 @@ export function ApplicationsTable({ rows }: { rows: ApplicationRow[] }) {
                 <TableCell>{row.role}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {row.status}
+                    {row.draft ? (
+                      <Pill tone="amber" size="sm">
+                        {row.status}
+                      </Pill>
+                    ) : (
+                      row.status
+                    )}
                     {row.declined && (
                       <Pill tone="outline" size="sm">
                         Declined
