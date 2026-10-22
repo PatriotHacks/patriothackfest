@@ -25,7 +25,7 @@ import {
   type FieldType,
   type QuestionType,
 } from "@workspace/forms"
-import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
+import { roleLabel, type Role } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -83,6 +83,7 @@ export type BuilderForm = {
 type Props = {
   form: BuilderForm
   eventName: string
+  eventSlug: string
   initialFields: Field[]
   answeredFieldIds: string[]
   canEdit: boolean
@@ -97,6 +98,7 @@ function numberItems(fields: Field[]) {
 export function FormBuilder({
   form,
   eventName,
+  eventSlug,
   initialFields,
   answeredFieldIds,
   canEdit,
@@ -243,7 +245,7 @@ export function FormBuilder({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={`${eventName}: ${ROLE_LABELS[form.role]}`}
+        title={`${eventName}: ${roleLabel(form.role, eventSlug)}`}
         description={
           <FormStatusBadges
             form={form}

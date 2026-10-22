@@ -1,5 +1,5 @@
 import { formatInZone } from "@workspace/forms"
-import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
+import { ROLES, roleLabel } from "@workspace/supabase/roles"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { Separator } from "@workspace/ui/components/separator"
@@ -78,10 +78,10 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
                             href={`/forms/${form.id}`}
                             className={cn(TEXT_LINK, "font-normal")}
                           >
-                            {ROLE_LABELS[role]}
+                            {roleLabel(role, event.slug)}
                           </Link>
                         ) : (
-                          ROLE_LABELS[role]
+                          roleLabel(role, event.slug)
                         )}
                       </h2>
                       {form ? (

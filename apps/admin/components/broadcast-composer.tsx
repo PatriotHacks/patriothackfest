@@ -10,7 +10,7 @@ import {
   SUBJECT_MAX_LENGTH,
   validateTemplate,
 } from "@workspace/email/templates"
-import { ROLE_LABELS, ROLES, type Role } from "@workspace/supabase/roles"
+import { ROLES, roleLabel, type Role } from "@workspace/supabase/roles"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +57,7 @@ import {
 
 type Props = {
   eventId: string
+  eventSlug: string
   eventName: string
   adminEmail: string
   emailDisabledReason: string | null
@@ -76,6 +77,7 @@ function preview(subject: string, body: string) {
 
 export function BroadcastComposer({
   eventId,
+  eventSlug,
   eventName,
   adminEmail,
   emailDisabledReason,
@@ -98,7 +100,7 @@ export function BroadcastComposer({
 
   const errors = validateTemplate({ subject, body }, BROADCAST_VARIABLES)
   const rendered = errors.length === 0 ? preview(subject, body) : null
-  const roleLabel = role ? ROLE_LABELS[role] : "All roles"
+  const recipientsLabel = role ? roleLabel(role, eventSlug) : "All roles"
   const remaining = confirm
     ? Math.max(EMAIL_DAILY_LIMIT - confirm.dailyUsed, 0)
     : 0
@@ -122,7 +124,7 @@ export function BroadcastComposer({
       const result = await getBroadcastRecipientCount(eventId, role)
       if (result.error !== null) return setError(result.error)
       if (result.recipients === 0)
-        return setError(`No submitted applications match ${roleLabel}.`)
+        return setError(`No submitted applications match ${recipientsLabel}.`)
       setDialogError(null)
       setConfirm(result)
     })
@@ -174,7 +176,7 @@ export function BroadcastComposer({
                 <SelectItem value="all">All roles</SelectItem>
                 {ROLES.map((r) => (
                   <SelectItem key={r} value={r}>
-                    {ROLE_LABELS[r]}
+                    {roleLabel(r, eventSlug)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -279,7 +281,7 @@ export function BroadcastComposer({
           <AlertDialogHeader>
             <AlertDialogTitle>
               Send to {confirm?.recipients} applicants of {eventName} (
-              {roleLabel})?
+              {recipientsLabel})?
             </AlertDialogTitle>
             <AlertDialogDescription>
               This cannot be undone. Recipients are fixed when you confirm;

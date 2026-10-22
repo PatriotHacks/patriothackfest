@@ -72,6 +72,7 @@ export default async function EmailPage({ searchParams }: PageProps<"/email">) {
             <BroadcastComposer
               key={event.id}
               eventId={event.id}
+              eventSlug={event.slug}
               eventName={event.name}
               adminEmail={email}
               emailDisabledReason={emailDisabledReason}
@@ -80,6 +81,7 @@ export default async function EmailPage({ searchParams }: PageProps<"/email">) {
               <h3 className="font-medium">History</h3>
               <BroadcastHistory
                 broadcasts={history?.data ?? []}
+                eventSlug={event.slug}
                 configured={emailDisabledReason === null}
               />
             </div>

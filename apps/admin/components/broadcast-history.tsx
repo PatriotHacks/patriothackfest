@@ -1,5 +1,5 @@
 import { formatInZone } from "@workspace/forms"
-import { ROLE_LABELS, type Role } from "@workspace/supabase/roles"
+import { roleLabel, type Role } from "@workspace/supabase/roles"
 import {
   Table,
   TableBody,
@@ -31,9 +31,11 @@ type Broadcast = {
 
 export function BroadcastHistory({
   broadcasts,
+  eventSlug,
   configured,
 }: {
   broadcasts: Broadcast[]
+  eventSlug: string
   configured: boolean
 }) {
   if (broadcasts.length === 0)
@@ -64,7 +66,7 @@ export function BroadcastHistory({
                 <TableCell>{formatInZone(b.created_at)}</TableCell>
                 <TableCell>{b.sender_email}</TableCell>
                 <TableCell>
-                  {b.role ? ROLE_LABELS[b.role] : "All roles"}
+                  {b.role ? roleLabel(b.role, eventSlug) : "All roles"}
                 </TableCell>
                 <TableCell className="whitespace-normal">{b.subject}</TableCell>
                 <TableCell className="text-right tabular-nums">

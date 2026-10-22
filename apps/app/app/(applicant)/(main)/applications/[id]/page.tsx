@@ -3,7 +3,7 @@ import {
   hasEditableSections,
   publishedSchemaSchema,
 } from "@workspace/forms"
-import { ROLE_LABELS } from "@workspace/supabase/roles"
+import { roleLabel } from "@workspace/supabase/roles"
 import { Pill } from "@workspace/ui/components/pill"
 import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
@@ -27,7 +27,7 @@ export default async function ApplicationPage({
     supabase
       .from("applications")
       .select(
-        "id, role, status, answers, updated_at, declined_at, events(name), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
+        "id, role, status, answers, updated_at, declined_at, events(name, slug), forms(status, submissions_close_at, edits_lock_at, decisions_released_at, published_schema), application_decisions(decision)"
       )
       .eq("id", id)
       .maybeSingle(),
@@ -76,7 +76,7 @@ export default async function ApplicationPage({
           <Pill>{statusLabel(phase, form, decision)}</Pill>
         </div>
         <p className="text-[14.5px] text-[#6E6E68]">
-          {data.events.name} · {ROLE_LABELS[data.role]}
+          {data.events.name} · {roleLabel(data.role, data.events.slug)}
         </p>
         {editable && (
           <p className="text-[13px] text-[#6E6E68]">

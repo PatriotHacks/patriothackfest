@@ -3,7 +3,7 @@ import {
   formatInZone,
   publishedSchemaSchema,
 } from "@workspace/forms"
-import { ROLE_LABELS, ROLES } from "@workspace/supabase/roles"
+import { ROLES, roleLabel } from "@workspace/supabase/roles"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -56,7 +56,7 @@ export default async function ApplicationPage({
   const { data: application, error } = await supabase
     .from("applications")
     .select(
-      "id, event_id, role, status, answers, created_at, submitted_at, withdrawn_at, declined_at, under_18, profiles(full_name, email, school, phone, date_of_birth), events(name), forms(id, title, published_schema, decisions_released_at), application_decisions(decision, decided_at, profiles(email))"
+      "id, event_id, role, status, answers, created_at, submitted_at, withdrawn_at, declined_at, under_18, profiles(full_name, email, school, phone, date_of_birth), events(name, slug), forms(id, title, published_schema, decisions_released_at), application_decisions(decision, decided_at, profiles(email))"
     )
     .eq("id", id)
     .maybeSingle()
@@ -137,7 +137,7 @@ export default async function ApplicationPage({
                     now >= Date.parse(target.submissions_close_at)
                   ? "form closed"
                   : null
-        return { role, label: ROLE_LABELS[role], reason }
+        return { role, label: roleLabel(role, application.events.slug), reason }
       })
     : null
   const roleBlockedReason =
@@ -150,7 +150,7 @@ export default async function ApplicationPage({
   const timeline = [
     { label: "Started", at: application.created_at },
     ...archives.data.map((a) => ({
-      label: `Role changed from ${ROLE_LABELS[a.from_role]} to ${ROLE_LABELS[a.to_role]}`,
+      label: `Role changed from ${roleLabel(a.from_role, application.events.slug)} to ${roleLabel(a.to_role, application.events.slug)}`,
       at: a.created_at,
     })),
     { label: "Submitted", at: application.submitted_at },
@@ -201,7 +201,7 @@ export default async function ApplicationPage({
           </CardTitle>
           <CardDescription>
             {application.profiles.email} · {application.events.name} ·{" "}
-            {ROLE_LABELS[application.role]}
+            {roleLabel(application.role, application.events.slug)}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -285,10 +285,11 @@ export default async function ApplicationPage({
         <Card key={archive.id}>
           <CardHeader>
             <CardTitle>
-              Archived {ROLE_LABELS[archive.from_role]} answers
+              Archived {roleLabel(archive.from_role, application.events.slug)}{" "}
+              answers
             </CardTitle>
             <CardDescription>
-              Moved to {ROLE_LABELS[archive.to_role]} on{" "}
+              Moved to {roleLabel(archive.to_role, application.events.slug)} on{" "}
               {formatInZone(archive.created_at)}
               {archive.profiles && ` by ${archive.profiles.email}`}
             </CardDescription>
