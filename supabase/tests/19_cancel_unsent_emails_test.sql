@@ -61,10 +61,13 @@ insert into auth.users (id, email) values
   ('d9000000-0000-0000-0000-000000000002', 'd9000000-0000-0000-0000-000000000002@example.test'),
   ('d9000000-0000-0000-0000-000000000003', 'd9000000-0000-0000-0000-000000000003@example.test'),
   ('d9000000-0000-0000-0000-000000000004', 'd9000000-0000-0000-0000-000000000004@example.test'),
-  ('d9000000-0000-0000-0000-0000000000a0', 'cancel-organizer@example.test');
+  ('d9000000-0000-0000-0000-0000000000a0', 'cancel-organizer@example.test'),
+  ('d9000000-0000-0000-0000-0000000000c0', 'cancel-owner@example.test');
 update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
-insert into public.admin_allowlist (email, level) values ('cancel-organizer@example.test', 'organizer');
+insert into public.admin_allowlist (email, level) values
+  ('cancel-owner@example.test', 'owner'),
+  ('cancel-organizer@example.test', 'organizer');
 
 insert into public.events (id, slug, name) values
   ('e9000000-0000-0000-0000-000000000001', 'pgtap-cancel-emails', 'pgTAP Cancel Emails');
@@ -115,7 +118,7 @@ select is(pg_temp.emails('test.moved'), 'cancelled:waitlisted,sent:accepted', 'm
 update public.applications set answers = '{}' where id = current_setting('test.kept')::uuid;
 select is(pg_temp.emails('test.kept'), 'pending:accepted', 'other updates leave emails pending');
 
-select pg_temp.login('d9000000-0000-0000-0000-0000000000a0', 'cancel-organizer@example.test');
+select pg_temp.login('d9000000-0000-0000-0000-0000000000c0', 'cancel-owner@example.test');
 select is(
   (select count(*) from public.admin_claim_emails('f9000000-0000-0000-0000-000000000001', 10)),
   1::bigint,

@@ -65,12 +65,14 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('d7000000-0000-0000-0000-000000000006', 'wd@emails.test', '{"full_name": "Wd"}'),
   ('d7000000-0000-0000-0000-000000000007', 'late@emails.test', '{"full_name": "Late"}'),
   ('d7000000-0000-0000-0000-0000000000a0', 'emails-organizer@example.test', '{}'),
+  ('d7000000-0000-0000-0000-0000000000c0', 'emails-owner@example.test', '{}'),
   ('d7000000-0000-0000-0000-0000000000b0', 'emails-reviewer@example.test', '{}');
 update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
 update public.profiles set email = 'stale@emails.test' where id = 'd7000000-0000-0000-0000-000000000002';
 
 insert into public.admin_allowlist (email, level) values
+  ('emails-owner@example.test', 'owner'),
   ('emails-organizer@example.test', 'organizer'),
   ('emails-reviewer@example.test', 'reviewer');
 
@@ -101,18 +103,25 @@ select pg_temp.login('d7000000-0000-0000-0000-000000000006', 'wd@emails.test', '
 select public.withdraw_application(current_setting('test.wd')::uuid);
 reset role;
 
-select plan(30);
+select plan(34);
 
 select is((select count(*) from public.email_log where form_id = 'f7000000-0000-0000-0000-000000000001'), 0::bigint, 'decisions before release queue nothing');
 
 select pg_temp.login('d7000000-0000-0000-0000-0000000000b0', 'emails-reviewer@example.test');
 select throws_ok(
   $$select public.admin_release_decisions('f7000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'reviewer cannot release decisions'
+  '42501', 'Owner access required', 'reviewer cannot release decisions'
 );
 reset role;
 
 select pg_temp.login('d7000000-0000-0000-0000-0000000000a0', 'emails-organizer@example.test');
+select throws_ok(
+  $$select public.admin_release_decisions('f7000000-0000-0000-0000-000000000001')$$,
+  '42501', 'Owner access required', 'organizer cannot release decisions'
+);
+reset role;
+
+select pg_temp.login('d7000000-0000-0000-0000-0000000000c0', 'emails-owner@example.test');
 select throws_ok(
   $$select public.admin_release_decisions('f7000000-0000-0000-0000-000000000002')$$,
   'P0001', 'Publish the form before releasing decisions', 'unpublished forms cannot be released'
@@ -139,27 +148,42 @@ select pg_temp.login('d7000000-0000-0000-0000-0000000000b0', 'emails-reviewer@ex
 select is((select count(*) from public.email_log), 0::bigint, 'reviewer cannot read the email log');
 select throws_ok(
   $$select * from public.admin_claim_emails('f7000000-0000-0000-0000-000000000001', 10)$$,
-  '42501', 'Organizer access required', 'reviewer cannot claim emails'
+  '42501', 'Owner access required', 'reviewer cannot claim emails'
 );
 select throws_ok(
   $$select public.admin_retry_failed_emails('f7000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'reviewer cannot retry emails'
+  '42501', 'Owner access required', 'reviewer cannot retry emails'
+);
+reset role;
+
+select pg_temp.login('d7000000-0000-0000-0000-0000000000a0', 'emails-organizer@example.test');
+select throws_ok(
+  $$select * from public.admin_claim_emails('f7000000-0000-0000-0000-000000000001', 10)$$,
+  '42501', 'Owner access required', 'organizer cannot claim emails'
+);
+select throws_ok(
+  $$select public.admin_finish_email(gen_random_uuid(), true)$$,
+  '42501', 'Owner access required', 'organizer cannot finish emails'
+);
+select throws_ok(
+  $$select public.admin_retry_failed_emails('f7000000-0000-0000-0000-000000000001')$$,
+  '42501', 'Owner access required', 'organizer cannot retry emails'
 );
 reset role;
 
 select pg_temp.login('d7000000-0000-0000-0000-000000000001', 'acc@emails.test', 'otp');
 select throws_ok(
   $$select * from public.admin_claim_emails('f7000000-0000-0000-0000-000000000001', 10)$$,
-  '42501', 'Organizer access required', 'applicant cannot claim emails'
+  '42501', 'Owner access required', 'applicant cannot claim emails'
 );
 select throws_ok(
   $$select public.admin_finish_email(gen_random_uuid(), true)$$,
-  '42501', 'Organizer access required', 'applicant cannot finish emails'
+  '42501', 'Owner access required', 'applicant cannot finish emails'
 );
 select public.decline_application_offer(current_setting('test.acc')::uuid);
 reset role;
 
-select pg_temp.login('d7000000-0000-0000-0000-0000000000a0', 'emails-organizer@example.test');
+select pg_temp.login('d7000000-0000-0000-0000-0000000000c0', 'emails-owner@example.test');
 select is(
   (select string_agg(concat_ws('|', email, full_name, event_name, role, decision, coalesce(previous_decision::text, '-')), ',' order by email)
    from public.admin_claim_emails('f7000000-0000-0000-0000-000000000001', 10)),
@@ -179,11 +203,11 @@ select is(
 );
 select lives_ok(
   format('select public.admin_finish_email(id, true, null, %L) from public.email_log where application_id = %L', 'msg-1', current_setting('test.wait')),
-  'organizer marks an email sent'
+  'owner marks an email sent'
 );
 select lives_ok(
   format('select public.admin_finish_email(id, false, %L) from public.email_log where application_id = %L', 'SMTP down', current_setting('test.rej')),
-  'organizer marks an email failed'
+  'owner marks an email failed'
 );
 select throws_ok(
   format('select public.admin_finish_email(id, true) from public.email_log where application_id = %L', current_setting('test.wait')),
@@ -217,7 +241,7 @@ select is(pg_temp.emails('test.late'), 'cancelled:accepted:-,pending:rejected:-'
 select pg_temp.decide('test.late', 'pending');
 select is(pg_temp.emails('test.late'), 'cancelled:accepted:-,cancelled:rejected:-', 'moving back to pending cancels the queued email');
 
-select pg_temp.login('d7000000-0000-0000-0000-0000000000a0', 'emails-organizer@example.test');
+select pg_temp.login('d7000000-0000-0000-0000-0000000000c0', 'emails-owner@example.test');
 select is(public.admin_retry_failed_emails('f7000000-0000-0000-0000-000000000001'), 1, 'retry moves failed emails back to pending');
 select is(
   (select count(*) from public.admin_claim_emails('f7000000-0000-0000-0000-000000000001', 10)),
@@ -228,7 +252,7 @@ reset role;
 
 update public.email_log set claimed_at = now() - interval '11 minutes' where application_id = current_setting('test.rej')::uuid;
 
-select pg_temp.login('d7000000-0000-0000-0000-0000000000a0', 'emails-organizer@example.test');
+select pg_temp.login('d7000000-0000-0000-0000-0000000000c0', 'emails-owner@example.test');
 select is(
   (select count(*) from public.admin_claim_emails('f7000000-0000-0000-0000-000000000001', 10)),
   1::bigint,

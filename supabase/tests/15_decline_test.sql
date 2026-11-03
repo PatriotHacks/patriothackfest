@@ -46,10 +46,13 @@ insert into auth.users (id, email) values
   ('d1000000-0000-0000-0000-000000000007', 'd1000000-0000-0000-0000-000000000007@example.test'),
   ('d1000000-0000-0000-0000-000000000008', 'd1000000-0000-0000-0000-000000000008@example.test'),
   ('d1000000-0000-0000-0000-000000000009', 'd1000000-0000-0000-0000-000000000009@example.test'),
-  ('d1000000-0000-0000-0000-0000000000a0', 'decline-organizer@example.test');
+  ('d1000000-0000-0000-0000-0000000000a0', 'decline-organizer@example.test'),
+  ('d1000000-0000-0000-0000-0000000000c0', 'decline-owner@example.test');
 update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
-insert into public.admin_allowlist (email, level) values ('decline-organizer@example.test', 'organizer');
+insert into public.admin_allowlist (email, level) values
+  ('decline-owner@example.test', 'owner'),
+  ('decline-organizer@example.test', 'organizer');
 
 insert into public.events (id, slug, name, starts_at) values
   ('e1000000-0000-0000-0000-000000000001', 'pgtap-decline', 'pgTAP Decline', now() + interval '30 days'),
@@ -101,7 +104,7 @@ select throws_ok(
 );
 reset role;
 
-select pg_temp.login('d1000000-0000-0000-0000-0000000000a0', 'decline-organizer@example.test');
+select pg_temp.login('d1000000-0000-0000-0000-0000000000c0', 'decline-owner@example.test');
 select public.admin_release_decisions('f1000000-0000-0000-0000-000000000001');
 reset role;
 

@@ -40,10 +40,13 @@ insert into auth.users (id, email) values
   ('d8000000-0000-0000-0000-000000000002', 'd8000000-0000-0000-0000-000000000002@example.test'),
   ('d8000000-0000-0000-0000-000000000003', 'd8000000-0000-0000-0000-000000000003@example.test'),
   ('d8000000-0000-0000-0000-000000000004', 'd8000000-0000-0000-0000-000000000004@example.test'),
-  ('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
+  ('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test'),
+  ('d8000000-0000-0000-0000-0000000000c0', 'roles-owner@example.test');
 update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
-insert into public.admin_allowlist (email, level) values ('roles-organizer@example.test', 'organizer');
+insert into public.admin_allowlist (email, level) values
+  ('roles-owner@example.test', 'owner'),
+  ('roles-organizer@example.test', 'organizer');
 
 insert into public.events (id, slug, name) values
   ('e8000000-0000-0000-0000-000000000001', 'pgtap-roles-open', 'pgTAP Roles Open'),
@@ -71,7 +74,13 @@ select set_config('test.emailed', pg_temp.apply('d8000000-0000-0000-0000-0000000
 
 select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
 insert into public.application_decisions (application_id, decision) values (current_setting('test.accepted')::uuid, 'accepted');
+reset role;
+
+select pg_temp.login('d8000000-0000-0000-0000-0000000000c0', 'roles-owner@example.test');
 select public.admin_release_decisions('f8000000-0000-0000-0000-000000000004');
+reset role;
+
+select pg_temp.login('d8000000-0000-0000-0000-0000000000a0', 'roles-organizer@example.test');
 insert into public.application_decisions (application_id, decision) values (current_setting('test.emailed')::uuid, 'accepted');
 reset role;
 
@@ -124,6 +133,9 @@ select lives_ok(
   format('select public.admin_change_application_role(%L, %L)', current_setting('test.accepted'), 'volunteer'),
   'organizer moves an accepted application with a queued email'
 );
+reset role;
+
+select pg_temp.login('d8000000-0000-0000-0000-0000000000c0', 'roles-owner@example.test');
 select is(
   (select count(*) from public.admin_claim_emails('f8000000-0000-0000-0000-000000000004', 10)),
   0::bigint,

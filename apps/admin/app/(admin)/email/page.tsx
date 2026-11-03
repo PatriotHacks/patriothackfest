@@ -15,7 +15,7 @@ export const maxDuration = 60
 export default async function EmailPage({ searchParams }: PageProps<"/email">) {
   const { event: slug } = await searchParams
   const { supabase, level, email } = await getAdmin()
-  if (!hasLevel(level, "organizer")) redirect("/forms")
+  if (!hasLevel(level, "owner")) redirect("/forms")
 
   const [template, events] = await Promise.all([
     supabase

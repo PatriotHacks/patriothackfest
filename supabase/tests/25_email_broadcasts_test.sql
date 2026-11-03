@@ -26,6 +26,13 @@ as $$
   select pg_temp.login('dc000000-0000-0000-0000-0000000000a0', 'broadcast-organizer@example.test');
 $$;
 
+create function pg_temp.owner()
+returns void
+language sql
+as $$
+  select pg_temp.login('dc000000-0000-0000-0000-0000000000c0', 'broadcast-owner@example.test');
+$$;
+
 create function pg_temp.start(p_id uuid, p_form uuid)
 returns uuid
 language plpgsql
@@ -102,10 +109,12 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('dc000000-0000-0000-0000-000000000006', 'dc000000-0000-0000-0000-000000000006@example.test', '{"full_name": "Vol"}'),
   ('dc000000-0000-0000-0000-000000000007', 'dc000000-0000-0000-0000-000000000007@example.test', '{"full_name": "Other Event"}'),
   ('dc000000-0000-0000-0000-0000000000a0', 'broadcast-organizer@example.test', '{}'),
+  ('dc000000-0000-0000-0000-0000000000c0', 'broadcast-owner@example.test', '{}'),
   ('dc000000-0000-0000-0000-0000000000b0', 'broadcast-reviewer@example.test', '{}');
 update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
 insert into public.admin_allowlist (email, level) values
+  ('broadcast-owner@example.test', 'owner'),
   ('broadcast-organizer@example.test', 'organizer'),
   ('broadcast-reviewer@example.test', 'reviewer');
 
@@ -140,37 +149,50 @@ reset role;
 
 select pg_temp.decide('test.p1', 'accepted');
 
-select plan(46);
+select plan(52);
 
 select pg_temp.login('dc000000-0000-0000-0000-0000000000b0', 'broadcast-reviewer@example.test');
 select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'reviewer cannot count recipients');
+  '42501', 'Owner access required', 'reviewer cannot count recipients');
 select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3)$$,
-  '42501', 'Organizer access required', 'reviewer cannot create broadcasts');
+  '42501', 'Owner access required', 'reviewer cannot create broadcasts');
 select throws_ok($$select * from public.admin_claim_broadcast_emails(gen_random_uuid(), 10)$$,
-  '42501', 'Organizer access required', 'reviewer cannot claim broadcast emails');
+  '42501', 'Owner access required', 'reviewer cannot claim broadcast emails');
 select throws_ok($$select public.admin_retry_failed_broadcast(gen_random_uuid())$$,
-  '42501', 'Organizer access required', 'reviewer cannot retry broadcasts');
+  '42501', 'Owner access required', 'reviewer cannot retry broadcasts');
 select throws_ok($$select * from public.admin_broadcast_history('ec000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'reviewer cannot read broadcast history');
+  '42501', 'Owner access required', 'reviewer cannot read broadcast history');
 reset role;
 
 select pg_temp.login('dc000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000001@example.test', 'otp');
 select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'applicant cannot count recipients');
+  '42501', 'Owner access required', 'applicant cannot count recipients');
 select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3)$$,
-  '42501', 'Organizer access required', 'applicant cannot create broadcasts');
+  '42501', 'Owner access required', 'applicant cannot create broadcasts');
 select throws_ok($$select * from public.admin_claim_broadcast_emails(gen_random_uuid(), 10)$$,
-  '42501', 'Organizer access required', 'applicant cannot claim broadcast emails');
+  '42501', 'Owner access required', 'applicant cannot claim broadcast emails');
 select throws_ok($$select public.admin_retry_failed_broadcast(gen_random_uuid())$$,
-  '42501', 'Organizer access required', 'applicant cannot retry broadcasts');
+  '42501', 'Owner access required', 'applicant cannot retry broadcasts');
 select throws_ok($$select * from public.admin_broadcast_history('ec000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'applicant cannot read broadcast history');
+  '42501', 'Owner access required', 'applicant cannot read broadcast history');
+reset role;
+
+select pg_temp.organizer();
+select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
+  '42501', 'Owner access required', 'organizer cannot count recipients');
+select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3)$$,
+  '42501', 'Owner access required', 'organizer cannot create broadcasts');
+select throws_ok($$select * from public.admin_claim_broadcast_emails(gen_random_uuid(), 10)$$,
+  '42501', 'Owner access required', 'organizer cannot claim broadcast emails');
+select throws_ok($$select public.admin_retry_failed_broadcast(gen_random_uuid())$$,
+  '42501', 'Owner access required', 'organizer cannot retry broadcasts');
+select throws_ok($$select * from public.admin_broadcast_history('ec000000-0000-0000-0000-000000000001')$$,
+  '42501', 'Owner access required', 'organizer cannot read broadcast history');
 reset role;
 
 select set_config('test.used_before', pg_temp.daily_used()::text, true);
 
-select pg_temp.organizer();
+select pg_temp.owner();
 select is(
   (select row(c.*)::text from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001') c),
   format('(3,%s)', current_setting('test.used_before')),
@@ -207,7 +229,7 @@ select set_config('test.b2', (select broadcast_id::text from public.admin_create
   'ec000000-0000-0000-0000-000000000001', 'Participants', 'Body', 2, 'participant')), true);
 select is(
   (select count(*) from public.email_broadcasts where event_id = 'ec000000-0000-0000-0000-000000000001'),
-  2::bigint, 'organizers read broadcasts and may run them concurrently'
+  2::bigint, 'owners read broadcasts and may run them concurrently'
 );
 reset role;
 
@@ -222,7 +244,7 @@ select is(
 );
 select is(
   (select created_by from public.email_broadcasts where id = current_setting('test.b1')::uuid),
-  'dc000000-0000-0000-0000-0000000000a0'::uuid, 'records the sender'
+  'dc000000-0000-0000-0000-0000000000c0'::uuid, 'records the sender'
 );
 
 select throws_ok(
@@ -261,7 +283,7 @@ select is(
 update public.email_log set status = 'failed', claimed_at = now(), error = 'boom'
 where id = pg_temp.row_id('test.b1', 'test.p1');
 
-select pg_temp.organizer();
+select pg_temp.owner();
 select is(
   (select row(emails_pending, emails_sending, emails_sent, emails_failed, emails_cancelled)::text
    from public.admin_release_counts('fc000000-0000-0000-0000-000000000001')),
@@ -285,7 +307,7 @@ select is(
   'cancelled:Application withdrawn', 'withdrawing cancels pending broadcast emails'
 );
 
-select pg_temp.organizer();
+select pg_temp.owner();
 select is(
   (select string_agg(email || ':' || full_name || ':' || event_name, ',' order by email)
    from public.admin_claim_broadcast_emails(current_setting('test.b1')::uuid, 10)),
@@ -303,7 +325,7 @@ select is(
   2::bigint, 'claimed broadcast emails are marked as sending'
 );
 
-select pg_temp.organizer();
+select pg_temp.owner();
 select set_config('test.used_before', pg_temp.reported_daily_used()::text, true);
 select public.admin_finish_email(pg_temp.row_id('test.b1', 'test.p1'), true, null, 'message-1');
 select is(
@@ -315,8 +337,8 @@ select is(
   (select array_agg(row(h.subject, h.role, h.sender_email, h.recipients, h.sent, h.failed, h.pending, h.sending, h.cancelled)::text order by h.created_at desc)
    from public.admin_broadcast_history('ec000000-0000-0000-0000-000000000001') h),
   array[
-    '(Participants,participant,broadcast-organizer@example.test,2,0,0,1,0,1)',
-    '("Hello {{name}}",,broadcast-organizer@example.test,3,1,0,0,1,1)'
+    '(Participants,participant,broadcast-owner@example.test,2,0,0,1,0,1)',
+    '("Hello {{name}}",,broadcast-owner@example.test,3,1,0,0,1,1)'
   ],
   'history lists broadcasts newest first with delivery counts'
 );
@@ -336,13 +358,14 @@ select throws_ok(
 reset role;
 
 select pg_temp.organizer();
+select is((select count(*) from public.email_broadcasts where event_id = 'ec000000-0000-0000-0000-000000000001'), 2::bigint, 'organizers still read broadcasts');
 select throws_ok(
   format($$update public.email_broadcasts set subject = 'x' where id = %L$$, current_setting('test.b1')),
   '42501', null, 'organizers cannot edit broadcasts'
 );
 reset role;
 
-select pg_temp.organizer();
+select pg_temp.owner();
 select set_config('test.used_before', pg_temp.reported_daily_used()::text, true);
 select set_config('test.b3', (select broadcast_id::text from public.admin_create_broadcast(
   'ec000000-0000-0000-0000-000000000001', 'Everyone', 'Body', 2)), true);
@@ -366,7 +389,7 @@ select pg_temp.login('dc000000-0000-0000-0000-000000000001', 'dc000000-0000-0000
 select public.submit_application(current_setting('test.p1')::uuid);
 reset role;
 
-select pg_temp.organizer();
+select pg_temp.owner();
 select is(
   (select count(*) from public.admin_claim_broadcast_emails(current_setting('test.b3')::uuid, 10)),
   2::bigint, 'resubmitted applicants who changed role still get broadcasts to every role'

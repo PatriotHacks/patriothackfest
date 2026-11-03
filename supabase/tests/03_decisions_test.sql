@@ -48,7 +48,7 @@ set published_schema = '{"title": "Participant", "description": null, "fields": 
 ]}'
 where id = 'f0000000-0000-0000-0000-000000000001';
 
-select plan(16);
+select plan(18);
 
 select pg_temp.login('11111111-1111-1111-1111-111111111111', 'alice@example.test');
 select set_config('test.alice_app', public.start_application('f0000000-0000-0000-0000-000000000001')::text, true);
@@ -72,7 +72,7 @@ select is(
 );
 select throws_ok(
   $$select public.admin_release_decisions('f0000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'reviewer cannot release decisions'
+  '42501', 'Owner access required', 'reviewer cannot release decisions'
 );
 reset role;
 
@@ -84,14 +84,21 @@ select throws_ok(
 );
 select throws_ok(
   $$select public.admin_release_decisions('f0000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'applicant cannot release decisions'
+  '42501', 'Owner access required', 'applicant cannot release decisions'
 );
 reset role;
 
 select pg_temp.login('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'organizer@example.test');
+select throws_ok(
+  $$select public.admin_release_decisions('f0000000-0000-0000-0000-000000000001')$$,
+  '42501', 'Owner access required', 'organizer cannot release decisions'
+);
+reset role;
+
+select pg_temp.login('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'owner@example.test');
 select lives_ok(
   $$select public.admin_release_decisions('f0000000-0000-0000-0000-000000000001')$$,
-  'organizer releases decisions'
+  'owner releases decisions'
 );
 select throws_ok(
   $$select public.admin_release_decisions('f0000000-0000-0000-0000-000000000001')$$,
@@ -133,6 +140,11 @@ select is(
   (select row(decision, decided_by)::text from public.application_decisions where application_id = current_setting('test.alice_app')::uuid),
   row('waitlisted'::public.decision, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid)::text,
   'organizer decision is stored and stamped'
+);
+select is(
+  (select string_agg(status || ':' || decision, ',' order by status) from public.email_log where application_id = current_setting('test.alice_app')::uuid),
+  'cancelled:accepted,pending:waitlisted',
+  'organizer decision change queues a pending status email'
 );
 select lives_ok(
   format('insert into public.application_decisions (application_id, decision) values (%L, %L)', current_setting('test.bob_app'), 'rejected'),

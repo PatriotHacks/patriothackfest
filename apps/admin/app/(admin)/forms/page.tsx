@@ -23,6 +23,7 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
   const { event: slug } = await searchParams
   const { supabase, level } = await getAdmin()
   const canEdit = hasLevel(level, "organizer")
+  const isOwner = hasLevel(level, "owner")
 
   const [events, forms] = await Promise.all([
     supabase
@@ -111,19 +112,17 @@ export default async function FormsPage({ searchParams }: PageProps<"/forms">) {
                             Applications
                           </Link>
                         </Button>
+                        {isOwner && (
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/forms/${form.id}/release`}>
+                              Release decisions
+                            </Link>
+                          </Button>
+                        )}
                         {canEdit && (
-                          <>
-                            <Button asChild variant="outline" size="sm">
-                              <Link href={`/forms/${form.id}/release`}>
-                                Release decisions
-                              </Link>
-                            </Button>
-                            <Button asChild variant="outline" size="sm">
-                              <a href={`/forms/${form.id}/export`}>
-                                Export CSV
-                              </a>
-                            </Button>
-                          </>
+                          <Button asChild variant="outline" size="sm">
+                            <a href={`/forms/${form.id}/export`}>Export CSV</a>
+                          </Button>
                         )}
                       </div>
                     )}
