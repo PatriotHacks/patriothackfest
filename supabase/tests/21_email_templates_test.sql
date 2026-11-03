@@ -53,7 +53,7 @@ insert into public.forms (id, event_id, role, title, status, submissions_close_a
   ('f2100000-0000-0000-0000-000000000001', 'e2100000-0000-0000-0000-000000000001', 'participant', 'Participant', 'published',
    now() + interval '1 day', now() + interval '2 days', '{"title": "Participant", "description": null, "fields": []}');
 
-select plan(23);
+select plan(24);
 
 select is(
   (select array_agg(concat_ws('|', key, subject, body)) from public.email_templates),
@@ -79,28 +79,28 @@ select is(
   0, 'reviewers cannot update templates'
 );
 
+select pg_temp.login('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test');
+select is((select count(*) from public.email_templates), 0::bigint, 'organizers cannot read templates');
+reset role;
+select is(
+  pg_temp.update_subject('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test', 'oauth', 'Hijacked'),
+  0, 'organizers cannot update templates'
+);
+
 select pg_temp.login('d2100000-0000-0000-0000-0000000000a0', 'templates-owner@example.test');
 select is((select count(*) from public.email_templates), 1::bigint, 'owners read templates');
 reset role;
 select is(
-  pg_temp.update_subject('d2100000-0000-0000-0000-0000000000a0', 'templates-owner@example.test', 'oauth', 'Owner subject'),
+  pg_temp.update_subject('d2100000-0000-0000-0000-0000000000a0', 'templates-owner@example.test', 'oauth', 'Welcome to {{event_name}}'),
   1, 'owners update templates'
-);
-
-select pg_temp.login('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test');
-select is((select count(*) from public.email_templates), 1::bigint, 'organizers read templates');
-reset role;
-select is(
-  pg_temp.update_subject('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test', 'oauth', 'Welcome to {{event_name}}'),
-  1, 'organizers update templates'
 );
 select is(
   (select subject || '|' || updated_by::text || '|' || (updated_at = now())::text from public.email_templates where key = 'status_update'),
-  'Welcome to {{event_name}}|d2100000-0000-0000-0000-0000000000b0|true',
+  'Welcome to {{event_name}}|d2100000-0000-0000-0000-0000000000a0|true',
   'updates stamp the editor and time'
 );
 
-select pg_temp.login('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test');
+select pg_temp.login('d2100000-0000-0000-0000-0000000000a0', 'templates-owner@example.test');
 select throws_ok(
   $$update public.email_templates set subject = E' \t ' where key = 'status_update'$$,
   '23514', null, 'subject cannot be blank'
@@ -156,6 +156,9 @@ reset role;
 select pg_temp.login('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test');
 insert into public.application_decisions (application_id, decision)
 values (current_setting('test.app')::uuid, 'accepted');
+reset role;
+
+select pg_temp.login('d2100000-0000-0000-0000-0000000000a0', 'templates-owner@example.test');
 select public.admin_release_decisions('f2100000-0000-0000-0000-000000000001');
 select is(
   (select concat_ws('|', email, full_name, event_name, event_starts_at, event_ends_at, role, decision)
@@ -169,7 +172,14 @@ reset role;
 select pg_temp.login('d2100000-0000-0000-0000-0000000000c0', 'templates-reviewer@example.test');
 select throws_ok(
   $$select * from public.admin_claim_emails('f2100000-0000-0000-0000-000000000001', 10)$$,
-  '42501', 'Organizer access required', 'reviewers still cannot claim emails'
+  '42501', 'Owner access required', 'reviewers still cannot claim emails'
+);
+reset role;
+
+select pg_temp.login('d2100000-0000-0000-0000-0000000000b0', 'templates-organizer@example.test');
+select throws_ok(
+  $$select * from public.admin_claim_emails('f2100000-0000-0000-0000-000000000001', 10)$$,
+  '42501', 'Owner access required', 'organizers cannot claim emails'
 );
 reset role;
 

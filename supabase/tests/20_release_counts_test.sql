@@ -56,10 +56,12 @@ insert into auth.users (id, email) values
   ('da000000-0000-0000-0000-000000000006', 'da000000-0000-0000-0000-000000000006@example.test'),
   ('da000000-0000-0000-0000-000000000007', 'da000000-0000-0000-0000-000000000007@example.test'),
   ('da000000-0000-0000-0000-0000000000a0', 'counts-organizer@example.test'),
+  ('da000000-0000-0000-0000-0000000000c0', 'counts-owner@example.test'),
   ('da000000-0000-0000-0000-0000000000b0', 'counts-reviewer@example.test');
 update public.profiles set full_name = coalesce(full_name, 'Applicant'), school = 'George Mason University', phone = '+17035551234', date_of_birth = '2000-01-01' where email like '%.test';
 
 insert into public.admin_allowlist (email, level) values
+  ('counts-owner@example.test', 'owner'),
   ('counts-organizer@example.test', 'organizer'),
   ('counts-reviewer@example.test', 'reviewer');
 
@@ -87,9 +89,9 @@ select pg_temp.decide('test.wait', 'waitlisted');
 select pg_temp.decide('test.rej', 'rejected');
 select pg_temp.decide('test.pend', 'pending');
 
-select plan(4);
+select plan(5);
 
-select pg_temp.login('da000000-0000-0000-0000-0000000000a0', 'counts-organizer@example.test');
+select pg_temp.login('da000000-0000-0000-0000-0000000000c0', 'counts-owner@example.test');
 select is(
   (select row(c.*)::text from public.admin_release_counts('fa000000-0000-0000-0000-000000000001') c),
   '(6,2,1,1,1,1,0,0,0,0,0,0)',
@@ -106,7 +108,7 @@ where application_id = current_setting('test.acc1')::uuid;
 update public.email_log set status = 'failed', claimed_at = now()
 where application_id = current_setting('test.rej')::uuid;
 
-select pg_temp.login('da000000-0000-0000-0000-0000000000a0', 'counts-organizer@example.test');
+select pg_temp.login('da000000-0000-0000-0000-0000000000c0', 'counts-owner@example.test');
 select is(
   (select row(c.*)::text from public.admin_release_counts('fa000000-0000-0000-0000-000000000001') c),
   '(6,2,1,1,1,1,1,1,0,1,1,1)',
@@ -114,17 +116,24 @@ select is(
 );
 reset role;
 
+select pg_temp.login('da000000-0000-0000-0000-0000000000a0', 'counts-organizer@example.test');
+select throws_ok(
+  $$select * from public.admin_release_counts('fa000000-0000-0000-0000-000000000001')$$,
+  '42501', 'Owner access required', 'organizer cannot read release counts'
+);
+reset role;
+
 select pg_temp.login('da000000-0000-0000-0000-0000000000b0', 'counts-reviewer@example.test');
 select throws_ok(
   $$select * from public.admin_release_counts('fa000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'reviewer cannot read release counts'
+  '42501', 'Owner access required', 'reviewer cannot read release counts'
 );
 reset role;
 
 select pg_temp.login('da000000-0000-0000-0000-000000000001', 'da000000-0000-0000-0000-000000000001@example.test', 'otp');
 select throws_ok(
   $$select * from public.admin_release_counts('fa000000-0000-0000-0000-000000000001')$$,
-  '42501', 'Organizer access required', 'applicant cannot read release counts'
+  '42501', 'Owner access required', 'applicant cannot read release counts'
 );
 reset role;
 
