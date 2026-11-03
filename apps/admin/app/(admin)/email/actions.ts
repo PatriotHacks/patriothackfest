@@ -47,7 +47,7 @@ export async function saveEmailTemplate(
   body: string
 ): Promise<ActionResult> {
   const template = templateInput.parse({ subject, body })
-  const { supabase } = await requireAdmin("organizer")
+  const { supabase } = await requireAdmin("owner")
   const errors = validateTemplate(template)
   if (errors.length > 0) return { error: errors.join(" ") }
 
@@ -92,7 +92,7 @@ export async function sendTestEmail(
   body: string
 ): Promise<ActionResult> {
   const template = templateInput.parse({ subject, body })
-  const { email } = await requireAdmin("organizer")
+  const { email } = await requireAdmin("owner")
   const errors = validateTemplate(template)
   if (errors.length > 0) return { error: errors.join(" ") }
 
@@ -106,7 +106,7 @@ export async function sendBroadcastTest(
   body: string
 ): Promise<ActionResult> {
   const template = templateInput.parse({ subject, body })
-  const { email } = await requireAdmin("organizer")
+  const { email } = await requireAdmin("owner")
   const errors = validateTemplate(template, BROADCAST_VARIABLES)
   if (errors.length > 0) return { error: errors.join(" ") }
 
@@ -122,7 +122,7 @@ export async function getBroadcastRecipientCount(
   { error: string } | { error: null; recipients: number; dailyUsed: number }
 > {
   const target = broadcastTarget.parse({ eventId, role })
-  const { supabase } = await requireAdmin("organizer")
+  const { supabase } = await requireAdmin("owner")
 
   const { data, error } = await supabase
     .rpc("admin_broadcast_recipient_count", {
@@ -149,7 +149,7 @@ export async function createBroadcast(
   const target = broadcastTarget.parse({ eventId, role })
   const template = templateInput.parse({ subject, body })
   const count = z.int().positive().parse(expected)
-  const { supabase } = await requireAdmin("organizer")
+  const { supabase } = await requireAdmin("owner")
   const errors = validateTemplate(template, BROADCAST_VARIABLES)
   if (errors.length > 0) return { error: errors.join(" ") }
   if (!isEmailConfigured()) return { error: EMAIL_NOT_CONFIGURED }
@@ -200,7 +200,7 @@ export async function sendBroadcastBatch(
   broadcastId: string
 ): Promise<SendEmailsResult> {
   const id = z.guid().parse(broadcastId)
-  const { supabase } = await requireAdmin("organizer")
+  const { supabase } = await requireAdmin("owner")
   if (!isEmailConfigured()) return { error: EMAIL_NOT_CONFIGURED }
   const { smtp } = emailSettings()
 
@@ -275,7 +275,7 @@ export async function retryBroadcast(
   broadcastId: string
 ): Promise<RetryEmailsResult> {
   const id = z.guid().parse(broadcastId)
-  const { supabase } = await requireAdmin("organizer")
+  const { supabase } = await requireAdmin("owner")
 
   const { data, error } = await supabase.rpc("admin_retry_failed_broadcast", {
     p_broadcast_id: id,

@@ -31,7 +31,7 @@ export async function releaseDecisions(
   formId: string
 ): Promise<ActionResult & { queued?: number; undecided?: number }> {
   const id = z.guid().parse(formId)
-  const { supabase } = await requireAdmin("organizer")
+  const { supabase } = await requireAdmin("owner")
 
   const { data, error } = await supabase.rpc("admin_release_decisions", {
     p_form_id: id,
@@ -46,7 +46,7 @@ export async function sendPendingEmails(
   formId: string
 ): Promise<SendEmailsResult> {
   const id = z.guid().parse(formId)
-  const { supabase } = await requireAdmin("organizer")
+  const { supabase } = await requireAdmin("owner")
   if (!isEmailConfigured()) return { error: EMAIL_NOT_CONFIGURED }
   const { smtp, portalUrl } = emailSettings()
 
@@ -131,7 +131,7 @@ export async function retryFailedEmails(
   formId: string
 ): Promise<RetryEmailsResult> {
   const id = z.guid().parse(formId)
-  const { supabase } = await requireAdmin("organizer")
+  const { supabase } = await requireAdmin("owner")
 
   const { data, error } = await supabase.rpc("admin_retry_failed_emails", {
     p_form_id: id,
