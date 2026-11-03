@@ -54,7 +54,7 @@ export default async function ReleasePage({
   const { formId } = await params
   if (!z.guid().safeParse(formId).success) notFound()
   const { supabase, level } = await getAdmin()
-  if (!hasLevel(level, "organizer")) redirect("/forms")
+  if (!hasLevel(level, "owner")) redirect("/forms")
 
   const [formResult, countsResult] = await Promise.all([
     supabase

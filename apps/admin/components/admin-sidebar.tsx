@@ -57,7 +57,7 @@ const NAV: {
     icon: InboxIcon,
     min: "reviewer",
   },
-  { href: "/email", label: "Email", icon: MailIcon, min: "organizer" },
+  { href: "/email", label: "Email", icon: MailIcon, min: "owner" },
   { href: "/admins", label: "Admins", icon: ShieldIcon, min: "owner" },
 ]
 
