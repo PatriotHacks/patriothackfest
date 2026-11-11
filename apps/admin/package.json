@@ -20,7 +20,7 @@
     "@workspace/supabase": "workspace:*",
     "@workspace/ui": "workspace:*",
     "lucide-react": "^1.54.0",
-    "next": "16.4.0",
+    "next": "16.4.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",

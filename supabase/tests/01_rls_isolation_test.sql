@@ -109,7 +109,11 @@ select throws_ok(
 reset role;
 
 select pg_temp.login('cccccccc-cccc-cccc-cccc-cccccccccccc', 'reviewer@example.test');
-select is((select count(*) from public.applications), 2::bigint, 'reviewer sees all applications');
+select is(
+  (select count(*) from public.applications where event_id = 'e0000000-0000-0000-0000-000000000001'),
+  2::bigint,
+  'reviewer sees all applications'
+);
 reset role;
 
 select lives_ok(
