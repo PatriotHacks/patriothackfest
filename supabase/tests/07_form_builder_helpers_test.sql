@@ -52,7 +52,7 @@ select lives_ok(
   'organizer reorders questions'
 );
 select is(
-  (select array_agg(label order by position) from public.form_fields where archived_at is null),
+  (select array_agg(label order by position) from public.form_fields where archived_at is null and form_id = 'f0000000-0000-0000-0000-000000000001'),
   array['Three', 'One', 'Two'],
   'positions follow the given order'
 );
