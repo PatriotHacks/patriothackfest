@@ -29,6 +29,7 @@ import {
   isEmailConfigured,
 } from "@/lib/email"
 import { BROADCAST_SAMPLE_VALUES, SAMPLE_VALUES } from "@/lib/email-templates"
+import { AUDIENCES, type Audience } from "@/lib/roles"
 
 const BATCH_SIZE = 10
 
@@ -39,6 +40,7 @@ const templateInput = z.object({
 
 const broadcastTarget = z.object({
   eventId: z.guid(),
+  audience: z.enum(AUDIENCES),
   role: z.enum(ROLES).nullable(),
 })
 
@@ -117,16 +119,18 @@ export async function sendBroadcastTest(
 
 export async function getBroadcastRecipientCount(
   eventId: string,
+  audience: Audience,
   role: Role | null
 ): Promise<
   { error: string } | { error: null; recipients: number; dailyUsed: number }
 > {
-  const target = broadcastTarget.parse({ eventId, role })
+  const target = broadcastTarget.parse({ eventId, audience, role })
   const { supabase } = await requireAdmin("owner")
 
   const { data, error } = await supabase
     .rpc("admin_broadcast_recipient_count", {
       p_event_id: target.eventId,
+      p_audience: target.audience,
       p_role: target.role ?? undefined,
     })
     .single()
@@ -141,12 +145,13 @@ export async function getBroadcastRecipientCount(
 
 export async function createBroadcast(
   eventId: string,
+  audience: Audience,
   role: Role | null,
   subject: string,
   body: string,
   expected: number
 ): Promise<{ error: string } | { error: null; broadcastId: string }> {
-  const target = broadcastTarget.parse({ eventId, role })
+  const target = broadcastTarget.parse({ eventId, audience, role })
   const template = templateInput.parse({ subject, body })
   const count = z.int().positive().parse(expected)
   const { supabase } = await requireAdmin("owner")
@@ -171,6 +176,7 @@ export async function createBroadcast(
   const budget = await supabase
     .rpc("admin_broadcast_recipient_count", {
       p_event_id: target.eventId,
+      p_audience: target.audience,
       p_role: target.role ?? undefined,
     })
     .single()
@@ -184,6 +190,7 @@ export async function createBroadcast(
   const { data, error } = await supabase
     .rpc("admin_create_broadcast", {
       p_event_id: target.eventId,
+      p_audience: target.audience,
       p_role: target.role ?? undefined,
       p_subject: template.subject,
       p_body: template.body,

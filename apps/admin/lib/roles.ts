@@ -3,6 +3,7 @@ import type { Database } from "@workspace/supabase/types"
 export type Decision = Database["public"]["Enums"]["decision"]
 export type ApplicationStatus =
   Database["public"]["Enums"]["application_status"]
+export type Audience = Database["public"]["Enums"]["broadcast_audience"]
 
 export const DECISIONS: Decision[] = [
   "pending",
@@ -24,4 +25,12 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   draft: "Draft",
   submitted: "Submitted",
   withdrawn: "Withdrawn",
+}
+
+export const AUDIENCES: Audience[] = ["submitted", "draft", "all"]
+
+export const AUDIENCE_LABELS: Record<Audience, string> = {
+  submitted: "Submitted",
+  draft: "Drafts",
+  all: "Drafts and submitted",
 }
