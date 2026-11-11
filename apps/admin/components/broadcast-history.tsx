@@ -13,9 +13,11 @@ import { Fragment } from "react"
 import { retryBroadcast, sendBroadcastBatch } from "@/app/(admin)/email/actions"
 import { EmailSender } from "@/components/email-sender"
 import { TableCard } from "@/components/table-card"
+import { AUDIENCE_LABELS, type Audience } from "@/lib/roles"
 
 type Broadcast = {
   id: string
+  audience: Audience
   role: Role | null
   subject: string
   body: string
@@ -52,7 +54,8 @@ export function BroadcastHistory({
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Sender</TableHead>
-            <TableHead>Recipients</TableHead>
+            <TableHead>Audience</TableHead>
+            <TableHead>Role</TableHead>
             <TableHead>Subject</TableHead>
             <TableHead className="text-right">Sent</TableHead>
             <TableHead className="text-right">Failed</TableHead>
@@ -65,6 +68,7 @@ export function BroadcastHistory({
               <TableRow className="border-b-0">
                 <TableCell>{formatInZone(b.created_at)}</TableCell>
                 <TableCell>{b.sender_email}</TableCell>
+                <TableCell>{AUDIENCE_LABELS[b.audience]}</TableCell>
                 <TableCell>
                   {b.role ? roleLabel(b.role, eventSlug) : "All roles"}
                 </TableCell>
@@ -80,7 +84,7 @@ export function BroadcastHistory({
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell colSpan={7} className="whitespace-normal">
+                <TableCell colSpan={8} className="whitespace-normal">
                   <div className="flex flex-col gap-3">
                     <details>
                       <summary className="cursor-pointer text-sm text-muted-foreground">

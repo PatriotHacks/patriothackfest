@@ -227,6 +227,7 @@ export type Database = {
       }
       email_broadcasts: {
         Row: {
+          audience: Database["public"]["Enums"]["broadcast_audience"]
           body: string
           created_at: string
           created_by: string | null
@@ -237,6 +238,7 @@ export type Database = {
         }
         ComputedFields: never
         Insert: {
+          audience?: Database["public"]["Enums"]["broadcast_audience"]
           body: string
           created_at?: string
           created_by?: string | null
@@ -246,6 +248,7 @@ export type Database = {
           subject: string
         }
         Update: {
+          audience?: Database["public"]["Enums"]["broadcast_audience"]
           body?: string
           created_at?: string
           created_by?: string | null
@@ -574,6 +577,7 @@ export type Database = {
       admin_broadcast_history: {
         Args: { p_event_id: string }
         Returns: {
+          audience: Database["public"]["Enums"]["broadcast_audience"]
           body: string
           cancelled: number
           created_at: string
@@ -590,6 +594,7 @@ export type Database = {
       }
       admin_broadcast_recipient_count: {
         Args: {
+          p_audience: Database["public"]["Enums"]["broadcast_audience"]
           p_event_id: string
           p_role?: Database["public"]["Enums"]["app_role"]
         }
@@ -630,6 +635,7 @@ export type Database = {
       }
       admin_create_broadcast: {
         Args: {
+          p_audience: Database["public"]["Enums"]["broadcast_audience"]
           p_body: string
           p_event_id: string
           p_expected: number
@@ -687,6 +693,14 @@ export type Database = {
       }
       application_file_deletable: { Args: { p_name: string }; Returns: boolean }
       application_file_writable: { Args: { p_name: string }; Returns: boolean }
+      broadcast_audience_includes: {
+        Args: {
+          p_audience: Database["public"]["Enums"]["broadcast_audience"]
+          p_declined_at: string
+          p_status: Database["public"]["Enums"]["application_status"]
+        }
+        Returns: boolean
+      }
       current_admin_level: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["admin_level"]
@@ -788,6 +802,7 @@ export type Database = {
       admin_level: "owner" | "organizer" | "reviewer"
       app_role: "participant" | "volunteer" | "judge"
       application_status: "draft" | "submitted" | "withdrawn"
+      broadcast_audience: "draft" | "submitted" | "all"
       decision: "pending" | "accepted" | "waitlisted" | "rejected"
       field_type:
         | "short_text"
@@ -929,6 +944,7 @@ export const Constants = {
       admin_level: ["owner", "organizer", "reviewer"],
       app_role: ["participant", "volunteer", "judge"],
       application_status: ["draft", "submitted", "withdrawn"],
+      broadcast_audience: ["draft", "submitted", "all"],
       decision: ["pending", "accepted", "waitlisted", "rejected"],
       field_type: [
         "short_text",

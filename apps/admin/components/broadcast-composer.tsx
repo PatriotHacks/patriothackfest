@@ -54,6 +54,7 @@ import {
   BROADCAST_SAMPLE_VALUES,
   BROADCAST_VARIABLE_INFO,
 } from "@/lib/email-templates"
+import { AUDIENCE_LABELS, AUDIENCES, type Audience } from "@/lib/roles"
 
 type Props = {
   eventId: string
@@ -84,6 +85,7 @@ export function BroadcastComposer({
 }: Props) {
   const id = useId()
   const router = useRouter()
+  const [audience, setAudience] = useState<Audience>("submitted")
   const [role, setRole] = useState<Role | null>(null)
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
@@ -100,7 +102,7 @@ export function BroadcastComposer({
 
   const errors = validateTemplate({ subject, body }, BROADCAST_VARIABLES)
   const rendered = errors.length === 0 ? preview(subject, body) : null
-  const recipientsLabel = role ? roleLabel(role, eventSlug) : "All roles"
+  const recipientsLabel = `${AUDIENCE_LABELS[audience]}, ${role ? roleLabel(role, eventSlug) : "All roles"}`
   const remaining = confirm
     ? Math.max(EMAIL_DAILY_LIMIT - confirm.dailyUsed, 0)
     : 0
@@ -121,10 +123,10 @@ export function BroadcastComposer({
     setMessage(null)
     setError(null)
     startCount(async () => {
-      const result = await getBroadcastRecipientCount(eventId, role)
+      const result = await getBroadcastRecipientCount(eventId, audience, role)
       if (result.error !== null) return setError(result.error)
       if (result.recipients === 0)
-        return setError(`No submitted applications match ${recipientsLabel}.`)
+        return setError(`No applications match ${recipientsLabel}.`)
       setDialogError(null)
       setConfirm(result)
     })
@@ -136,6 +138,7 @@ export function BroadcastComposer({
     startCreate(async () => {
       const result = await createBroadcast(
         eventId,
+        audience,
         role,
         subject,
         body,
@@ -156,31 +159,51 @@ export function BroadcastComposer({
         <CardHeader>
           <CardTitle>Compose</CardTitle>
           <CardDescription>
-            Email every submitted application for {eventName}, skipping
-            withdrawn and declined applicants. Plain text; a blank line starts a
-            new paragraph. The subject becomes the heading, and the sign-off is
-            added automatically.
+            Email applicants of {eventName} by application status and role.
+            Withdrawn and declined applicants are always skipped. Plain text; a
+            blank line starts a new paragraph. The subject becomes the heading,
+            and the sign-off is added automatically.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <Label htmlFor={`${id}-role`}>Recipients</Label>
-            <Select
-              value={role ?? "all"}
-              onValueChange={(v) => setRole(v === "all" ? null : (v as Role))}
-            >
-              <SelectTrigger id={`${id}-role`} className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
-                {ROLES.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {roleLabel(r, eventSlug)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor={`${id}-audience`}>Audience</Label>
+              <Select
+                value={audience}
+                onValueChange={(v) => setAudience(v as Audience)}
+              >
+                <SelectTrigger id={`${id}-audience`} className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {AUDIENCES.map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {AUDIENCE_LABELS[a]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor={`${id}-role`}>Role</Label>
+              <Select
+                value={role ?? "all"}
+                onValueChange={(v) => setRole(v === "all" ? null : (v as Role))}
+              >
+                <SelectTrigger id={`${id}-role`} className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All roles</SelectItem>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {roleLabel(r, eventSlug)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor={`${id}-subject`}>Subject</Label>
@@ -284,10 +307,11 @@ export function BroadcastComposer({
               {recipientsLabel})?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This cannot be undone. Recipients are fixed when you confirm;
-              applicants who submit later are not added. {remaining} of the{" "}
-              {EMAIL_DAILY_LIMIT} daily emails remain ({confirm?.dailyUsed} sent
-              in the last 24 hours or still queued).
+              This cannot be undone. Recipients are fixed when you confirm; new
+              applicants are not added, and applicants who no longer match are
+              skipped when sending. {remaining} of the {EMAIL_DAILY_LIMIT} daily
+              emails remain ({confirm?.dailyUsed} sent in the last 24 hours or
+              still queued).
             </AlertDialogDescription>
           </AlertDialogHeader>
           {overBudget && (

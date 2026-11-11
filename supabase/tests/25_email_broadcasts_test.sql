@@ -97,7 +97,7 @@ create function pg_temp.reported_daily_used()
 returns integer
 language sql
 as $$
-  select daily_used from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')
+  select daily_used from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'submitted')
 $$;
 
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -152,9 +152,9 @@ select pg_temp.decide('test.p1', 'accepted');
 select plan(52);
 
 select pg_temp.login('dc000000-0000-0000-0000-0000000000b0', 'broadcast-reviewer@example.test');
-select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
+select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'submitted')$$,
   '42501', 'Owner access required', 'reviewer cannot count recipients');
-select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3)$$,
+select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3, 'submitted')$$,
   '42501', 'Owner access required', 'reviewer cannot create broadcasts');
 select throws_ok($$select * from public.admin_claim_broadcast_emails(gen_random_uuid(), 10)$$,
   '42501', 'Owner access required', 'reviewer cannot claim broadcast emails');
@@ -165,9 +165,9 @@ select throws_ok($$select * from public.admin_broadcast_history('ec000000-0000-0
 reset role;
 
 select pg_temp.login('dc000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000001@example.test', 'otp');
-select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
+select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'submitted')$$,
   '42501', 'Owner access required', 'applicant cannot count recipients');
-select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3)$$,
+select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3, 'submitted')$$,
   '42501', 'Owner access required', 'applicant cannot create broadcasts');
 select throws_ok($$select * from public.admin_claim_broadcast_emails(gen_random_uuid(), 10)$$,
   '42501', 'Owner access required', 'applicant cannot claim broadcast emails');
@@ -178,9 +178,9 @@ select throws_ok($$select * from public.admin_broadcast_history('ec000000-0000-0
 reset role;
 
 select pg_temp.organizer();
-select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001')$$,
+select throws_ok($$select * from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'submitted')$$,
   '42501', 'Owner access required', 'organizer cannot count recipients');
-select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3)$$,
+select throws_ok($$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3, 'submitted')$$,
   '42501', 'Owner access required', 'organizer cannot create broadcasts');
 select throws_ok($$select * from public.admin_claim_broadcast_emails(gen_random_uuid(), 10)$$,
   '42501', 'Owner access required', 'organizer cannot claim broadcast emails');
@@ -194,29 +194,29 @@ select set_config('test.used_before', pg_temp.daily_used()::text, true);
 
 select pg_temp.owner();
 select is(
-  (select row(c.*)::text from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001') c),
+  (select row(c.*)::text from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'submitted') c),
   format('(3,%s)', current_setting('test.used_before')),
   'counts submitted applications of every role, skipping drafts, withdrawn, declined, and other events'
 );
 select is(
-  (select recipients from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'participant')),
+  (select recipients from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'submitted', 'participant')),
   2, 'filters recipients by role'
 );
 select is(
-  (select recipients from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'judge')),
+  (select recipients from public.admin_broadcast_recipient_count('ec000000-0000-0000-0000-000000000001', 'submitted', 'judge')),
   0, 'roles without applicants have no recipients'
 );
 select throws_ok(
-  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3, 'participant')$$,
+  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 3, 'submitted', 'participant')$$,
   'P0001', 'The number of recipients changed from 3 to 2. Review and send again.',
   'a stale recipient count is rejected'
 );
 select throws_ok(
-  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 0, 'judge')$$,
+  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', 's', 'b', 0, 'submitted', 'judge')$$,
   'P0001', 'No applicants to email', 'a broadcast needs recipients'
 );
 select throws_ok(
-  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', ' ', 'b', 3)$$,
+  $$select * from public.admin_create_broadcast('ec000000-0000-0000-0000-000000000001', ' ', 'b', 3, 'submitted')$$,
   '23514', null, 'blank subjects are rejected'
 );
 select is(
@@ -224,9 +224,9 @@ select is(
   0::bigint, 'rejected broadcasts leave nothing behind'
 );
 select set_config('test.b1', (select broadcast_id::text from public.admin_create_broadcast(
-  'ec000000-0000-0000-0000-000000000001', 'Hello {{name}}', 'Body', 3)), true);
+  'ec000000-0000-0000-0000-000000000001', 'Hello {{name}}', 'Body', 3, 'submitted')), true);
 select set_config('test.b2', (select broadcast_id::text from public.admin_create_broadcast(
-  'ec000000-0000-0000-0000-000000000001', 'Participants', 'Body', 2, 'participant')), true);
+  'ec000000-0000-0000-0000-000000000001', 'Participants', 'Body', 2, 'submitted', 'participant')), true);
 select is(
   (select count(*) from public.email_broadcasts where event_id = 'ec000000-0000-0000-0000-000000000001'),
   2::bigint, 'owners read broadcasts and may run them concurrently'
@@ -368,7 +368,7 @@ reset role;
 select pg_temp.owner();
 select set_config('test.used_before', pg_temp.reported_daily_used()::text, true);
 select set_config('test.b3', (select broadcast_id::text from public.admin_create_broadcast(
-  'ec000000-0000-0000-0000-000000000001', 'Everyone', 'Body', 2)), true);
+  'ec000000-0000-0000-0000-000000000001', 'Everyone', 'Body', 2, 'submitted')), true);
 select is(
   pg_temp.reported_daily_used(),
   current_setting('test.used_before')::integer + 2,
