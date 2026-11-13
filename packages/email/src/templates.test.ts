@@ -149,6 +149,20 @@ describe("renderStatusUpdate", () => {
     ])
   })
 
+  it("renders links as text followed by the URL in the text part", () => {
+    const { text } = renderStatusUpdate(
+      {
+        subject: "s",
+        body: "[Site](https://a.test/?a=1&b=2) and [Mail](mailto:hi@c.test) [x](javascript:y)",
+      },
+      values,
+      url
+    )
+    expect(text).toContain(
+      "Site (https://a.test/?a=1&b=2) and Mail (mailto:hi@c.test) [x](javascript:y)\n"
+    )
+  })
+
   it("throws on unknown or missing variables", () => {
     expect(() =>
       renderStatusUpdate(

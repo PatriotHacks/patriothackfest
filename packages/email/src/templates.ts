@@ -85,7 +85,7 @@ export function renderBody(
   values: Readonly<Record<string, string | null>>
 ) {
   return {
-    text: paragraphs(fill(body, values)).join("\n\n"),
+    text: paragraphs(fill(body.replace(LINK, "$1 ($2)"), values)).join("\n\n"),
     html: paragraphs(body).map((p) =>
       p
         .split("\n")
