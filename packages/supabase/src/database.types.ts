@@ -169,10 +169,10 @@ export type Database = {
           updated_at: string
           user_id: string
           withdrawn_at: string | null
-          under_18: boolean | null
           status_rank: number | null
+          under_18: boolean | null
         }
-        ComputedFields: "under_18" | "status_rank"
+        ComputedFields: "status_rank" | "under_18"
         Insert: {
           answers?: NonNullable<Json>
           created_at?: string
@@ -222,6 +222,51 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_tracks: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          name: string
+          reviews_per_project: number
+          sponsor: string | null
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          name: string
+          reviews_per_project?: number
+          sponsor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          name?: string
+          reviews_per_project?: number
+          sponsor?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_tracks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_competition_settings"
+            referencedColumns: ["event_id"]
           },
         ]
       }
@@ -387,6 +432,103 @@ export type Database = {
           },
         ]
       }
+      event_competition_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          event_id: string
+          general_reviews_per_project: number
+          judging_close_at: string | null
+          judging_started_at: string | null
+          project_submissions_close_at: string | null
+          project_submissions_open_at: string | null
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          event_id: string
+          general_reviews_per_project?: number
+          judging_close_at?: string | null
+          judging_started_at?: string | null
+          project_submissions_close_at?: string | null
+          project_submissions_open_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          event_id?: string
+          general_reviews_per_project?: number
+          judging_close_at?: string | null
+          judging_started_at?: string | null
+          project_submissions_close_at?: string | null
+          project_submissions_open_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_competition_settings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_judges: {
+        Row: {
+          active: boolean
+          capacity: number
+          created_at: string
+          email: string
+          event_id: string
+          id: string
+          kind: string
+          updated_at: string
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          email: string
+          event_id: string
+          id?: string
+          kind?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          email?: string
+          event_id?: string
+          id?: string
+          kind?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_judges_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_competition_settings"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "event_judges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -535,6 +677,124 @@ export type Database = {
           },
         ]
       }
+      judge_track_scopes: {
+        Row: {
+          event_id: string
+          judge_id: string
+          track_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          event_id: string
+          judge_id: string
+          track_id: string
+        }
+        Update: {
+          event_id?: string
+          judge_id?: string
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "judge_track_scopes_judge_id_event_id_fkey"
+            columns: ["judge_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "event_judges"
+            referencedColumns: ["id", "event_id"]
+          },
+          {
+            foreignKeyName: "judge_track_scopes_track_id_event_id_fkey"
+            columns: ["track_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "competition_tracks"
+            referencedColumns: ["id", "event_id"]
+          },
+        ]
+      }
+      judging_assignments: {
+        Row: {
+          cancelled: boolean
+          created_at: string
+          creativity_score: number | null
+          event_id: string
+          id: string
+          impact_score: number | null
+          judge_id: string
+          notes: string
+          presentation_score: number | null
+          project_id: string
+          submitted_at: string | null
+          technical_score: number | null
+          total_score: number | null
+          track_id: string | null
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          cancelled?: boolean
+          created_at?: string
+          creativity_score?: number | null
+          event_id: string
+          id?: string
+          impact_score?: number | null
+          judge_id: string
+          notes?: string
+          presentation_score?: number | null
+          project_id: string
+          submitted_at?: string | null
+          technical_score?: number | null
+          total_score?: never
+          track_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancelled?: boolean
+          created_at?: string
+          creativity_score?: number | null
+          event_id?: string
+          id?: string
+          impact_score?: number | null
+          judge_id?: string
+          notes?: string
+          presentation_score?: number | null
+          project_id?: string
+          submitted_at?: string | null
+          technical_score?: number | null
+          total_score?: never
+          track_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "judging_assignments_judge_id_event_id_fkey"
+            columns: ["judge_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "event_judges"
+            referencedColumns: ["id", "event_id"]
+          },
+          {
+            foreignKeyName: "judging_assignments_judge_id_track_id_event_id_fkey"
+            columns: ["judge_id", "track_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "judge_track_scopes"
+            referencedColumns: ["judge_id", "track_id", "event_id"]
+          },
+          {
+            foreignKeyName: "judging_assignments_project_id_event_id_fkey"
+            columns: ["project_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "event_id"]
+          },
+          {
+            foreignKeyName: "judging_assignments_project_id_track_id_event_id_fkey"
+            columns: ["project_id", "track_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "project_tracks"
+            referencedColumns: ["project_id", "track_id", "event_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -568,6 +828,144 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      project_collaborators: {
+        Row: {
+          created_at: string
+          event_id: string
+          project_id: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          event_id: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_collaborators_project_id_event_id_fkey"
+            columns: ["project_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "event_id"]
+          },
+          {
+            foreignKeyName: "project_collaborators_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_tracks: {
+        Row: {
+          event_id: string
+          project_id: string
+          track_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          event_id: string
+          project_id: string
+          track_id: string
+        }
+        Update: {
+          event_id?: string
+          project_id?: string
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tracks_project_id_event_id_fkey"
+            columns: ["project_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "event_id"]
+          },
+          {
+            foreignKeyName: "project_tracks_track_id_event_id_fkey"
+            columns: ["track_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "competition_tracks"
+            referencedColumns: ["id", "event_id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          demo_url: string | null
+          description: string
+          event_id: string
+          id: string
+          name: string
+          owner_user_id: string
+          repository_url: string | null
+          status: string
+          submitted_at: string | null
+          summary: string
+          technologies: string
+          updated_at: string
+          video_url: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          demo_url?: string | null
+          description?: string
+          event_id: string
+          id?: string
+          name?: string
+          owner_user_id: string
+          repository_url?: string | null
+          status?: string
+          submitted_at?: string | null
+          summary?: string
+          technologies?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          demo_url?: string | null
+          description?: string
+          event_id?: string
+          id?: string
+          name?: string
+          owner_user_id?: string
+          repository_url?: string | null
+          status?: string
+          submitted_at?: string | null
+          summary?: string
+          technologies?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_competition_settings"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "projects_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -687,6 +1085,30 @@ export type Database = {
         Args: { p_form_id: string }
         Returns: number
       }
+      admin_save_competition_settings: {
+        Args: {
+          p_close_at?: string
+          p_enabled: boolean
+          p_event_id: string
+          p_general_reviews?: number
+          p_judging_close_at?: string
+          p_open_at?: string
+        }
+        Returns: undefined
+      }
+      admin_save_competition_track: {
+        Args: {
+          p_active: boolean
+          p_description: string
+          p_event_id: string
+          p_name: string
+          p_reviews: number
+          p_sponsor: string
+          p_track_id?: string
+        }
+        Returns: string
+      }
+      admin_start_judging: { Args: { p_event_id: string }; Returns: undefined }
       application_answer_errors: {
         Args: { p_answers: Json; p_application_id: string; p_schema: Json }
         Returns: Json

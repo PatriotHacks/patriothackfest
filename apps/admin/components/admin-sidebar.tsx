@@ -34,6 +34,7 @@ import {
   MailIcon,
   SettingsIcon,
   ShieldIcon,
+  TrophyIcon,
   type LucideIcon,
 } from "lucide-react"
 import Image from "next/image"
@@ -58,6 +59,7 @@ const NAV: {
     min: "reviewer",
   },
   { href: "/email", label: "Email", icon: MailIcon, min: "owner" },
+  { href: "/judging", label: "Judging", icon: TrophyIcon, min: "organizer" },
   { href: "/admins", label: "Admins", icon: ShieldIcon, min: "owner" },
 ]
 
