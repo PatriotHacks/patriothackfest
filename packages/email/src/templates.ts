@@ -21,6 +21,10 @@ export const BODY_MAX_LENGTH = 10000
 
 const VARIABLE = /\{\{\s*([^{}]*?)\s*\}\}/g
 
+const LINK = /\[([^[\]\n]+)\]\(((?:https?:\/\/|mailto:)[^\s)]+)\)/gi
+
+const LINK_STYLE = "color: #3A4A2B; text-decoration: underline;"
+
 export function usedVariables({ subject, body }: EmailTemplate) {
   const names = [...`${subject}\n${body}`.matchAll(VARIABLE)].map((m) => m[1]!)
   return [...new Set(names)]
@@ -85,7 +89,16 @@ export function renderBody(
     html: paragraphs(body).map((p) =>
       p
         .split("\n")
-        .map((line) => fill(escapeHtml(line), values, escapeHtml))
+        .map((line) =>
+          fill(
+            escapeHtml(line).replace(
+              LINK,
+              `<a href="$2" style="${LINK_STYLE}">$1</a>`
+            ),
+            values,
+            escapeHtml
+          )
+        )
         .join("<br>")
     ),
   }

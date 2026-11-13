@@ -86,6 +86,69 @@ describe("renderStatusUpdate", () => {
     expect(bodyCells(email.html)).toEqual(["{{event_name}}"])
   })
 
+  it("converts http, https, and mailto links", () => {
+    const { html } = renderStatusUpdate(
+      {
+        subject: "s",
+        body: "[Site](https://a.test/x) [Old](http://b.test) [Mail](mailto:hi@c.test)",
+      },
+      values,
+      url
+    )
+    const style = 'style="color: #3A4A2B; text-decoration: underline;"'
+    expect(bodyCells(html)).toEqual([
+      `<a href="https://a.test/x" ${style}>Site</a> <a href="http://b.test" ${style}>Old</a> <a href="mailto:hi@c.test" ${style}>Mail</a>`,
+    ])
+  })
+
+  it("leaves disallowed schemes and malformed links literal", () => {
+    const { html } = renderStatusUpdate(
+      {
+        subject: "s",
+        body: "[x](javascript:alert(1)) [y](ftp://z.test) [w](https://a b)",
+      },
+      values,
+      url
+    )
+    expect(bodyCells(html)).toEqual([
+      "[x](javascript:alert(1)) [y](ftp://z.test) [w](https://a b)",
+    ])
+  })
+
+  it("escapes link text and URLs", () => {
+    const { html } = renderStatusUpdate(
+      {
+        subject: "s",
+        body: `[<b>"Hi"</b>](https://a.test/?q=1&r="x"><script>)`,
+      },
+      values,
+      url
+    )
+    expect(bodyCells(html)).toEqual([
+      `<a href="https://a.test/?q=1&amp;r=&quot;x&quot;&gt;&lt;script&gt;" style="color: #3A4A2B; text-decoration: underline;">&lt;b&gt;&quot;Hi&quot;&lt;/b&gt;</a>`,
+    ])
+  })
+
+  it("keeps query strings with ampersands escaped once", () => {
+    const { html } = renderStatusUpdate(
+      { subject: "s", body: "[Go](https://a.test/?a=1&b=2)" },
+      values,
+      url
+    )
+    expect(bodyCells(html)[0]).toContain('href="https://a.test/?a=1&amp;b=2"')
+  })
+
+  it("fills variables in link text but not links inside values", () => {
+    const { html } = renderStatusUpdate(
+      { subject: "s", body: "[Hi {{name}}](https://a.test) {{role}}" },
+      { ...values, name: "<Ada>", role: "[x](https://evil.test)" },
+      url
+    )
+    expect(bodyCells(html)).toEqual([
+      '<a href="https://a.test" style="color: #3A4A2B; text-decoration: underline;">Hi &lt;Ada&gt;</a> [x](https://evil.test)',
+    ])
+  })
+
   it("throws on unknown or missing variables", () => {
     expect(() =>
       renderStatusUpdate(
