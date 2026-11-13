@@ -6,6 +6,8 @@ import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
 import { useRef } from "react"
 
+const LINK = "[link text](https://)"
+
 type Props<V extends string> = {
   id: string
   value: string
@@ -28,17 +30,15 @@ export function BodyField<V extends string>({
   const ref = useRef<HTMLTextAreaElement>(null)
   const focused = useRef(false)
 
-  function insert(variable: V) {
+  function insert(token: string, from = token.length, to = from) {
     const el = ref.current
     if (!el) return
-    const token = `{{${variable}}}`
     const start = focused.current ? el.selectionStart : value.length
     const end = focused.current ? el.selectionEnd : value.length
-    const cursor = start + token.length
     onChange(value.slice(0, start) + token + value.slice(end))
     requestAnimationFrame(() => {
       el.focus()
-      el.setSelectionRange(cursor, cursor)
+      el.setSelectionRange(start + from, start + to)
     })
   }
 
@@ -59,7 +59,7 @@ export function BodyField<V extends string>({
         />
         <div
           role="group"
-          aria-label="Insert variable"
+          aria-label="Insert into body"
           className="flex flex-wrap gap-1 sm:flex-col sm:flex-nowrap"
         >
           {variables.map((variable) => (
@@ -70,11 +70,20 @@ export function BodyField<V extends string>({
               size="sm"
               className="font-mono"
               title={info[variable]}
-              onClick={() => insert(variable)}
+              onClick={() => insert(`{{${variable}}}`)}
             >
               {`{{${variable}}}`}
             </Button>
           ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            title="Insert a [text](url) link"
+            onClick={() => insert(LINK, 1, 10)}
+          >
+            Insert link
+          </Button>
         </div>
       </div>
     </div>
