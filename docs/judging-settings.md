@@ -2,7 +2,7 @@
 
 ## What this branch implements
 
-This is **Person A's A1 foundation**, not the complete submissions/judging system.
+This document covers **Person A's A1 foundation**, not the complete judging system. Person B's participant workflow is now implemented; see [Participant project submissions](project-submissions.md) for its setup and rehearsal.
 
 - `/judging` in the existing admin app: per-event enablement, submission dates, judging end, general review target, and sponsor tracks.
 - Organizer/owner-only navigation, page access, server actions, and database mutations.
@@ -12,15 +12,14 @@ This is **Person A's A1 foundation**, not the complete submissions/judging syste
 - Optional submission closing, irreversible Start judging, and adjustable judging end even after expiry.
 - Database triggers lock projects/collaborators/selected tracks/track definitions after Start judging, including writes from later security-definer RPCs.
 
-Admissions forms, application deadlines, applicant login, admissions decisions, and existing application pages are unchanged. The only existing admin navigation change is the Judging entry.
+Admissions forms, application deadlines, ordinary applicant login routing, admissions decisions, and existing application pages are unchanged. Project links additionally retain a validated return destination through OTP login. The only existing admin navigation change is the Judging entry.
 
 ## Not implemented yet
 
-- Participant project creation, collaborator lookup, content validation, eligibility enforcement, or submission UI/RPCs: **Person B**.
 - Judge roster access/binding, judge routes, save/submit review operations, active-judge checks, or judging-window checks on scorecards: **Person C**.
 - Assignment generation, reassignment, progress, and results: **Person A's A2/A3**.
 
-Those six project/judge tables intentionally have **no client privileges or policies yet**. There is no public write path that can bypass the missing workflow checks. Turning on settings alone does not make participant submissions usable.
+The project/judge tables intentionally have **no direct client table privileges**. Person B now provides scoped authenticated project RPCs with eligibility and lifecycle checks; judge workflows remain unimplemented. Enabling settings permits eligible participant use through those project pages, not arbitrary table writes.
 
 ## 1. Configure a development Supabase project
 
@@ -147,7 +146,7 @@ Do not create alternate copies of these tables/settings:
 
 Same-event composite foreign keys are already present. General-context uniqueness handles `NULL` correctly. Cancelled rows retain their uniqueness slot so generation must not automatically recreate cancelled pairs.
 
-B must enforce accepted-application eligibility and pre-opening/post-closing rules inside domain RPCs, locking the event settings row while mutating. The shared freeze triggers are a final guard after judging starts, not a replacement for those checks. C must add active judge/assignment authorization and final-review immutability; score bounds and generated totals alone do not implement that workflow.
+B's participant RPCs now enforce accepted-application eligibility and pre-opening/post-closing rules, locking the event settings row while mutating. The shared freeze triggers are a final guard after judging starts. C must add active judge/assignment authorization and final-review immutability; score bounds and generated totals alone do not implement that workflow.
 
 Current admin RPC names:
 

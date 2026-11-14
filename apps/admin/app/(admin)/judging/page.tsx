@@ -98,8 +98,8 @@ export default async function JudgingPage({
         )}
       </section>
       <p className="text-sm text-muted-foreground">
-        Project submission pages, judge access, assignments, and results are not
-        part of this initial settings release.
+        Participants use the Projects section in the participant portal. Judge
+        access, assignments, and results are separate follow-up work.
       </p>
     </div>
   )

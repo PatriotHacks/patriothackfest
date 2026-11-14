@@ -29,6 +29,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import {
   ChevronsUpDownIcon,
   FileTextIcon,
+  FolderOpenIcon,
   LayoutDashboardIcon,
   SettingsIcon,
 } from "lucide-react"
@@ -43,7 +44,7 @@ export function ApplicantSidebar({
   applicationId,
   email,
 }: {
-  applicationId: string
+  applicationId?: string
   email: string
 }) {
   const pathname = usePathname()
@@ -52,11 +53,16 @@ export function ApplicantSidebar({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const nav = [
     { href: "/", label: "Dashboard", icon: LayoutDashboardIcon },
-    {
-      href: `/applications/${applicationId}`,
-      label: "My application",
-      icon: FileTextIcon,
-    },
+    { href: "/projects", label: "Projects", icon: FolderOpenIcon },
+    ...(applicationId
+      ? [
+          {
+            href: `/applications/${applicationId}`,
+            label: "My application",
+            icon: FileTextIcon,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -81,7 +87,10 @@ export function ApplicantSidebar({
                 <SidebarMenuButton
                   asChild
                   className={SIDEBAR_ITEM}
-                  isActive={pathname === item.href}
+                  isActive={
+                    pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`)
+                  }
                 >
                   <Link href={item.href} onClick={() => setOpenMobile(false)}>
                     <item.icon />

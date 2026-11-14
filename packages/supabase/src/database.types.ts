@@ -1158,9 +1158,115 @@ export type Database = {
         Returns: boolean
       }
       js_trim: { Args: { p_value: string }; Returns: string }
+      lock_participant_project: {
+        Args: { p_project_id: string; p_roster_only?: boolean }
+        Returns: {
+          created_at: string
+          demo_url: string | null
+          description: string
+          event_id: string
+          id: string
+          name: string
+          owner_user_id: string
+          repository_url: string | null
+          status: string
+          submitted_at: string | null
+          summary: string
+          technologies: string
+          updated_at: string
+          video_url: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "projects"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       locked_answer_errors: {
         Args: { p_after: Json; p_before: Json; p_schema: Json }
         Returns: Json
+      }
+      participant_add_project_collaborator: {
+        Args: { p_email: string; p_project_id: string }
+        Returns: undefined
+      }
+      participant_create_project: {
+        Args: { p_event_id: string }
+        Returns: string
+      }
+      participant_project_detail: {
+        Args: { p_event_id: string; p_project_id: string }
+        Returns: Json
+      }
+      participant_project_events: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          eligible: boolean
+          enabled: boolean
+          event_id: string
+          judging_started_at: string
+          name: string
+          project_submissions_close_at: string
+          project_submissions_open_at: string
+          slug: string
+        }[]
+      }
+      participant_projects: {
+        Args: { p_event_id: string }
+        Returns: {
+          created_at: string
+          demo_url: string | null
+          description: string
+          event_id: string
+          id: string
+          name: string
+          owner_user_id: string
+          repository_url: string | null
+          status: string
+          submitted_at: string | null
+          summary: string
+          technologies: string
+          updated_at: string
+          video_url: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "projects"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      participant_remove_project_collaborator: {
+        Args: { p_project_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      participant_save_project: {
+        Args: {
+          p_content: Json
+          p_expected_updated_at?: string
+          p_project_id: string
+          p_submit?: boolean
+          p_track_ids?: string[]
+        }
+        Returns: string
+      }
+      participant_withdraw_project: {
+        Args: { p_project_id: string }
+        Returns: undefined
+      }
+      project_content_errors: {
+        Args: { p_complete: boolean; p_content: Json }
+        Returns: Json
+      }
+      project_http_url_valid: { Args: { p_url: string }; Returns: boolean }
+      project_is_accessible: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
+      project_user_is_eligible: {
+        Args: { p_event_id: string; p_user_id: string }
+        Returns: boolean
       }
       prune_application_answers: {
         Args: { p_answers: Json; p_schema: Json }

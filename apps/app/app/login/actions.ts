@@ -6,6 +6,7 @@ import * as z from "zod"
 
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { AUTH_COOKIE } from "@/lib/auth-cookie"
+import { projectReturnPath } from "@/lib/project-return-path"
 
 const emailInput = z.email().trim().toLowerCase()
 const codeInput = z.string().regex(/^\d{6}$/)
@@ -26,7 +27,8 @@ export async function sendCode(email: string): Promise<ActionResult> {
 
 export async function verifyCode(
   email: string,
-  code: string
+  code: string,
+  returnTo?: string
 ): Promise<ActionResult> {
   const parsedEmail = emailInput.safeParse(email)
   const parsedCode = codeInput.safeParse(code)
@@ -42,5 +44,5 @@ export async function verifyCode(
   })
   if (error) return failure(error)
 
-  redirect("/start")
+  redirect(projectReturnPath(returnTo))
 }
