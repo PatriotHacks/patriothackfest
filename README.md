@@ -159,11 +159,26 @@ To open applications, set `event.startsOn` and `event.endsOn` (`YYYY-MM-DD`) and
 
 ## Development
 
+### Project submissions and judging (in progress)
+
+Organizers/owners can configure project submission dates, judging deadlines, and
+sponsor tracks at `/judging` in the admin app. This is separate from admissions
+form deadlines. Competitions are disabled by default. Eligible participants can
+create projects, add collaborators, save drafts, and submit through `/projects`
+in the participant app. Judge review and assignment workflows remain follow-up work.
+
+See [Judging settings setup and verification](docs/judging-settings.md) for migration
+instructions, a disposable manual-test event, click-through checks, and the database
+contract for the participant/judge implementations.
+
+See [Participant project submissions](docs/project-submissions.md) for participant
+setup, permissions, and the full manual submission rehearsal.
+
 ```sh
 pnpm dev         # all apps
 pnpm build
 pnpm lint
 pnpm typecheck
-pnpm test        # vitest unit tests (packages/forms, packages/email) via turbo
+pnpm test        # vitest tests in forms, email, admin, and participant app via turbo
 pnpm db:test     # pgTAP tests against SUPABASE_DB_URL
 ```
