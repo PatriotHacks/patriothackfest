@@ -13,6 +13,7 @@ This implements Person B's workflow on `feat/submissions-and-judging`. C1 judge 
 - Optional multi-track selection; all submitted projects enter general judging.
 - Closed/disabled/withdrawn projects remain readable to associated people, but not editable.
 - OTP login returns to a validated project link without changing ordinary admissions login routing.
+- Organizers/owners can inspect submitted projects inside admin `/judging`; see [Organizer submitted projects](organizer-projects.md) for that read-only view and its permission checks.
 
 ## 1. Apply to a development project
 

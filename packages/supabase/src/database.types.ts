@@ -1122,6 +1122,14 @@ export type Database = {
         Returns: string
       }
       admin_start_judging: { Args: { p_event_id: string }; Returns: undefined }
+      admin_submitted_project_detail: {
+        Args: { p_event_id: string; p_project_id: string }
+        Returns: Json
+      }
+      admin_submitted_projects: {
+        Args: { p_event_id: string; p_page?: number }
+        Returns: Json
+      }
       application_answer_errors: {
         Args: { p_answers: Json; p_application_id: string; p_schema: Json }
         Returns: Json

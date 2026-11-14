@@ -162,7 +162,8 @@ To open applications, set `event.startsOn` and `event.endsOn` (`YYYY-MM-DD`) and
 ### Project submissions and judging (in progress)
 
 Organizers/owners can configure project submission dates, judging deadlines, and
-sponsor tracks at `/judging` in the admin app. This is separate from admissions
+sponsor tracks at `/judging` in the admin app, where they can also list and inspect
+submitted projects in read-only detail. This is separate from admissions
 form deadlines. Competitions are disabled by default. Eligible participants can
 create projects, add collaborators, save drafts, and submit through `/projects`
 in the participant app. Organizers can also manage judges in `/judging`; rostered
@@ -178,6 +179,9 @@ setup, permissions, and the full manual submission rehearsal.
 
 See [Judge roster and access](docs/judge-access.md) for C1 setup, judge login,
 revocation checks, and the assignment/review integration contract.
+
+See [Organizer submitted projects](docs/organizer-projects.md) for the submitted-only
+list/detail view, development migration, and manual verification checklist.
 
 ```sh
 pnpm dev         # all apps
