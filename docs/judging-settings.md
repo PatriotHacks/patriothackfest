@@ -2,7 +2,7 @@
 
 ## What this branch implements
 
-This document covers **Person A's A1 foundation**, not the complete judging system. Person B's participant workflow is now implemented; see [Participant project submissions](project-submissions.md) for its setup and rehearsal.
+This document covers **Person A's A1 foundation**, not the complete judging system. Person B's participant workflow and C1 judge roster/access are now implemented; see [Participant project submissions](project-submissions.md) and [Judge roster and access](judge-access.md) for setup and rehearsal.
 
 - `/judging` in the existing admin app: per-event enablement, submission dates, judging end, general review target, and sponsor tracks.
 - Organizer/owner-only navigation, page access, server actions, and database mutations.
@@ -16,10 +16,10 @@ Admissions forms, application deadlines, ordinary applicant login routing, admis
 
 ## Not implemented yet
 
-- Judge roster access/binding, judge routes, save/submit review operations, active-judge checks, or judging-window checks on scorecards: **Person C**.
+- Judge queues/scorecards, save/submit review operations, assigned-project checks, and judging-window enforcement on reviews: **Person C2/C3**.
 - Assignment generation, reassignment, progress, and results: **Person A's A2/A3**.
 
-The project/judge tables intentionally have **no direct client table privileges**. Person B now provides scoped authenticated project RPCs with eligibility and lifecycle checks; judge workflows remain unimplemented. Enabling settings permits eligible participant use through those project pages, not arbitrary table writes.
+The project/judge tables intentionally have **no direct client table privileges**. Person B provides scoped project RPCs; C1 provides organizer roster operations and verified judge event access. Assigned-project/review workflows remain unimplemented. Neither participant nor judge access grants arbitrary table reads/writes.
 
 ## 1. Configure a development Supabase project
 
@@ -102,7 +102,7 @@ All inputs are in **America/New_York**, regardless of your computer/browser time
 4. Verify the start notice; enablement/opening/closing/track fields are locked, including after reload. Judging end remains editable.
 5. Extend judging end and save. Verify persistence.
 6. To test a post-expiry extension, set judging end a few minutes ago **but after submission closing**, save, then extend it to tomorrow. Both saves should succeed and the start timestamp must remain unchanged.
-7. Do not expect a judge queue to work yet: Person C must consume this deadline on every review save/submit. This branch tests the underlying setting and lock behavior, not that unimplemented UI.
+7. C1's `/judge` event landing shows this deadline, but there is no judge queue yet: C2/C3 must consume it on every review save/submit.
 
 The UI includes the whole selected final minute. For example, a displayed end of `2026-11-20 23:59` is stored as exclusive `2026-11-21T05:00:00Z`. Saving/reloading repeatedly must not add extra minutes.
 
@@ -146,7 +146,7 @@ Do not create alternate copies of these tables/settings:
 
 Same-event composite foreign keys are already present. General-context uniqueness handles `NULL` correctly. Cancelled rows retain their uniqueness slot so generation must not automatically recreate cancelled pairs.
 
-B's participant RPCs now enforce accepted-application eligibility and pre-opening/post-closing rules, locking the event settings row while mutating. The shared freeze triggers are a final guard after judging starts. C must add active judge/assignment authorization and final-review immutability; score bounds and generated totals alone do not implement that workflow.
+B's participant RPCs enforce accepted-application eligibility and pre-opening/post-closing rules, locking the event settings row while mutating. The shared freeze triggers are a final guard after judging starts. C1 adds verified active-judge binding/access; C2/C3 must still enforce assigned-project access and final-review immutability. Score bounds and generated totals alone do not implement that workflow.
 
 Current admin RPC names:
 

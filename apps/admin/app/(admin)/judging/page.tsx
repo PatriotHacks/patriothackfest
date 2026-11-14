@@ -3,11 +3,13 @@ import { redirect } from "next/navigation"
 
 import { CompetitionSettingsForm } from "@/components/judging/settings-form"
 import { CompetitionTrackForm } from "@/components/judging/track-form"
+import { JudgeRoster } from "@/components/judging/judges"
 import { EventTabs } from "@/components/event-tabs"
 import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
+import { judgeRosterSchema } from "@/lib/judges"
 
 export default async function JudgingPage({
   searchParams,
@@ -25,7 +27,7 @@ export default async function JudgingPage({
   if (!event)
     return <PageHeader title="Judging" description="No events configured." />
 
-  const [settings, tracks] = await Promise.all([
+  const [settings, tracks, roster] = await Promise.all([
     supabase
       .from("event_competition_settings")
       .select("*")
@@ -37,16 +39,18 @@ export default async function JudgingPage({
       .eq("event_id", event.id)
       .order("created_at")
       .order("id"),
+    supabase.rpc("admin_judge_roster", { p_event_id: event.id }),
   ])
   if (settings.error) throw new Error(settings.error.message)
   if (tracks.error) throw new Error(tracks.error.message)
+  if (roster.error) throw new Error(roster.error.message)
   const started = Boolean(settings.data?.judging_started_at)
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="Judging"
-        description="Project submission dates and sponsor tracks. These do not change admissions applications."
+        description="Project submission dates, sponsor tracks, and judge roster. These do not change admissions applications."
       />
       <EventTabs events={events} selected={event.slug} basePath="/judging" />
       <Card>
@@ -97,9 +101,17 @@ export default async function JudgingPage({
           </>
         )}
       </section>
+      {settings.data && (
+        <JudgeRoster
+          eventId={event.id}
+          tracks={tracks.data}
+          judges={judgeRosterSchema.parse(roster.data)}
+        />
+      )}
       <p className="text-sm text-muted-foreground">
-        Participants use the Projects section in the participant portal. Judge
-        access, assignments, and results are separate follow-up work.
+        Participants use /projects and rostered judges use /judge in the
+        participant portal. Assignment queues, scorecards, and results are
+        separate follow-up work.
       </p>
     </div>
   )

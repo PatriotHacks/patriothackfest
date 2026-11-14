@@ -1,6 +1,6 @@
 # Participant project submissions: test and handoff
 
-This implements Person B's workflow on `feat/submissions-and-judging`. Assignment generation/results (A2/A3) and judge roster/scorecards (Person C) remain separate work. Nothing here creates another deployment or changes admissions decisions/deadlines.
+This implements Person B's workflow on `feat/submissions-and-judging`. C1 judge roster/access is also available; see [Judge roster and access](judge-access.md). Assignment generation/results (A2/A3) and judge queues/scorecards (C2/C3) remain separate work. Nothing here creates another deployment or changes admissions decisions/deadlines.
 
 ## What's available
 

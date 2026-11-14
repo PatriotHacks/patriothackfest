@@ -34,6 +34,11 @@ describe("participant OTP and project return", () => {
       verifyCode("person@example.com", "123456", "/projects/fall-2026")
     ).rejects.toThrow("redirect:/projects/fall-2026")
   })
+  it("returns judges to their event without participant onboarding", async () => {
+    await expect(
+      verifyCode("person@example.com", "123456", "/judge/fall-2026")
+    ).rejects.toThrow("redirect:/judge/fall-2026")
+  })
   it("does not redirect externally even if a caller bypasses the login page", async () => {
     await expect(
       verifyCode("person@example.com", "123456", "//evil.test")

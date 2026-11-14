@@ -1054,6 +1054,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_judge_roster: { Args: { p_event_id: string }; Returns: Json }
       admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
       admin_release_counts: {
         Args: { p_form_id: string }
@@ -1108,6 +1109,18 @@ export type Database = {
         }
         Returns: string
       }
+      admin_save_event_judge: {
+        Args: {
+          p_active: boolean
+          p_capacity: number
+          p_email: string
+          p_event_id: string
+          p_judge_id?: string
+          p_kind: string
+          p_track_ids?: string[]
+        }
+        Returns: string
+      }
       admin_start_judging: { Args: { p_event_id: string }; Returns: undefined }
       application_answer_errors: {
         Args: { p_answers: Json; p_application_id: string; p_schema: Json }
@@ -1126,6 +1139,11 @@ export type Database = {
       current_admin_level: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["admin_level"]
+      }
+      current_event_judge_id: { Args: { p_event_id: string }; Returns: string }
+      current_verified_judge_email: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       decline_application_offer: {
         Args: { p_application_id: string }
@@ -1158,6 +1176,9 @@ export type Database = {
         Returns: boolean
       }
       js_trim: { Args: { p_value: string }; Returns: string }
+      judge_event_access: { Args: { p_event_slug: string }; Returns: Json }
+      judge_event_summary: { Args: { p_judge_id: string }; Returns: Json }
+      judge_events: { Args: Record<PropertyKey, never>; Returns: Json }
       lock_participant_project: {
         Args: { p_project_id: string; p_roster_only?: boolean }
         Returns: {

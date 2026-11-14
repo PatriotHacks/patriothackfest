@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server"
 
 import { AUTH_COOKIE } from "@/lib/auth-cookie"
 import { isOtpSession } from "@/lib/otp-session"
-import { projectReturnPath } from "@/lib/project-return-path"
+import { loginReturnPath } from "@/lib/login-return-path"
 
 export async function proxy(request: NextRequest) {
   const response = await updateSession(request, {
@@ -12,7 +12,7 @@ export async function proxy(request: NextRequest) {
     loginPath: "/login",
     isValidSession: isOtpSession,
   })
-  const returnTo = projectReturnPath(request.nextUrl.pathname)
+  const returnTo = loginReturnPath(request.nextUrl.pathname)
   const location = response.headers.get("location")
   if (returnTo !== "/start" && location) {
     const url = new URL(location, request.url)

@@ -29,6 +29,17 @@ describe("project login redirects", () => {
     )
     expect(response.headers.get("location")).toBe("http://localhost:3001/login")
   })
+  it("preserves a judge event destination without changing cookie handling", async () => {
+    updateSession.mockResolvedValue(
+      NextResponse.redirect("http://localhost:3001/login")
+    )
+    const response = await proxy(
+      new NextRequest("http://localhost:3001/judge/fall-2026")
+    )
+    expect(
+      new URL(response.headers.get("location")!).searchParams.get("next")
+    ).toBe("/judge/fall-2026")
+  })
   it("does not replace successful responses or unrelated locations", async () => {
     updateSession.mockResolvedValue(NextResponse.next())
     expect(
