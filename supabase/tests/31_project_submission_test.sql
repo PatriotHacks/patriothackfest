@@ -6,7 +6,7 @@ create function pg_temp.login(n integer) returns void language sql as $$
 $$;
 create function pg_temp.save(p_content jsonb default '{}',p_tracks uuid[] default '{}',p_submit boolean default false)
 returns timestamptz language sql as $$
-  select public.participant_save_project(current_setting('test.project')::uuid,p_content,p_tracks,p_submit,
+  select public.participant_save_project(current_setting('test.project')::uuid,p_content,'{}',p_tracks,p_submit,
     (public.participant_project_detail(current_setting('test.project')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'updated_at')::timestamptz);
 $$;
 insert into auth.users(id,email)
@@ -63,7 +63,7 @@ select throws_ok($$select pg_temp.save('{"name":"Invalid change"}')$$,'PT422',nu
 select is(public.participant_project_detail(current_setting('test.project')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'name','Demo','failed validation rolls back content');
 select lives_ok($$select pg_temp.save(current_setting('test.content')::jsonb,'{}',true)$$,'repeat submit succeeds with no sponsor tracks');
 select is(public.participant_project_detail(current_setting('test.project')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'submitted_at',current_setting('test.first_submission'),'first submission timestamp preserved');
-select throws_ok($$select public.participant_save_project(current_setting('test.project')::uuid,'{}','{}',false,'2000-01-01')$$,'PT409','This project changed. Reload before saving again.','stale content save rejected');
+select throws_ok($$select public.participant_save_project(current_setting('test.project')::uuid,'{}','{}','{}',false,'2000-01-01')$$,'PT409','This project changed. Reload before saving again.','stale content save rejected');
 reset role;
 select pg_temp.login(2);
 select throws_ok($$select pg_temp.save(current_setting('test.content')::jsonb)$$,'PT404','Project not found','collaborator cannot edit');
@@ -77,7 +77,7 @@ select lives_ok($$select pg_temp.save(current_setting('test.content')::jsonb)$$,
 select set_config('test.withdrawn',public.participant_create_project('ed100000-0000-0000-0000-000000000001')::text,true);
 select lives_ok($$select public.participant_withdraw_project(current_setting('test.withdrawn')::uuid)$$,'owner can withdraw before closing');
 select is(public.participant_project_detail(current_setting('test.withdrawn')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'status','withdrawn','withdrawn project remains readable');
-select throws_ok($$select public.participant_save_project(current_setting('test.withdrawn')::uuid,'{}')$$,'P0001','This project has been withdrawn','withdrawn project cannot be restored');
+select throws_ok($$select public.participant_save_project(current_setting('test.withdrawn')::uuid,'{}','{}')$$,'P0001','This project has been withdrawn','withdrawn project cannot be restored');
 reset role;
 update public.event_competition_settings set project_submissions_open_at=now()-interval '1 day',project_submissions_close_at=clock_timestamp()
 where event_id='ed100000-0000-0000-0000-000000000001';
@@ -95,7 +95,7 @@ select throws_ok($$select pg_temp.save(current_setting('test.content')::jsonb)$$
 select throws_ok($$update public.projects set status='draft'$$,'42501',null,'cannot change status directly');
 reset role;
 set local role anon;
-select throws_ok($$select public.participant_save_project(current_setting('test.project')::uuid,'{}')$$,'42501',null,'anonymous save denied');
+select throws_ok($$select public.participant_save_project(current_setting('test.project')::uuid,'{}','{}')$$,'42501',null,'anonymous save denied');
 select throws_ok($$select public.participant_withdraw_project(current_setting('test.project')::uuid)$$,'42501',null,'anonymous withdrawal denied');
 reset role;
 select is((select count(*) from public.applications where event_id='ed100000-0000-0000-0000-000000000001' and status='submitted'),2::bigint,'project withdrawal does not withdraw applications');
