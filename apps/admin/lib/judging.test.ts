@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest"
 import {
   competitionDates,
   competitionSettingsInput,
+  competitionSettingsValues,
   competitionTrackInput,
   judgingEndInputValue,
+  projectQuestionInput,
   type CompetitionSettingsInput,
 } from "./judging"
 
@@ -152,5 +154,65 @@ describe("competition tracks", () => {
         competitionTrackInput.safeParse({ ...track, ...change }).success
       ).toBe(false)
     }
+  })
+})
+
+describe("split settings forms", () => {
+  it("turns stored settings into form values that round-trip unchanged", () => {
+    const values = competitionSettingsValues(defaults.eventId, {
+      event_id: defaults.eventId,
+      enabled: true,
+      project_submissions_open_at: "2026-11-15T05:00:00Z",
+      project_submissions_close_at: null,
+      judging_started_at: null,
+      judging_close_at: "2026-11-21T05:00:00Z",
+      general_reviews_per_project: 3,
+      judges_see_answers: false,
+      created_at: "2026-11-01T00:00:00Z",
+      updated_at: "2026-11-01T00:00:00Z",
+    })
+    expect(values).toEqual(defaults)
+    expect(competitionDates(values).judgingClose).toBe(
+      "2026-11-21T05:00:00.000Z"
+    )
+  })
+  it("uses disabled blank defaults before settings exist", () => {
+    expect(competitionSettingsValues(defaults.eventId, null)).toEqual({
+      eventId: defaults.eventId,
+      enabled: false,
+      open: "",
+      close: "",
+      judgingEnd: "",
+      generalReviews: 3,
+    })
+  })
+})
+
+describe("project question input", () => {
+  const question = {
+    eventId: defaults.eventId,
+    label: " Why? ",
+    helpText: " ",
+    required: false,
+    maxLength: 5000,
+  }
+  it("trims text and bounds length limits", () => {
+    expect(projectQuestionInput.parse(question)).toMatchObject({
+      label: "Why?",
+      helpText: "",
+    })
+    expect(
+      projectQuestionInput.safeParse({ ...question, label: " " }).success
+    ).toBe(false)
+    expect(
+      projectQuestionInput.safeParse({ ...question, label: "x".repeat(301) })
+        .success
+    ).toBe(false)
+    expect(
+      projectQuestionInput.safeParse({ ...question, maxLength: 0 }).success
+    ).toBe(false)
+    expect(
+      projectQuestionInput.safeParse({ ...question, maxLength: 10_001 }).success
+    ).toBe(false)
   })
 })
