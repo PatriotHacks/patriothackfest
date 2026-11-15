@@ -2,7 +2,8 @@
 
 Rostered judges use the existing participant deployment and email OTP login at
 `/judge`. No application, profile name, admin role, new Auth provider, or separate
-judge deployment is required. Organizer results remain Person A's A3 work.
+judge deployment is required. [Organizer results](judging-results.md) consumes
+submitted scorecards separately for General and each active sponsor track.
 
 ## Development deployment
 

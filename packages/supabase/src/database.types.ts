@@ -1087,6 +1087,10 @@ export type Database = {
         Returns: Json
       }
       admin_judge_roster: { Args: { p_event_id: string }; Returns: Json }
+      admin_judging_results: {
+        Args: { p_event_id: string; p_page?: number; p_track_id?: string }
+        Returns: Json
+      }
       admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
       admin_reassign_assignment: {
         Args: {

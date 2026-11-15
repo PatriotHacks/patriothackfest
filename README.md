@@ -172,7 +172,9 @@ organizers can generate missing assignments, inspect coverage/loads, and manuall
 assign, cancel, or reassign untouched work. Judges can complete their assigned
 queue, save partial scorecards, and Submit & next. Current database deadlines
 enforce scoring; extensions restore unfinished work without reopening completed
-reviews or participant content. Organizer results remain follow-up work.
+reviews or participant content. Organizer-only results show separate general/track
+averages, completed-review counts versus targets, insufficient coverage, and ties;
+winner decisions remain manual.
 
 See [Judging settings setup and verification](docs/judging-settings.md) for migration
 instructions, a disposable manual-test event, click-through checks, and the database
@@ -192,6 +194,9 @@ conflict rules, manual management, concurrency checks, and the C2 handoff.
 
 See [Judge reviews and deadlines](docs/judge-reviews.md) for C2/C3 deployment,
 scorecards, extension recovery, concurrency verification and the real-login rehearsal.
+
+See [Organizer judging results](docs/judging-results.md) for A3 deployment,
+contextual averages/coverage/tie rules, privacy, and the final integration rehearsal.
 
 ```sh
 pnpm dev         # all apps

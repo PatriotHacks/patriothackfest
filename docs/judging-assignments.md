@@ -1,6 +1,6 @@
 # Assignment generation and management (A2)
 
-Organizers/owners use **Assignments** in `/judging?event=YOUR_EVENT` after closing submissions and clicking **Start judging**. A2 itself grants no new participant/judge privileges. [C2/C3](judge-reviews.md) adds scoped judge queues/scorecard saves; organizer results remain A3 work.
+Organizers/owners use **Assignments** in `/judging?event=YOUR_EVENT` after closing submissions and clicking **Start judging**. A2 itself grants no new participant/judge privileges. [C2/C3](judge-reviews.md) adds scoped judge queues/scorecard saves; [A3 results](judging-results.md) shows separate completed-review counts and averages.
 
 ## Development deployment
 
@@ -57,7 +57,7 @@ Use the existing B3/C1 sandbox and real organizer OAuth login; no auth bypass:
 5. Filter by project/status, use coverage/assignment pages, and follow project detail/back links. Context labels must distinguish general and each sponsor track.
 6. Cancel an untouched row and leave it cancelled; no immediate replacement appears. Generate again: another eligible judge may fill the slot, but the old pair stays cancelled.
 7. Reassign another untouched row. Confirm old cancelled/new untouched rows and unchanged coverage; a stale second request must not add another replacement.
-8. On an isolated database fixture, save a note or score on an assignment and refresh. Its controls become protected. Direct management RPC attempts must fail too. There is no judge score-save UI until C2.
+8. Using the judge scorecard UI, save a note or score on an assignment and refresh admin. Its controls become protected. Direct management RPC attempts must fail too.
 9. Deactivate a judge/reduce capacity or the general target: existing work stays, warnings appear, and generation does not remove scores. Expire/extend judging: management remains available, projects remain permanently frozen.
 10. An admissions reviewer, participant, judge, or anonymous user must not access organizer reads/mutations. An allowlisted email with OTP rather than admin OAuth is also denied.
 

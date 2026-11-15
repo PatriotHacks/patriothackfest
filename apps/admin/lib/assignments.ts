@@ -114,18 +114,28 @@ export function assignmentContextLabel(trackName: string | null) {
   return trackName === null ? "General" : `Sponsor: ${trackName}`
 }
 
-export function assignmentHref(
-  eventSlug: string,
-  filters: AssignmentFilters,
-  projectsPage: number
-) {
-  const params = new URLSearchParams({
-    event: eventSlug,
-    projectsPage: String(projectsPage),
+export function assignmentQueryParams(
+  filters: AssignmentFilters
+): Record<string, string> {
+  return {
     coveragePage: String(filters.coveragePage),
     assignmentPage: String(filters.assignmentPage),
     assignmentStatus: filters.status,
+    ...(filters.projectId ? { assignmentProject: filters.projectId } : {}),
+  }
+}
+
+export function assignmentHref(
+  eventSlug: string,
+  filters: AssignmentFilters,
+  projectsPage: number,
+  preserved: Record<string, string> = {}
+) {
+  const params = new URLSearchParams({
+    ...preserved,
+    event: eventSlug,
+    projectsPage: String(projectsPage),
+    ...assignmentQueryParams(filters),
   })
-  if (filters.projectId) params.set("assignmentProject", filters.projectId)
   return `/judging?${params}#assignments`
 }

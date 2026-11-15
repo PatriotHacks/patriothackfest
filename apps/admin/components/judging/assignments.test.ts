@@ -90,4 +90,26 @@ describe("organizer assignment coverage", () => {
     expect(html).toContain("No assignments match this page and filter")
     expect(html).toContain("Assign manually")
   })
+  it("retains result context/pages through assignment links and status forms", () => {
+    const html = renderToStaticMarkup(
+      createElement(AssignmentsSection, {
+        eventId: id,
+        eventSlug: "event",
+        started: false,
+        data,
+        filters: {
+          coveragePage: 2,
+          assignmentPage: 2,
+          status: "all",
+          projectId: id,
+        },
+        projectsPage: 3,
+        resultsQuery: { resultsTrack: id, resultsPage: "4" },
+      })
+    )
+    expect(html).toContain(`resultsTrack=${id}&amp;resultsPage=4`)
+    expect(html).toContain(`name="resultsTrack" value="${id}"`)
+    expect(html).toContain('name="resultsPage" value="4"')
+    expect(html).toContain("Show all projects")
+  })
 })

@@ -24,12 +24,14 @@ export function AssignmentPages({
   projectsPage,
   kind,
   hasMore,
+  resultsQuery = {},
 }: {
   eventSlug: string
   filters: AssignmentFilters
   projectsPage: number
   kind: "coveragePage" | "assignmentPage"
   hasMore: boolean
+  resultsQuery?: Record<string, string>
 }) {
   const page = filters[kind]
   return (
@@ -45,7 +47,8 @@ export function AssignmentPages({
           href={assignmentHref(
             eventSlug,
             { ...filters, [kind]: page - 1 },
-            projectsPage
+            projectsPage,
+            resultsQuery
           )}
         >
           Previous
@@ -58,7 +61,8 @@ export function AssignmentPages({
           href={assignmentHref(
             eventSlug,
             { ...filters, [kind]: page + 1 },
-            projectsPage
+            projectsPage,
+            resultsQuery
           )}
         >
           Next
@@ -75,6 +79,7 @@ export function AssignmentsSection({
   data,
   filters,
   projectsPage,
+  resultsQuery = {},
 }: {
   eventId: string
   eventSlug: string
@@ -82,6 +87,7 @@ export function AssignmentsSection({
   data: AssignmentOverview
   filters: AssignmentFilters
   projectsPage: number
+  resultsQuery?: Record<string, string>
 }) {
   return (
     <section
@@ -121,7 +127,8 @@ export function AssignmentsSection({
                 coveragePage: 1,
                 assignmentPage: 1,
               },
-              projectsPage
+              projectsPage,
+              resultsQuery
             )}
           >
             Show all projects
@@ -166,7 +173,8 @@ export function AssignmentsSection({
                           coveragePage: 1,
                           assignmentPage: 1,
                         },
-                        projectsPage
+                        projectsPage,
+                        resultsQuery
                       )}
                     >
                       Filter assignments to this project
@@ -202,6 +210,7 @@ export function AssignmentsSection({
         projectsPage={projectsPage}
         kind="coveragePage"
         hasMore={data.coverage_has_more}
+        resultsQuery={resultsQuery}
       />
       <h3 className="font-semibold">Judge loads</h3>
       {data.judges.length === 0 ? (
@@ -258,6 +267,9 @@ export function AssignmentsSection({
         <input type="hidden" name="event" value={eventSlug} />
         <input type="hidden" name="projectsPage" value={projectsPage} />
         <input type="hidden" name="coveragePage" value={filters.coveragePage} />
+        {Object.entries(resultsQuery).map(([name, value]) => (
+          <input key={name} type="hidden" name={name} value={value} />
+        ))}
         {filters.projectId && (
           <input
             type="hidden"
@@ -343,6 +355,7 @@ export function AssignmentsSection({
         projectsPage={projectsPage}
         kind="assignmentPage"
         hasMore={data.assignments_has_more}
+        resultsQuery={resultsQuery}
       />
     </section>
   )

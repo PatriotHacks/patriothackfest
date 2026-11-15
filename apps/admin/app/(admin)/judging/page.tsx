@@ -6,6 +6,7 @@ import { CompetitionTrackForm } from "@/components/judging/track-form"
 import { JudgeRoster } from "@/components/judging/judges"
 import { SubmittedProjectsList } from "@/components/judging/projects"
 import { AssignmentsSection } from "@/components/judging/assignments"
+import { ResultsSection } from "@/components/judging/results"
 import { EventTabs } from "@/components/event-tabs"
 import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
@@ -15,7 +16,9 @@ import { judgeRosterSchema } from "@/lib/judges"
 import { getSubmittedProjects } from "@/lib/organizer-project-data"
 import { parseProjectsPage } from "@/lib/organizer-projects"
 import { getAssignmentOverview } from "@/lib/assignment-data"
-import { parseAssignmentQuery } from "@/lib/assignments"
+import { assignmentQueryParams, parseAssignmentQuery } from "@/lib/assignments"
+import { getJudgingResults } from "@/lib/judging-results-data"
+import { parseResultsQuery, resultsQueryParams } from "@/lib/judging-results"
 
 export default async function JudgingPage({
   searchParams,
@@ -26,6 +29,7 @@ export default async function JudgingPage({
   const { event: slug, projectsPage } = query
   const page = parseProjectsPage(projectsPage)
   const assignmentFilters = parseAssignmentQuery(query)
+  const resultsQuery = parseResultsQuery(query)
   const { data: events, error: eventsError } = await supabase
     .from("events")
     .select("id, slug, name, starts_at, ends_at")
@@ -56,18 +60,33 @@ export default async function JudgingPage({
   if (tracks.error) throw new Error(tracks.error.message)
   if (roster.error) throw new Error(roster.error.message)
   const started = Boolean(settings.data?.judging_started_at)
+  const invalidResultsContext =
+    resultsQuery.invalidContext ||
+    (resultsQuery.filters.trackId !== null &&
+      !tracks.data.some(
+        (track) => track.active && track.id === resultsQuery.filters.trackId
+      ))
+  const results = invalidResultsContext
+    ? null
+    : await getJudgingResults(event.id, resultsQuery.filters)
+  const resultParams = {
+    ...resultsQueryParams(resultsQuery.filters),
+    ...(resultsQuery.invalidContext ? { resultsTrack: "unavailable" } : {}),
+  }
+  const assignmentParams = assignmentQueryParams(assignmentFilters)
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="Judging"
-        description="Submitted projects, dates, tracks, judge roster, and assignments. These do not change admissions applications."
+        description="Submitted projects, dates, tracks, judge roster, assignments, and results. These do not change admissions applications."
       />
       <EventTabs events={events} selected={event.slug} basePath="/judging" />
       <SubmittedProjectsList
         eventSlug={event.slug}
         page={page}
         data={projects}
+        judgingQuery={{ ...assignmentParams, ...resultParams }}
       />
       <Card>
         <CardContent>
@@ -131,11 +150,21 @@ export default async function JudgingPage({
         data={assignments}
         filters={assignmentFilters}
         projectsPage={page}
+        resultsQuery={resultParams}
+      />
+      <ResultsSection
+        eventSlug={event.slug}
+        tracks={tracks.data}
+        filters={resultsQuery.filters}
+        data={results}
+        invalidContext={invalidResultsContext}
+        projectsPage={page}
+        otherQuery={assignmentParams}
       />
       <p className="text-sm text-muted-foreground">
         Participants use /projects and rostered judges use /judge in the
-        participant portal. Judge queues, scorecards, and results are separate
-        follow-up work.
+        participant portal. Results are organizer-only; winner decisions are
+        manual.
       </p>
     </div>
   )

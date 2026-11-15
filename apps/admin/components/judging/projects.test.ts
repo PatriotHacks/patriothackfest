@@ -91,6 +91,25 @@ describe("organizer submitted projects", () => {
     expect(html).toContain("No submitted projects for this event yet")
     expect(html).not.toContain("<table")
   })
+  it("preserves results and assignment state while paging the project list", () => {
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectsList, {
+        eventSlug: event.slug,
+        page: 2,
+        data,
+        judgingQuery: {
+          resultsTrack: id,
+          resultsPage: "3",
+          assignmentStatus: "submitted",
+        },
+      })
+    )
+    expect(html).toContain(
+      `resultsTrack=${id}&amp;resultsPage=3&amp;assignmentStatus=submitted`
+    )
+    expect(html).toContain("projectsPage=3#submitted-projects")
+    expect(html).toContain("projectsPage=1#submitted-projects")
+  })
   it("uses unnamed/general-only fallbacks and escapes submitted names", () => {
     const project = {
       ...data.projects[0]!,

@@ -60,8 +60,12 @@ export function parseProjectsPage(value: unknown) {
   return parsed.success ? parsed.data : 1
 }
 
-export function submittedProjectsHref(eventSlug: string, page: number) {
-  return `/judging?${new URLSearchParams({ event: eventSlug, projectsPage: String(page) })}#submitted-projects`
+export function submittedProjectsHref(
+  eventSlug: string,
+  page: number,
+  preserved: Record<string, string> = {}
+) {
+  return `/judging?${new URLSearchParams({ ...preserved, event: eventSlug, projectsPage: String(page) })}#submitted-projects`
 }
 
 export function submittedProjectHref(
