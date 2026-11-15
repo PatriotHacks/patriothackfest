@@ -11,6 +11,7 @@ import { ProjectCollaborators } from "./collaborators"
 import type { ProjectDetail } from "@/lib/projects"
 
 const id = "a0000000-0000-4000-8000-000000000001"
+const questionId = "b0000000-0000-4000-8000-000000000001"
 const detail: ProjectDetail = {
   project: {
     id,
@@ -26,10 +27,20 @@ const detail: ProjectDetail = {
     status: "draft",
     submitted_at: null,
     updated_at: "2026-11-15T05:00:00Z",
+    answers: { [questionId]: "Our <b>story</b>" },
   },
   collaborators: [{ user_id: id, full_name: "Participant Two" }],
   selected_tracks: [],
   available_tracks: [],
+  questions: [
+    {
+      id: questionId,
+      label: "What inspired you?",
+      help_text: "A paragraph is enough",
+      required: true,
+      max_length: 500,
+    },
+  ],
 }
 
 describe("project form views", () => {
@@ -67,6 +78,29 @@ describe("project form views", () => {
     expect(roster).toContain("Participant Two")
     expect(roster).not.toContain("Add collaborator")
     expect(roster).not.toContain("Remove")
+  })
+  it("renders a limited textarea per question with label, help, and required marker", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectEditor, { detail, editable: true })
+    )
+    expect(html).toContain("What inspired you? (required)")
+    expect(html).toContain("A paragraph is enough")
+    expect(html).toContain('maxLength="500"')
+    expect(html).toContain("16/500 characters")
+    expect(html).toContain("Our &lt;b&gt;story&lt;/b&gt;")
+  })
+  it("shows escaped answers in the read-only view", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectReadOnly, { detail })
+    )
+    expect(html).toContain("What inspired you?")
+    expect(html).toContain("Our &lt;b&gt;story&lt;/b&gt;")
+    const blank = renderToStaticMarkup(
+      createElement(ProjectReadOnly, {
+        detail: { ...detail, project: { ...detail.project, answers: {} } },
+      })
+    )
+    expect(blank).toContain("No answer")
   })
   it("does not render unsafe URLs as clickable links", () => {
     const html = renderToStaticMarkup(

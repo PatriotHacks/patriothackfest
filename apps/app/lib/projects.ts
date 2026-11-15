@@ -55,6 +55,7 @@ export const projectSaveSchema = z
   .object({
     projectId: z.guid(),
     content: projectContentSchema,
+    answers: z.record(z.guid(), z.string().trim().max(10_000)),
     trackIds: z.array(z.guid()),
     submit: z.boolean(),
     updatedAt: z.iso.datetime({ offset: true }),
@@ -62,6 +63,7 @@ export const projectSaveSchema = z
   .strict()
 
 export type ProjectContent = z.infer<typeof projectContentSchema>
+export type ProjectAnswers = Record<string, string>
 export type ProjectSaveInput = z.input<typeof projectSaveSchema>
 // SQL RETURNS TABLE metadata does not encode nullable output columns.
 export type ProjectEvent = Omit<
@@ -90,6 +92,7 @@ export const projectDetailSchema = z.object({
     status: z.enum(["draft", "submitted", "withdrawn"]),
     submitted_at: z.string().nullable(),
     updated_at: z.string(),
+    answers: z.record(z.string(), z.string()),
   }),
   collaborators: z.array(
     z.object({ user_id: z.guid(), full_name: z.string().nullable() })
@@ -103,6 +106,15 @@ export const projectDetailSchema = z.object({
       name: z.string(),
       description: z.string().nullable(),
       sponsor: z.string().nullable(),
+    })
+  ),
+  questions: z.array(
+    z.object({
+      id: z.guid(),
+      label: z.string(),
+      help_text: z.string().nullable(),
+      required: z.boolean(),
+      max_length: z.number().int().positive(),
     })
   ),
 })
@@ -143,6 +155,15 @@ export function projectContent(detail: ProjectDetail): ProjectContent {
     demo_url: detail.project.demo_url ?? "",
     video_url: detail.project.video_url ?? "",
   }
+}
+
+export function projectAnswers(detail: ProjectDetail): ProjectAnswers {
+  return Object.fromEntries(
+    detail.questions.map((question) => [
+      question.id,
+      detail.project.answers[question.id] ?? "",
+    ])
+  )
 }
 
 export function fieldErrors(issues: z.core.$ZodIssue[]) {
