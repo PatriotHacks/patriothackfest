@@ -28,6 +28,10 @@ describe("judge project rendering", () => {
             submitted_at: null,
             notes: "",
           },
+          answers: [
+            { label: "What inspired you?", answer: "<i>Curiosity</i>" },
+            { label: "Anything else?", answer: "" },
+          ],
         },
       })
     )
@@ -35,5 +39,8 @@ describe("judge project rendering", () => {
     expect(html).toContain("&lt;script&gt;")
     expect(html).toContain('rel="noopener noreferrer"')
     expect(html).not.toContain("javascript:")
+    expect(html).toContain("What inspired you?")
+    expect(html).toContain("&lt;i&gt;Curiosity&lt;/i&gt;")
+    expect(html).toContain("No answer")
   })
 })

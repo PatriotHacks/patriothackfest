@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  judgeAssignmentSchema,
   judgeContinuation,
   judgeProjectUrl,
   reviewContext,
@@ -80,5 +81,42 @@ describe("judge scorecard contracts", () => {
     "https://example.test\\bad",
   ])("rejects unsafe project link %s", (url) => {
     expect(judgeProjectUrl(url)).toBeNull()
+  })
+})
+
+describe("judge assignment payload", () => {
+  const payload = {
+    assignment: {
+      id,
+      track_id: null,
+      track_name: null,
+      creativity_score: null,
+      technical_score: null,
+      impact_score: null,
+      presentation_score: null,
+      total_score: null,
+      submitted_at: null,
+      notes: "",
+    },
+    project: {
+      name: "Project",
+      summary: "",
+      description: "",
+      technologies: "",
+      repository_url: null,
+      demo_url: null,
+      video_url: null,
+    },
+    answers: [{ label: "Why?", answer: "Because" }],
+  }
+  it("accepts question answers and an empty list when hidden", () => {
+    expect(judgeAssignmentSchema.parse(payload).answers).toHaveLength(1)
+    expect(
+      judgeAssignmentSchema.parse({ ...payload, answers: [] }).answers
+    ).toEqual([])
+  })
+  it("rejects payloads without the answers list", () => {
+    const { answers: _answers, ...rest } = payload
+    expect(judgeAssignmentSchema.safeParse(rest).success).toBe(false)
   })
 })
