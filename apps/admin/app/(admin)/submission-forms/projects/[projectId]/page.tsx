@@ -9,7 +9,7 @@ import { parseProjectsPage } from "@/lib/organizer-projects"
 export default async function SubmittedProjectPage({
   params,
   searchParams,
-}: PageProps<"/judging/projects/[projectId]">) {
+}: PageProps<"/submission-forms/projects/[projectId]">) {
   const { level } = await getAdmin()
   if (!hasLevel(level, "organizer")) redirect("/forms")
   const { projectId } = await params

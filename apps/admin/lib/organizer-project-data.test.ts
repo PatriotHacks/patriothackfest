@@ -39,6 +39,7 @@ const detail = {
   owner: { id, full_name: "Owner" },
   collaborators: [],
   tracks: [],
+  answers: [],
 }
 beforeEach(() => {
   vi.clearAllMocks()

@@ -41,6 +41,10 @@ const detail: SubmittedProjectDetail = {
   owner: { id, full_name: "Owner" },
   collaborators: [{ id, full_name: "Collaborator" }],
   tracks: data.projects[0]!.tracks,
+  answers: [
+    { question_id: id, label: "What inspired you?", answer: "<b>Bees</b>" },
+    { question_id: id, label: "Anything else?", answer: "" },
+  ],
 }
 
 describe("organizer submitted projects", () => {
@@ -62,7 +66,7 @@ describe("organizer submitted projects", () => {
       "View project",
     ])
       expect(html).toContain(text)
-    expect(html).toContain(`/judging/projects/${id}?event=fall-2026`)
+    expect(html).toContain(`/submission-forms/projects/${id}?event=fall-2026`)
     expect(html).toContain("projectsPage=1")
     expect(html).toContain(">Next</a>")
     expect(html).not.toContain(">Previous</a>")
@@ -90,25 +94,6 @@ describe("organizer submitted projects", () => {
     )
     expect(html).toContain("No submitted projects for this event yet")
     expect(html).not.toContain("<table")
-  })
-  it("preserves results and assignment state while paging the project list", () => {
-    const html = renderToStaticMarkup(
-      createElement(SubmittedProjectsList, {
-        eventSlug: event.slug,
-        page: 2,
-        data,
-        judgingQuery: {
-          resultsTrack: id,
-          resultsPage: "3",
-          assignmentStatus: "submitted",
-        },
-      })
-    )
-    expect(html).toContain(
-      `resultsTrack=${id}&amp;resultsPage=3&amp;assignmentStatus=submitted`
-    )
-    expect(html).toContain("projectsPage=3#submitted-projects")
-    expect(html).toContain("projectsPage=1#submitted-projects")
   })
   it("uses unnamed/general-only fallbacks and escapes submitted names", () => {
     const project = {
@@ -143,6 +128,9 @@ describe("organizer submitted projects", () => {
       "Submitted",
       "Last updated",
       "Read-only organizer view",
+      "What inspired you?",
+      "&lt;b&gt;Bees&lt;/b&gt;",
+      "No answer",
     ])
       expect(html).toContain(text)
     expect(html).toContain("projectsPage=2#submitted-projects")
