@@ -7,7 +7,7 @@ import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useId, useState, useTransition } from "react"
 
-import { saveCompetitionTrack } from "@/app/(admin)/judging/actions"
+import { saveCompetitionTrack } from "@/app/(admin)/submission-forms/actions"
 
 export function CompetitionTrackForm({
   eventId,
