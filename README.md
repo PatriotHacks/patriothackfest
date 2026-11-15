@@ -169,8 +169,10 @@ create projects, add collaborators, save drafts, and submit through `/projects`
 in the participant app. Organizers can also manage judges in `/judging`; rostered
 judges sign in through `/judge` without participant onboarding. After Start judging,
 organizers can generate missing assignments, inspect coverage/loads, and manually
-assign, cancel, or reassign untouched work. Review queues, scorecards, and results
-remain follow-up work.
+assign, cancel, or reassign untouched work. Judges can complete their assigned
+queue, save partial scorecards, and Submit & next. Current database deadlines
+enforce scoring; extensions restore unfinished work without reopening completed
+reviews or participant content. Organizer results remain follow-up work.
 
 See [Judging settings setup and verification](docs/judging-settings.md) for migration
 instructions, a disposable manual-test event, click-through checks, and the database
@@ -187,6 +189,9 @@ list/detail view, development migration, and manual verification checklist.
 
 See [Judging assignments](docs/judging-assignments.md) for A2 generation, capacity and
 conflict rules, manual management, concurrency checks, and the C2 handoff.
+
+See [Judge reviews and deadlines](docs/judge-reviews.md) for C2/C3 deployment,
+scorecards, extension recovery, concurrency verification and the real-login rehearsal.
 
 ```sh
 pnpm dev         # all apps

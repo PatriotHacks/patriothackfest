@@ -23,7 +23,7 @@ describe("judge event landing", () => {
     expect(html).toContain("Sponsor judge")
     expect(html).toContain("Track A")
     expect(html).toContain("Judging has not started")
-    expect(html).toContain("not implemented")
+    expect(html).not.toContain("not implemented")
     expect(html).not.toContain("Submit review")
   })
   it("displays the final included judging minute in Eastern time", () => {

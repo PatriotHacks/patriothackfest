@@ -33,8 +33,8 @@ export default async function JudgeEventsPage() {
         ))
       )}
       <p className="text-sm text-[#6E6E68]">
-        This portal currently confirms judge access. Assignment queues and
-        scoring are coming next.
+        Choose an event to view your assigned review queue and scorecards.
+        Only your own assigned projects and reviews are available here.
       </p>
     </>
   )

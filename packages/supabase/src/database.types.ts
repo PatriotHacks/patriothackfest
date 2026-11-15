@@ -728,8 +728,9 @@ export type Database = {
           total_score: number | null
           track_id: string | null
           updated_at: string
+          judge_scorecard: Json | null
         }
-        ComputedFields: never
+        ComputedFields: "judge_scorecard"
         Insert: {
           cancelled?: boolean
           created_at?: string
@@ -1213,6 +1214,32 @@ export type Database = {
         Returns: Database["public"]["Enums"]["admin_level"]
       }
       current_event_judge_id: { Args: { p_event_id: string }; Returns: string }
+      current_judge_assignments: {
+        Args: { p_event_id: string }
+        Returns: {
+          cancelled: boolean
+          created_at: string
+          creativity_score: number | null
+          event_id: string
+          id: string
+          impact_score: number | null
+          judge_id: string
+          notes: string
+          presentation_score: number | null
+          project_id: string
+          submitted_at: string | null
+          technical_score: number | null
+          total_score: number | null
+          track_id: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "judging_assignments"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       current_verified_judge_email: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1248,9 +1275,33 @@ export type Database = {
         Returns: boolean
       }
       js_trim: { Args: { p_value: string }; Returns: string }
+      judge_assignment: {
+        Args: { p_assignment_id: string; p_event_slug: string }
+        Returns: Json
+      }
       judge_event_access: { Args: { p_event_slug: string }; Returns: Json }
       judge_event_summary: { Args: { p_judge_id: string }; Returns: Json }
       judge_events: { Args: Record<PropertyKey, never>; Returns: Json }
+      judge_queue: { Args: { p_event_slug: string }; Returns: Json }
+      judge_save_review: {
+        Args: {
+          p_assignment_id: string
+          p_event_slug: string
+          p_notes: string
+          p_scores: Json
+          p_submit?: boolean
+        }
+        Returns: Json
+      }
+      judge_scorecard: {
+        Args: {
+          p_assignment: Omit<
+            Database["public"]["Tables"]["judging_assignments"]["Row"],
+            Database["public"]["Tables"]["judging_assignments"]["ComputedFields"]
+          >
+        }
+        Returns: Json
+      }
       lock_assignment_event: {
         Args: { p_event_id: string }
         Returns: undefined

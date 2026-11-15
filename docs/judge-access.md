@@ -1,6 +1,6 @@
 # Judge roster and access: C1 verification
 
-C1 adds judge roster management and a judge-only landing area. It does **not** add assignments, project review, scorecards, or results yet. Keep using the existing admin and participant deployments.
+C1 introduced judge roster management and a judge-only landing area. [C2/C3 judge reviews and deadlines](judge-reviews.md) now adds queues/scorecards; use that document for the current review workflow. Keep using the existing admin and participant deployments. Results remain A3 work.
 
 ## 1. Apply the C1 migrations to development
 
@@ -64,7 +64,7 @@ http://localhost:3001/judge
 4. Open the sandbox event. The first event visit links the roster entry to the verified account. Repeat/reload is safe.
 5. General judge sees General judge. Sponsor judge sees Sponsor judge and only their authorized track labels.
 6. Confirm the waiting/status message and judging deadline/timezone. A prepared/disabled event may show its landing page; this does not grant project access or open judging.
-7. There is intentionally no review queue, project catalog, scorecard, or fake completion count. The page explicitly says those are follow-up work.
+7. With C2/C3 applied, the event page shows the real assigned queue/counts. No assignments means an honest empty state; use the review rehearsal for scoring checks.
 8. Confirm no participant application/name is required for a fresh judge account. No new access to admin forms, admissions answers, or unrelated projects is granted. An account that independently already owns a participant project retains its separate participant permissions.
 
 Ordinary login opened directly at `/login` without a judge destination still goes to `/start`. Use `/judge` or a direct `/judge/YOUR_SANDBOX_SLUG` link for judge-only login. Project destinations and normal admissions behavior remain supported.
@@ -91,7 +91,7 @@ Deactivation takes effect on the next database/server read; it does not retroact
 - Deactivating a judge never deletes assignments or scores. Changing capacity never silently cancels work; future A2 generation must respect remaining capacity.
 - No hard-delete, account-transfer, automatic reassignment, or invitation workflow is included.
 
-Current C1 alone cannot create assignments. [A2 assignment generation and management](judging-assignments.md) now creates them; history-dependent roster restrictions are directly visible after generation. Judge queues and scoring remain C2/C3 work.
+Current C1 alone cannot create assignments. [A2 assignment generation and management](judging-assignments.md) creates them; history-dependent roster restrictions are directly visible after generation. [C2/C3](judge-reviews.md) provides judge queues and scoring.
 
 ## 7. Automated checks and limits
 

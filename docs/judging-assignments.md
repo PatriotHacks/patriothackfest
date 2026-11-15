@@ -1,6 +1,6 @@
 # Assignment generation and management (A2)
 
-Organizers/owners use **Assignments** in `/judging?event=YOUR_EVENT` after closing submissions and clicking **Start judging**. Participants and judges do not gain new read/write privileges. Judge queues, scorecard saves, and results remain C2/C3/A3 follow-up work.
+Organizers/owners use **Assignments** in `/judging?event=YOUR_EVENT` after closing submissions and clicking **Start judging**. A2 itself grants no new participant/judge privileges. [C2/C3](judge-reviews.md) adds scoped judge queues/scorecard saves; organizer results remain A3 work.
 
 ## Development deployment
 
@@ -98,4 +98,4 @@ The actual argument names have the `p_` prefix shown in generated Supabase types
 
 Assignment/roster writers lock **settings first**, then relevant assignment/judge rows. A reassign/cancel locks its source assignment before checking untouched state. C2 score writes must lock/recheck the assignment row in the same transaction, rejecting cancellation and revalidating the current active verified judge, context, submission state, and current database deadline after waiting. If they also need settings locks, acquire settings before assignment rows; never reverse that order. Do not save from a stale pre-lock read or implement unconditional score updates after an organizer cancellation.
 
-Deactivation does not cancel work. C2 should consume only the current judge's non-cancelled assignments and reuse C1's private verified-identity helper, without allowing raw project/scorecard directory access. A2 deliberately does not grant judge project/assignment reads or implement score saves.
+Deactivation does not cancel work. C2/C3 consumes only the current judge's non-cancelled assignments and reuses C1's private verified-identity helper, without allowing raw project/scorecard directory access. Its migrations/verification are documented in [Judge reviews and deadlines](judge-reviews.md).

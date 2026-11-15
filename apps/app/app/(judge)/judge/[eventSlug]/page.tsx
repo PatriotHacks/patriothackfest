@@ -4,6 +4,8 @@ import Link from "next/link"
 
 import { JudgeEventDetails } from "@/components/judge/event-details"
 import { getJudgeEvent } from "@/lib/judge-access"
+import { getJudgeQueue } from "@/lib/judge-review-data"
+import { JudgeQueueList } from "@/components/judge/queue"
 
 export default async function JudgeEventPage({
   params,
@@ -24,6 +26,7 @@ export default async function JudgeEventPage({
         </Link>
       </>
     )
+  const queue = await getJudgeQueue(eventSlug)
   return (
     <>
       <Link href="/judge" className="text-sm underline">
@@ -31,6 +34,14 @@ export default async function JudgeEventPage({
       </Link>
       <h1 className={cn(SERIF, "text-4xl")}>{event.name}</h1>
       <JudgeEventDetails event={event} />
+      {queue ? (
+        <JudgeQueueList eventSlug={eventSlug} queue={queue} />
+      ) : (
+        <p>
+          Judge access unavailable. Your roster may have changed; contact an
+          organizer.
+        </p>
+      )}
     </>
   )
 }

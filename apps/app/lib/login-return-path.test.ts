@@ -6,6 +6,7 @@ describe("judge and project login destinations", () => {
     "/judge",
     "/judge/",
     "/judge/fall-2026",
+    "/judge/fall-2026/a0000000-0000-4000-8000-000000000001",
     "/projects",
     "/projects/fall-2026/a0000000-0000-4000-8000-000000000001",
   ])("allows implemented local destination %s", (path) => {
@@ -23,6 +24,8 @@ describe("judge and project login destinations", () => {
     "/judge#fragment",
     "/judge\n",
     "/judge/fall-2026/not-implemented",
+    "/judge/fall-2026/a0000000-0000-4000-8000-000000000001/extra",
+    "/judge/fall-2026/a0000000-0000-4000-8000-000000000001?next=//evil.test",
     "/admins",
   ])("rejects unsafe or unimplemented destination %s", (value) => {
     expect(loginReturnPath(value)).toBe("/start")

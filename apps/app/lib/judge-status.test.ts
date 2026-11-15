@@ -2,6 +2,24 @@ import { describe, expect, it } from "vitest"
 import { judgeWindowStatus } from "./judge-status"
 describe("judge landing status", () => {
   const cutoff = "2026-11-21T05:00:00Z"
+  it("does not claim judging is open when disabled or missing a deadline", () => {
+    expect(
+      judgeWindowStatus(
+        {
+          enabled: false,
+          judging_started_at: cutoff,
+          judging_close_at: cutoff,
+        },
+        0
+      )
+    ).toBe("not-started")
+    expect(
+      judgeWindowStatus(
+        { enabled: true, judging_started_at: cutoff, judging_close_at: null },
+        0
+      )
+    ).toBe("ended")
+  })
   it("shows a waiting state without denying the landing page", () => {
     expect(
       judgeWindowStatus({ judging_started_at: null, judging_close_at: cutoff })

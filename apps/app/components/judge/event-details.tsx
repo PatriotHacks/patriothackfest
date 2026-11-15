@@ -1,9 +1,9 @@
-import { formatInZone } from "@workspace/forms"
 import { PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { JudgeEvent } from "@/lib/judge-access"
 import { judgeWindowStatus } from "@/lib/judge-status"
+import { JudgeDeadline } from "./deadline"
 
 export function JudgeEventDetails({ event }: { event: JudgeEvent }) {
   const status = judgeWindowStatus(event)
@@ -30,19 +30,10 @@ export function JudgeEventDetails({ event }: { event: JudgeEvent }) {
         {status === "not-started"
           ? "Judging has not started. Organizers are preparing the event."
           : status === "ended"
-            ? "The judging window has ended. Refresh this page to pick up any deadline extension."
+            ? "Judging is not open. Saved reviews remain available; open an unfinished scorecard to check for an extension without losing inputs."
             : "Judging has started."}
       </p>
-      <p className="text-sm">
-        {event.judging_close_at
-          ? `Judging ends ${formatInZone(new Date(Date.parse(event.judging_close_at) - 60_000).toISOString())}, including that final minute.`
-          : "No judging deadline configured yet."}{" "}
-        Times are in America/New_York.
-      </p>
-      <p className="text-sm text-[#6E6E68]">
-        Your judge access is confirmed. Assignment generation, project review
-        queues, and scorecards are not implemented in this release.
-      </p>
+      <JudgeDeadline closeAt={event.judging_close_at} />
     </section>
   )
 }

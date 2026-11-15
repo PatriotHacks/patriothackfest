@@ -6,6 +6,18 @@ import { proxy } from "./proxy"
 
 beforeEach(() => vi.clearAllMocks())
 describe("project login redirects", () => {
+  it("preserves assignment deep links through OTP login", async () => {
+    const path = "/judge/fall-2026/a0000000-0000-4000-8000-000000000001"
+    updateSession.mockResolvedValue(
+      NextResponse.redirect("http://localhost:3001/login")
+    )
+    const response = await proxy(
+      new NextRequest(`http://localhost:3001${path}`)
+    )
+    expect(
+      new URL(response.headers.get("location")!).searchParams.get("next")
+    ).toBe(path)
+  })
   it("preserves project destination and existing session-error cookies", async () => {
     const response = NextResponse.redirect(
       "http://localhost:3001/login?error=session"
