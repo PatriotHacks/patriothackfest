@@ -159,11 +159,50 @@ To open applications, set `event.startsOn` and `event.endsOn` (`YYYY-MM-DD`) and
 
 ## Development
 
+### Project submissions and judging (in progress)
+
+Organizers/owners can configure project submission dates, judging deadlines, and
+sponsor tracks at `/judging` in the admin app, where they can also list and inspect
+submitted projects in read-only detail. This is separate from admissions
+form deadlines. Competitions are disabled by default. Eligible participants can
+create projects, add collaborators, save drafts, and submit through `/projects`
+in the participant app. Organizers can also manage judges in `/judging`; rostered
+judges sign in through `/judge` without participant onboarding. After Start judging,
+organizers can generate missing assignments, inspect coverage/loads, and manually
+assign, cancel, or reassign untouched work. Judges can complete their assigned
+queue, save partial scorecards, and Submit & next. Current database deadlines
+enforce scoring; extensions restore unfinished work without reopening completed
+reviews or participant content. Organizer-only results show separate general/track
+averages, completed-review counts versus targets, insufficient coverage, and ties;
+winner decisions remain manual.
+
+See [Judging settings setup and verification](docs/judging-settings.md) for migration
+instructions, a disposable manual-test event, click-through checks, and the database
+contract for the participant/judge implementations.
+
+See [Participant project submissions](docs/project-submissions.md) for participant
+setup, permissions, and the full manual submission rehearsal.
+
+See [Judge roster and access](docs/judge-access.md) for C1 setup, judge login,
+revocation checks, and the assignment/review integration contract.
+
+See [Organizer submitted projects](docs/organizer-projects.md) for the submitted-only
+list/detail view, development migration, and manual verification checklist.
+
+See [Judging assignments](docs/judging-assignments.md) for A2 generation, capacity and
+conflict rules, manual management, concurrency checks, and the C2 handoff.
+
+See [Judge reviews and deadlines](docs/judge-reviews.md) for C2/C3 deployment,
+scorecards, extension recovery, concurrency verification and the real-login rehearsal.
+
+See [Organizer judging results](docs/judging-results.md) for A3 deployment,
+contextual averages/coverage/tie rules, privacy, and the final integration rehearsal.
+
 ```sh
 pnpm dev         # all apps
 pnpm build
 pnpm lint
 pnpm typecheck
-pnpm test        # vitest unit tests (packages/forms, packages/email) via turbo
+pnpm test        # vitest tests in forms, email, admin, and participant app via turbo
 pnpm db:test     # pgTAP tests against SUPABASE_DB_URL
 ```

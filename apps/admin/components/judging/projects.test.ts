@@ -1,0 +1,173 @@
+import { createElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { describe, expect, it } from "vitest"
+
+import { SubmittedProjectsList } from "./projects"
+import { SubmittedProjectDetails } from "./project-details"
+import type {
+  SubmittedProjectDetail,
+  SubmittedProjects,
+} from "@/lib/organizer-projects"
+
+const id = "a0000000-0000-4000-8000-000000000001"
+const event = { slug: "fall-2026", name: "Fall 2026" }
+const data: SubmittedProjects = {
+  has_more: true,
+  projects: [
+    {
+      id,
+      name: "Demo",
+      submitted_at: "2026-11-15T05:00:00Z",
+      owner: { id, full_name: "Owner" },
+      tracks: [{ id, name: "Sponsor A", active: false }],
+    },
+  ],
+}
+const detail: SubmittedProjectDetail = {
+  project: {
+    id,
+    event_id: id,
+    status: "submitted",
+    name: "Demo",
+    summary: "Summary",
+    description: "Description",
+    technologies: "TypeScript",
+    repository_url: null,
+    demo_url: "https://example.com",
+    video_url: null,
+    submitted_at: "2026-11-15T05:00:00Z",
+    updated_at: "2026-11-15T06:00:00Z",
+  },
+  owner: { id, full_name: "Owner" },
+  collaborators: [{ id, full_name: "Collaborator" }],
+  tracks: data.projects[0]!.tracks,
+}
+
+describe("organizer submitted projects", () => {
+  it("shows summary fields, inactive labels, Eastern dates and event-scoped detail links", () => {
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectsList, {
+        eventSlug: event.slug,
+        page: 1,
+        data,
+      })
+    )
+    for (const text of [
+      "Demo",
+      "Owner",
+      "Sponsor A",
+      "(inactive)",
+      "America/New_York",
+      "Nov 15",
+      "View project",
+    ])
+      expect(html).toContain(text)
+    expect(html).toContain(`/judging/projects/${id}?event=fall-2026`)
+    expect(html).toContain("projectsPage=1")
+    expect(html).toContain(">Next</a>")
+    expect(html).not.toContain(">Previous</a>")
+  })
+  it("preserves pagination and distinguishes an empty later page", () => {
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectsList, {
+        eventSlug: event.slug,
+        page: 3,
+        data: { projects: [], has_more: false },
+      })
+    )
+    expect(html).toContain("No submitted projects on this page")
+    expect(html).toContain("projectsPage=2#submitted-projects")
+    expect(html).toContain(">First page</a>")
+    expect(html).not.toContain(">Next</a>")
+  })
+  it("renders a clear first-page empty state without inventing failures or totals", () => {
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectsList, {
+        eventSlug: event.slug,
+        page: 1,
+        data: { projects: [], has_more: false },
+      })
+    )
+    expect(html).toContain("No submitted projects for this event yet")
+    expect(html).not.toContain("<table")
+  })
+  it("preserves results and assignment state while paging the project list", () => {
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectsList, {
+        eventSlug: event.slug,
+        page: 2,
+        data,
+        judgingQuery: {
+          resultsTrack: id,
+          resultsPage: "3",
+          assignmentStatus: "submitted",
+        },
+      })
+    )
+    expect(html).toContain(
+      `resultsTrack=${id}&amp;resultsPage=3&amp;assignmentStatus=submitted`
+    )
+    expect(html).toContain("projectsPage=3#submitted-projects")
+    expect(html).toContain("projectsPage=1#submitted-projects")
+  })
+  it("uses unnamed/general-only fallbacks and escapes submitted names", () => {
+    const project = {
+      ...data.projects[0]!,
+      name: "<script>alert(1)</script>",
+      owner: { id, full_name: null },
+      tracks: [],
+    }
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectsList, {
+        eventSlug: event.slug,
+        page: 1,
+        data: { projects: [project], has_more: false },
+      })
+    )
+    expect(html).toContain("Unnamed participant")
+    expect(html).toContain("None (general judging only)")
+    expect(html).not.toContain("<script>alert(1)</script>")
+    expect(html).toContain("&lt;script&gt;")
+  })
+  it("renders complete read-only detail, safe new-tab links, and context-preserving back navigation", () => {
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectDetails, { event, detail, page: 2 })
+    )
+    for (const text of [
+      "Summary",
+      "Description",
+      "TypeScript",
+      "Owner",
+      "Collaborator",
+      "Sponsor A",
+      "Submitted",
+      "Last updated",
+      "Read-only organizer view",
+    ])
+      expect(html).toContain(text)
+    expect(html).toContain("projectsPage=2#submitted-projects")
+    expect(html).toContain('href="https://example.com"')
+    expect(html).toContain('target="_blank"')
+    expect(html).toContain('rel="noopener noreferrer"')
+    expect(html).not.toContain("<form")
+    expect(html).not.toContain("<input")
+    expect(html).not.toContain("<button")
+  })
+  it("never renders project text as HTML or links unsafe legacy URLs", () => {
+    const unsafe = {
+      ...detail,
+      project: {
+        ...detail.project,
+        description: '<img src=x onerror="alert(1)">',
+        demo_url: "javascript:alert(1)",
+      },
+    }
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectDetails, { event, detail: unsafe, page: 1 })
+    )
+    expect(html).toContain("&lt;img")
+    expect(html).not.toContain("<img src=x")
+    expect(html).not.toContain('href="javascript:')
+    expect(html).toContain("No usable HTTP(S) project links")
+  })
+})

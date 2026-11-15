@@ -16,7 +16,13 @@ import { sendCode, verifyCode } from "@/app/login/actions"
 const RESEND_COOLDOWN_SECONDS = 60
 const CODE_LENGTH = 6
 
-export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
+export function OtpLoginForm({
+  sessionEnded,
+  returnTo = "/start",
+}: {
+  sessionEnded: boolean
+  returnTo?: string
+}) {
   const [email, setEmail] = useState("")
   const [code, setCode] = useState("")
   const [step, setStep] = useState<"email" | "code">("email")
@@ -45,7 +51,7 @@ export function OtpLoginForm({ sessionEnded }: { sessionEnded: boolean }) {
   function verify(value: string) {
     setError(null)
     startTransition(async () => {
-      const result = await verifyCode(email, value)
+      const result = await verifyCode(email, value, returnTo)
       setError(result.error)
       if (result.error) setCode("")
     })
