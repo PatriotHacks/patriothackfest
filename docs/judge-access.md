@@ -46,7 +46,7 @@ Sign into `http://localhost:3002/login` with the allowlisted Google organizer/ow
 4. Confirm email normalization, type, scopes, capacity, and Active state persist. There is no invitation email or automatic admin grant.
 5. Duplicate email/case variation should fail. Sponsor with no tracks and capacities outside 1–1000 should fail.
 6. Switch events: this event's roster must not appear elsewhere.
-7. An admissions reviewer must not see the Judging navigation or be able to invoke roster reads/mutations.
+7. An admissions reviewer must not see the Judging Management navigation or be able to invoke roster reads/mutations.
 
 An entry is **Not linked yet** until the verified judge visits its event page. A previously registered participant can also be unlinked; the label is not a statement about whether an Auth user exists.
 
