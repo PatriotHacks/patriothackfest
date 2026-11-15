@@ -972,6 +972,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_add_assignment: {
+        Args: {
+          p_event_id: string
+          p_judge_id: string
+          p_project_id: string
+          p_track_id?: string
+        }
+        Returns: string
+      }
+      admin_assignment_candidates: {
+        Args: { p_event_id: string; p_project_id: string; p_track_id?: string }
+        Returns: Json
+      }
+      admin_assignment_overview: {
+        Args: {
+          p_assignment_page?: number
+          p_coverage_page?: number
+          p_event_id: string
+          p_project_id?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
       admin_broadcast_history: {
         Args: { p_event_id: string }
         Returns: {
@@ -1000,6 +1023,10 @@ export type Database = {
           daily_used: number
           recipients: number
         }[]
+      }
+      admin_cancel_assignment: {
+        Args: { p_assignment_id: string; p_event_id: string }
+        Returns: undefined
       }
       admin_change_application_role: {
         Args: {
@@ -1054,8 +1081,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_generate_assignments: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
       admin_judge_roster: { Args: { p_event_id: string }; Returns: Json }
       admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
+      admin_reassign_assignment: {
+        Args: {
+          p_assignment_id: string
+          p_event_id: string
+          p_judge_id: string
+        }
+        Returns: string
+      }
       admin_release_counts: {
         Args: { p_form_id: string }
         Returns: {
@@ -1136,6 +1175,31 @@ export type Database = {
       }
       application_file_deletable: { Args: { p_name: string }; Returns: boolean }
       application_file_writable: { Args: { p_name: string }; Returns: boolean }
+      assignment_candidates: {
+        Args: { p_event_id: string; p_project_id: string; p_track_id: string }
+        Returns: {
+          capacity: number
+          email: string
+          judge_id: string
+          workload: number
+        }[]
+      }
+      assignment_targets: {
+        Args: { p_event_id: string }
+        Returns: {
+          assigned: number
+          missing: number
+          project_id: string
+          project_name: string
+          target: number
+          track_id: string
+          track_name: string
+        }[]
+      }
+      assignment_untouched: {
+        Args: { p_assignment_id: string }
+        Returns: boolean
+      }
       broadcast_audience_includes: {
         Args: {
           p_audience: Database["public"]["Enums"]["broadcast_audience"]
@@ -1187,6 +1251,10 @@ export type Database = {
       judge_event_access: { Args: { p_event_slug: string }; Returns: Json }
       judge_event_summary: { Args: { p_judge_id: string }; Returns: Json }
       judge_events: { Args: Record<PropertyKey, never>; Returns: Json }
+      lock_assignment_event: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
       lock_participant_project: {
         Args: { p_project_id: string; p_roster_only?: boolean }
         Returns: {

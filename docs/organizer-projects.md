@@ -93,4 +93,4 @@ admin_submitted_project_detail(p_event_id, p_project_id)
 
 Both enforce organizer authorization independently and use fixed search paths. Direct project/collaborator table access is still denied. The list returns at most 50 summaries plus a has-more indicator; detail explicitly projects the allowed project/participant/track fields rather than returning full profiles.
 
-Next workload: A2 assignment generation, then C2/C3 queues and scorecards, then remaining A3 progress/results. This view adds none of those operations.
+The separate [A2 assignment area](judging-assignments.md) now adds generation, coverage/loads, and untouched management. C2/C3 queues and scorecards and remaining A3 progress/results are still follow-up work. This submitted-project detail view remains read-only.

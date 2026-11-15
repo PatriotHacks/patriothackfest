@@ -167,8 +167,10 @@ submitted projects in read-only detail. This is separate from admissions
 form deadlines. Competitions are disabled by default. Eligible participants can
 create projects, add collaborators, save drafts, and submit through `/projects`
 in the participant app. Organizers can also manage judges in `/judging`; rostered
-judges sign in through `/judge` without participant onboarding. Review queues,
-scorecards, assignment generation, and results remain follow-up work.
+judges sign in through `/judge` without participant onboarding. After Start judging,
+organizers can generate missing assignments, inspect coverage/loads, and manually
+assign, cancel, or reassign untouched work. Review queues, scorecards, and results
+remain follow-up work.
 
 See [Judging settings setup and verification](docs/judging-settings.md) for migration
 instructions, a disposable manual-test event, click-through checks, and the database
@@ -182,6 +184,9 @@ revocation checks, and the assignment/review integration contract.
 
 See [Organizer submitted projects](docs/organizer-projects.md) for the submitted-only
 list/detail view, development migration, and manual verification checklist.
+
+See [Judging assignments](docs/judging-assignments.md) for A2 generation, capacity and
+conflict rules, manual management, concurrency checks, and the C2 handoff.
 
 ```sh
 pnpm dev         # all apps

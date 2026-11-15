@@ -5,7 +5,7 @@
 This document covers **Person A's A1 foundation**, not the complete judging system. Person B's participant workflow and C1 judge roster/access are now implemented; see [Participant project submissions](project-submissions.md) and [Judge roster and access](judge-access.md) for setup and rehearsal.
 
 - `/judging` in the existing admin app: per-event enablement, submission dates, judging end, general review target, and sponsor tracks.
-- Read-only submitted-project list/detail: see [Organizer submitted projects](organizer-projects.md). Drafts and withdrawn projects are excluded; assignment/progress/results remain follow-up work.
+- Read-only submitted-project list/detail: see [Organizer submitted projects](organizer-projects.md). Drafts and withdrawn projects are excluded. A2 now adds [assignment generation and management](judging-assignments.md); scorecards/results remain follow-up work.
 - Organizer/owner-only navigation, page access, server actions, and database mutations.
 - Eight base tables matching the simplified plan, with generated TypeScript types.
 - Three admin RPCs for saving settings, saving tracks, and starting judging.
@@ -18,7 +18,7 @@ Admissions forms, application deadlines, ordinary applicant login routing, admis
 ## Not implemented yet
 
 - Judge queues/scorecards, save/submit review operations, assigned-project checks, and judging-window enforcement on reviews: **Person C2/C3**.
-- Assignment generation, reassignment, progress, and results: **Person A's A2/A3**.
+- Results and remaining review progress: **Person A's A3**. A2 assignment generation, coverage, loads, and untouched management are implemented separately.
 
 The project/judge tables intentionally have **no direct client table privileges**. Person B provides scoped project RPCs; C1 provides organizer roster operations and verified judge event access. Assigned-project/review workflows remain unimplemented. Neither participant nor judge access grants arbitrary table reads/writes.
 

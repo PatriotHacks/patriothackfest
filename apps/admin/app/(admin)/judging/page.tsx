@@ -5,6 +5,7 @@ import { CompetitionSettingsForm } from "@/components/judging/settings-form"
 import { CompetitionTrackForm } from "@/components/judging/track-form"
 import { JudgeRoster } from "@/components/judging/judges"
 import { SubmittedProjectsList } from "@/components/judging/projects"
+import { AssignmentsSection } from "@/components/judging/assignments"
 import { EventTabs } from "@/components/event-tabs"
 import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
@@ -13,14 +14,18 @@ import { hasLevel } from "@/lib/levels"
 import { judgeRosterSchema } from "@/lib/judges"
 import { getSubmittedProjects } from "@/lib/organizer-project-data"
 import { parseProjectsPage } from "@/lib/organizer-projects"
+import { getAssignmentOverview } from "@/lib/assignment-data"
+import { parseAssignmentQuery } from "@/lib/assignments"
 
 export default async function JudgingPage({
   searchParams,
 }: PageProps<"/judging">) {
   const { supabase, level } = await getAdmin()
   if (!hasLevel(level, "organizer")) redirect("/forms")
-  const { event: slug, projectsPage } = await searchParams
+  const query = await searchParams
+  const { event: slug, projectsPage } = query
   const page = parseProjectsPage(projectsPage)
+  const assignmentFilters = parseAssignmentQuery(query)
   const { data: events, error: eventsError } = await supabase
     .from("events")
     .select("id, slug, name, starts_at, ends_at")
@@ -31,7 +36,7 @@ export default async function JudgingPage({
   if (!event)
     return <PageHeader title="Judging" description="No events configured." />
 
-  const [settings, tracks, roster, projects] = await Promise.all([
+  const [settings, tracks, roster, projects, assignments] = await Promise.all([
     supabase
       .from("event_competition_settings")
       .select("*")
@@ -45,6 +50,7 @@ export default async function JudgingPage({
       .order("id"),
     supabase.rpc("admin_judge_roster", { p_event_id: event.id }),
     getSubmittedProjects(event.id, page),
+    getAssignmentOverview(event.id, assignmentFilters),
   ])
   if (settings.error) throw new Error(settings.error.message)
   if (tracks.error) throw new Error(tracks.error.message)
@@ -55,7 +61,7 @@ export default async function JudgingPage({
     <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="Judging"
-        description="Submitted projects, project dates, sponsor tracks, and judge roster. These do not change admissions applications."
+        description="Submitted projects, dates, tracks, judge roster, and assignments. These do not change admissions applications."
       />
       <EventTabs events={events} selected={event.slug} basePath="/judging" />
       <SubmittedProjectsList
@@ -118,10 +124,18 @@ export default async function JudgingPage({
           judges={judgeRosterSchema.parse(roster.data)}
         />
       )}
+      <AssignmentsSection
+        eventId={event.id}
+        eventSlug={event.slug}
+        started={started}
+        data={assignments}
+        filters={assignmentFilters}
+        projectsPage={page}
+      />
       <p className="text-sm text-muted-foreground">
         Participants use /projects and rostered judges use /judge in the
-        participant portal. Assignment queues, scorecards, and results are
-        separate follow-up work.
+        participant portal. Judge queues, scorecards, and results are separate
+        follow-up work.
       </p>
     </div>
   )

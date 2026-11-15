@@ -91,7 +91,7 @@ Deactivation takes effect on the next database/server read; it does not retroact
 - Deactivating a judge never deletes assignments or scores. Changing capacity never silently cancels work; future A2 generation must respect remaining capacity.
 - No hard-delete, account-transfer, automatic reassignment, or invitation workflow is included.
 
-Current C1 alone cannot create assignments. The history-dependent restrictions are tested with database fixtures and become directly visible once A2 exists.
+Current C1 alone cannot create assignments. [A2 assignment generation and management](judging-assignments.md) now creates them; history-dependent roster restrictions are directly visible after generation. Judge queues and scoring remain C2/C3 work.
 
 ## 7. Automated checks and limits
 
