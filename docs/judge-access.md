@@ -89,6 +89,7 @@ Deactivation takes effect on the next database/server read; it does not retroact
 - A scope referenced by any assignment, including cancelled/history rows, cannot be removed. The form labels/protects those scopes and the database enforces the same restriction.
 - New scopes must be active same-event tracks. Existing inactive scopes stay visible; a retained referenced scope is never deleted/recreated during save.
 - Deactivating a judge never deletes assignments or scores. Changing capacity never silently cancels work; future A2 generation must respect remaining capacity.
+- A person cannot judge an event they participate in: saving a judge fails when the email matches the current confirmed `auth.users` email of an account with a submitted participant application for that event, or when the bound account has one. Draft/withdrawn applications and other roles do not block. Applying as a participant after being rostered is not blocked.
 - No hard-delete, account-transfer, automatic reassignment, or invitation workflow is included.
 
 Current C1 alone cannot create assignments. [A2 assignment generation and management](judging-assignments.md) creates them; history-dependent roster restrictions are directly visible after generation. [C2/C3](judge-reviews.md) provides judge queues and scoring.
