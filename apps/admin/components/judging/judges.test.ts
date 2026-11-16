@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@/app/(admin)/judging/judges-actions", () => ({
   saveEventJudge: vi.fn(),
 }))
-import { AddJudgeForm, EventJudgeForm } from "./judges"
+import { AddJudgeForm, EventJudgeForm, JudgeRoster } from "./judges"
 import type { JudgeRosterEntry } from "@/lib/judges"
 const id = "a0000000-0000-4000-8000-000000000001"
 const judge: JudgeRosterEntry = {
@@ -31,6 +31,34 @@ describe("judge admin form", () => {
     expect(html).not.toContain("Active")
     expect(html).not.toContain("Sponsor tracks")
     expect(html).not.toContain("Send invitation")
+  })
+  it("lists judges in a table with tracks, load, status and an edit control", () => {
+    const general: JudgeRosterEntry = {
+      ...judge,
+      id: "a0000000-0000-4000-8000-000000000002",
+      email: "general@example.com",
+      kind: "general",
+      active: true,
+      bound: false,
+      workload: 0,
+      scopes: [],
+    }
+    const html = renderToStaticMarkup(
+      createElement(JudgeRoster, {
+        eventId: id,
+        tracks,
+        judges: [judge, general],
+      })
+    )
+    expect(html).toContain('aria-label="Judges"')
+    expect(html).toContain("<td")
+    expect(html).toContain("Sponsor A")
+    expect(html).toContain("—")
+    expect(html).toContain("Inactive · Linked")
+    expect(html).toContain("Active · Not linked yet")
+    expect(html).toContain('aria-label="Edit person@example.com"')
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).not.toContain("Save judge")
   })
   it("keeps referenced inactive sponsor scopes visible and protected when editing", () => {
     const html = renderToStaticMarkup(
