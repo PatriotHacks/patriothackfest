@@ -54,4 +54,11 @@ describe("judge admin action", () => {
     )
     expect(revalidatePath).not.toHaveBeenCalled()
   })
+  it("surfaces the judge/participant conflict inline", async () => {
+    const message =
+      "This email has a participant application for this event and cannot be a judge"
+    rpc.mockResolvedValue({ error: { message } })
+    expect(await saveEventJudge(input)).toEqual({ error: message })
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
 })
