@@ -10,7 +10,7 @@ create function pg_temp.detail() returns jsonb language sql as $$
 $$;
 create function pg_temp.save(p_answers jsonb,p_submit boolean default false) returns timestamptz language sql as $$
   select public.participant_save_project('a4300000-0000-0000-0000-000000000001',
-    '{"name":"Demo","summary":"Summary","description":"Description","demo_url":"https://example.com"}',
+    '{"name":"Demo","summary":"Summary","description":"Description","demo_url":"https://example.com"}'::jsonb,
     p_answers,'{}',p_submit,(pg_temp.detail()->'project'->>'updated_at')::timestamptz);
 $$;
 create function pg_temp.save_errors(p_answers jsonb,p_submit boolean default false) returns jsonb language plpgsql as $$
@@ -55,7 +55,7 @@ insert into public.projects(id,event_id,owner_user_id) values
 insert into public.event_judges(id,event_id,email,user_id) values
  ('b4300000-0000-0000-0000-000000000001','e4300000-0000-0000-0000-000000000001','questions-4@example.test','d4300000-0000-0000-0000-000000000004');
 
-select plan(49);
+select plan(51);
 
 -- Organizer-only question management.
 select pg_temp.login(2,'oauth');
@@ -105,6 +105,10 @@ select is(pg_temp.save_errors(jsonb_build_object(pg_temp.question(2),'   '),true
 select is(pg_temp.save_errors('{}'),'{}'::jsonb,'draft may leave required question blank');
 select is(pg_temp.save_errors(jsonb_build_object(pg_temp.question(2),' Short ',pg_temp.question(1),' Long answer ',pg_temp.question(3),' '),true),'{}'::jsonb,'complete answers submit');
 select is(pg_temp.detail()->'project'->'answers',jsonb_build_object(pg_temp.question(2),'Short',pg_temp.question(1),'Long answer'),'answers trimmed and blanks omitted');
+select lives_ok($$select public.participant_save_project(p_project_id=>'a4300000-0000-0000-0000-000000000001'::uuid,
+  p_content=>'{"name":"Demo","summary":"Summary","description":"Description","demo_url":"https://example.com"}'::jsonb,
+  p_expected_updated_at=>(pg_temp.detail()->'project'->>'updated_at')::timestamptz)$$,'save without answers argument still works');
+select is(pg_temp.detail()->'project'->'answers',jsonb_build_object(pg_temp.question(2),'Short',pg_temp.question(1),'Long answer'),'omitted answers keep stored answers');
 select is(pg_temp.detail()->'project'->>'status','submitted','project submitted');
 reset role;
 
