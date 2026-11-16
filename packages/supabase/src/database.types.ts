@@ -1500,7 +1500,7 @@ export type Database = {
       }
       participant_save_project: {
         Args: {
-          p_answers: Json
+          p_answers?: Json
           p_content: Json
           p_expected_updated_at?: string
           p_project_id: string

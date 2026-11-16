@@ -175,20 +175,24 @@ $$;
 drop function public.participant_save_project(uuid, jsonb, uuid[], boolean, timestamptz);
 
 create function public.participant_save_project(
-  p_project_id uuid, p_content jsonb, p_answers jsonb, p_track_ids uuid[] default '{}',
+  p_project_id uuid, p_content jsonb, p_answers jsonb default null, p_track_ids uuid[] default '{}',
   p_submit boolean default false, p_expected_updated_at timestamptz default null
 )
 returns timestamptz language plpgsql security definer set search_path = '' as $$
-declare v_project public.projects; v_errors jsonb; v_complete boolean; v_updated_at timestamptz;
+declare v_project public.projects; v_errors jsonb; v_complete boolean; v_updated_at timestamptz; v_answers jsonb;
 begin
   v_project := public.lock_participant_project(p_project_id, false);
+  v_answers := coalesce(p_answers, (
+    select coalesce(jsonb_object_agg(e.key, e.value), '{}'::jsonb) from jsonb_each(v_project.answers) e
+    join public.project_questions q on q.id::text = e.key and q.event_id = v_project.event_id and q.archived_at is null
+  ));
   if p_expected_updated_at is null or p_expected_updated_at is distinct from v_project.updated_at then
     raise exception 'This project changed. Reload before saving again.' using errcode='PT409';
   end if;
   if p_submit is null then raise exception 'Invalid submission request'; end if;
   v_complete := p_submit or v_project.status = 'submitted';
   v_errors := public.project_content_errors(p_content, v_complete)
-    || public.project_answer_errors(v_project.event_id, p_answers, v_complete);
+    || public.project_answer_errors(v_project.event_id, v_answers, v_complete);
   if p_track_ids is null or exists (
     select 1 from unnest(p_track_ids) selected(id)
     left join public.competition_tracks t on t.id=selected.id and t.event_id=v_project.event_id and t.active
@@ -210,7 +214,7 @@ begin
     description=btrim(coalesce(p_content->>'description','')),technologies=btrim(coalesce(p_content->>'technologies','')),
     repository_url=nullif(btrim(p_content->>'repository_url'),''),demo_url=nullif(btrim(p_content->>'demo_url'),''),video_url=nullif(btrim(p_content->>'video_url'),''),
     answers=coalesce((
-      select jsonb_object_agg(a.key,btrim(a.value)) from jsonb_each_text(p_answers) a
+      select jsonb_object_agg(a.key,btrim(a.value)) from jsonb_each_text(v_answers) a
       where btrim(coalesce(a.value,''))<>''
     ),'{}'::jsonb),
     status=case when p_submit then 'submitted' else status end,
