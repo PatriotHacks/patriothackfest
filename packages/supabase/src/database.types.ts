@@ -438,6 +438,7 @@ export type Database = {
           enabled: boolean
           event_id: string
           general_reviews_per_project: number
+          judges_see_answers: boolean
           judging_close_at: string | null
           judging_started_at: string | null
           project_submissions_close_at: string | null
@@ -450,6 +451,7 @@ export type Database = {
           enabled?: boolean
           event_id: string
           general_reviews_per_project?: number
+          judges_see_answers?: boolean
           judging_close_at?: string | null
           judging_started_at?: string | null
           project_submissions_close_at?: string | null
@@ -461,6 +463,7 @@ export type Database = {
           enabled?: boolean
           event_id?: string
           general_reviews_per_project?: number
+          judges_see_answers?: boolean
           judging_close_at?: string | null
           judging_started_at?: string | null
           project_submissions_close_at?: string | null
@@ -867,6 +870,54 @@ export type Database = {
           },
         ]
       }
+      project_questions: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          event_id: string
+          help_text: string | null
+          id: string
+          label: string
+          max_length: number
+          position: number
+          required: boolean
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          event_id: string
+          help_text?: string | null
+          id?: string
+          label: string
+          max_length?: number
+          position: number
+          required?: boolean
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          event_id?: string
+          help_text?: string | null
+          id?: string
+          label?: string
+          max_length?: number
+          position?: number
+          required?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_tracks: {
         Row: {
           event_id: string
@@ -903,6 +954,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          answers: Json
           created_at: string
           demo_url: string | null
           description: string
@@ -917,9 +969,11 @@ export type Database = {
           technologies: string
           updated_at: string
           video_url: string | null
+          project_question_answers: Json | null
         }
-        ComputedFields: never
+        ComputedFields: "project_question_answers"
         Insert: {
+          answers?: Json
           created_at?: string
           demo_url?: string | null
           description?: string
@@ -936,6 +990,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          answers?: Json
           created_at?: string
           demo_url?: string | null
           description?: string
@@ -981,6 +1036,10 @@ export type Database = {
           p_track_id?: string
         }
         Returns: string
+      }
+      admin_archive_project_question: {
+        Args: { p_event_id: string; p_question_id: string }
+        Returns: undefined
       }
       admin_assignment_candidates: {
         Args: { p_event_id: string; p_project_id: string; p_track_id?: string }
@@ -1091,6 +1150,27 @@ export type Database = {
         Args: { p_event_id: string; p_page?: number; p_track_id?: string }
         Returns: Json
       }
+      admin_project_questions: {
+        Args: { p_event_id: string }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          event_id: string
+          help_text: string | null
+          id: string
+          label: string
+          max_length: number
+          position: number
+          required: boolean
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "project_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
       admin_reassign_assignment: {
         Args: {
@@ -1120,6 +1200,10 @@ export type Database = {
       admin_release_decisions: { Args: { p_form_id: string }; Returns: Json }
       admin_reorder_form_fields: {
         Args: { p_field_ids: string[]; p_form_id: string }
+        Returns: undefined
+      }
+      admin_reorder_project_questions: {
+        Args: { p_event_id: string; p_question_ids: string[] }
         Returns: undefined
       }
       admin_retry_failed_broadcast: {
@@ -1164,6 +1248,21 @@ export type Database = {
           p_track_ids?: string[]
         }
         Returns: string
+      }
+      admin_save_project_question: {
+        Args: {
+          p_event_id: string
+          p_help_text: string
+          p_label: string
+          p_max_length: number
+          p_question_id?: string
+          p_required: boolean
+        }
+        Returns: string
+      }
+      admin_set_judges_see_answers: {
+        Args: { p_event_id: string; p_value: boolean }
+        Returns: undefined
       }
       admin_start_judging: { Args: { p_event_id: string }; Returns: undefined }
       admin_submitted_project_detail: {
@@ -1313,6 +1412,7 @@ export type Database = {
       lock_participant_project: {
         Args: { p_project_id: string; p_roster_only?: boolean }
         Returns: {
+          answers: Json
           created_at: string
           demo_url: string | null
           description: string
@@ -1334,6 +1434,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      lock_project_questions: {
+        Args: { p_event_id: string }
+        Returns: undefined
       }
       locked_answer_errors: {
         Args: { p_after: Json; p_before: Json; p_schema: Json }
@@ -1367,6 +1471,7 @@ export type Database = {
       participant_projects: {
         Args: { p_event_id: string }
         Returns: {
+          answers: Json
           created_at: string
           demo_url: string | null
           description: string
@@ -1395,6 +1500,7 @@ export type Database = {
       }
       participant_save_project: {
         Args: {
+          p_answers?: Json
           p_content: Json
           p_expected_updated_at?: string
           p_project_id: string
@@ -1407,6 +1513,10 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: undefined
       }
+      project_answer_errors: {
+        Args: { p_answers: Json; p_complete: boolean; p_event_id: string }
+        Returns: Json
+      }
       project_content_errors: {
         Args: { p_complete: boolean; p_content: Json }
         Returns: Json
@@ -1415,6 +1525,15 @@ export type Database = {
       project_is_accessible: {
         Args: { p_project_id: string }
         Returns: boolean
+      }
+      project_question_answers: {
+        Args: {
+          p_project: Omit<
+            Database["public"]["Tables"]["projects"]["Row"],
+            Database["public"]["Tables"]["projects"]["ComputedFields"]
+          >
+        }
+        Returns: Json
       }
       project_user_is_eligible: {
         Args: { p_event_id: string; p_user_id: string }

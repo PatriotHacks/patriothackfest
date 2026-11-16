@@ -59,6 +59,21 @@ export function SubmittedProjectDetails({
             {project.technologies || "Not provided"}
           </p>
         </section>
+        {detail.answers.length > 0 && (
+          <section
+            aria-label="Question answers"
+            className="flex flex-col gap-3"
+          >
+            {detail.answers.map((item) => (
+              <div key={item.question_id} className="flex flex-col gap-1">
+                <h2 className="text-xl font-semibold">{item.label}</h2>
+                <p className="break-words whitespace-pre-wrap">
+                  {item.answer || "No answer"}
+                </p>
+              </div>
+            ))}
+          </section>
+        )}
         <section
           aria-label="Project participants"
           className="flex flex-col gap-2"

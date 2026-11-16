@@ -13,7 +13,7 @@ This document covers **Person A's A1 foundation**, not the complete judging syst
 - Optional submission closing, irreversible Start judging, and adjustable judging end even after expiry.
 - Database triggers lock projects/collaborators/selected tracks/track definitions after Start judging, including writes from later security-definer RPCs.
 
-Admissions forms, application deadlines, ordinary applicant login routing, admissions decisions, and existing application pages are unchanged. Project links additionally retain a validated return destination through OTP login. The only existing admin navigation change is the Judging entry.
+Admissions forms, application deadlines, ordinary applicant login routing, admissions decisions, and existing application pages are unchanged. Project links additionally retain a validated return destination through OTP login. Competition settings are split across two admin pages: **Submission Forms** (`/submission-forms`: enablement, submission dates, sponsor tracks, paragraph questions, submitted projects) and **Judging Management** (`/judging`: judging end, general reviews, Start judging, judges, assignments, results). See [Project paragraph questions](project-questions.md).
 
 ## Not implemented yet
 
@@ -73,8 +73,11 @@ pnpm --filter admin dev
 Open `http://localhost:3002/login`, sign in with your allowlisted Google account, then visit:
 
 ```text
+http://localhost:3002/submission-forms?event=judging-settings-sandbox
 http://localhost:3002/judging?event=judging-settings-sandbox
 ```
+
+Submission enablement/dates and tracks are on the first page; judging end, review target, and Start judging are on the second. Enabling submissions requires a saved judging end, so save that in Judging Management first.
 
 ## 3. Click-through checklist
 
@@ -109,8 +112,8 @@ The UI includes the whole selected final minute. For example, a displayed end of
 
 ### Permissions and admissions regression
 
-1. With an admissions `reviewer` account, Judging must not appear in the sidebar; visiting it directly redirects to Forms, and direct mutations must be denied.
-2. Sign out; `/judging` redirects to login.
+1. With an admissions `reviewer` account, Submission Forms and Judging Management must not appear in the sidebar; visiting either directly redirects to Forms, and direct mutations must be denied.
+2. Sign out; `/submission-forms` and `/judging` redirect to login.
 3. Use a participant OTP account; it must not gain admin mutation access even if its email is allowlisted for OAuth.
 4. Open Forms/Applications and verify existing admissions dates and application behavior did not change.
 
@@ -127,7 +130,7 @@ pnpm db:test
 New tests:
 
 - `apps/admin/lib/judging.test.ts`: date conversion, final included minute, repeated-save round trip, missing dates, invalid/nonexistent local times, review targets, track input.
-- `apps/admin/app/(admin)/judging/actions.test.ts`: organizer checks, input rejection, scoped mutations, date payloads, database errors, revalidation.
+- `apps/admin/app/(admin)/judging/actions.test.ts` and `apps/admin/app/(admin)/submission-forms/actions.test.ts`: organizer checks, input rejection, scoped mutations, date payloads merged with stored settings, database errors, revalidation.
 - `supabase/tests/28_competition_foundation_test.sql`: 64 assertions for RLS/default-deny access, roles/auth methods, independent events, dates, tracks, Start judging, permanent content locks, post-expiry extensions, contextual uniqueness, foreign keys, and generated scores.
 
 The database suite was run on an isolated PostgreSQL 17 instance with pgTAP and lightweight Supabase auth/storage SQL fixtures. That verifies real PostgreSQL migrations/RLS/RPCs; it does not replace the browser rehearsal against actual Supabase OTP/OAuth/PostgREST. No hosted auth/browser flow was exercised automatically.

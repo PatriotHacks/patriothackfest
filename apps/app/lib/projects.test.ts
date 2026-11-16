@@ -65,6 +65,7 @@ describe("project fields", () => {
       projectSaveSchema.safeParse({
         projectId: id,
         content: {},
+        answers: {},
         trackIds: [],
         submit: false,
         updatedAt: "2026-11-15T05:00:00.123456+00:00",
@@ -78,6 +79,7 @@ describe("project fields", () => {
       projectSaveSchema.parse({
         projectId: id,
         content: {},
+        answers: {},
         trackIds: [],
         submit: false,
         updatedAt,

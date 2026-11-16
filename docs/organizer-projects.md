@@ -1,6 +1,6 @@
 # Organizer submitted-project visibility
 
-Organizers/owners can inspect submitted projects inside admin `/judging`. This completes the project-visibility slice of A3, not assignments, review progress, or results.
+Organizers/owners can inspect submitted projects inside admin **Submission Forms** (`/submission-forms`). This completes the project-visibility slice of A3, not assignments, review progress, or results.
 
 ## 1. Development setup
 
@@ -20,10 +20,10 @@ No new dependencies, Auth settings, service-role keys, application eligibility r
 Open:
 
 ```text
-http://localhost:3002/judging?event=YOUR_SANDBOX_SLUG
+http://localhost:3002/submission-forms?event=YOUR_SANDBOX_SLUG
 ```
 
-The **Submitted projects** section appears below the event selector, before the existing settings/tracks/judges sections. Each row shows:
+The **Submitted projects** section appears at the bottom of the page, after the submission settings, questions, and tracks. Each row shows:
 
 - Project name.
 - Owner display name (or an explicit unnamed-participant fallback).
@@ -36,7 +36,7 @@ Use Previous/Next for pages of 50. Page links preserve the event and scroll to t
 The detail URL includes both project and event context:
 
 ```text
-/judging/projects/PROJECT_UUID?event=YOUR_SANDBOX_SLUG&projectsPage=1
+/submission-forms/projects/PROJECT_UUID?event=YOUR_SANDBOX_SLUG&projectsPage=1
 ```
 
 It shows current project content, owner/collaborator names, selected tracks, safe repository/demo/video links, submission time, and last-updated time. Back to submitted projects returns to the selected event/page.

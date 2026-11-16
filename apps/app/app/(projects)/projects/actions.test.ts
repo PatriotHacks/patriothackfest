@@ -15,6 +15,7 @@ import {
 } from "./actions"
 
 const id = "a0000000-0000-4000-8000-000000000001"
+const questionId = "b0000000-0000-4000-8000-000000000001"
 const updatedAt = "2026-11-15T05:00:00.123456+00:00"
 const input = {
   projectId: id,
@@ -24,6 +25,7 @@ const input = {
     description: "C",
     demo_url: "https://example.com",
   },
+  answers: { [questionId]: " Answer " },
   trackIds: [],
   submit: true,
   updatedAt,
@@ -56,6 +58,7 @@ describe("project mutations", () => {
       expect.objectContaining({
         p_project_id: id,
         p_content: expect.objectContaining(input.content),
+        p_answers: { [questionId]: "Answer" },
         p_track_ids: [],
         p_submit: true,
         p_expected_updated_at: updatedAt,
@@ -76,6 +79,10 @@ describe("project mutations", () => {
         })
       ).error
     ).toBeTruthy()
+    expect(
+      (await saveProject({ ...input, answers: { "not-a-question": "x" } }))
+        .error
+    ).toBeTruthy()
     expect((await removeProjectCollaborator(id, "bad")).error).toBeTruthy()
     expect(rpc).not.toHaveBeenCalled()
   })
@@ -93,12 +100,15 @@ describe("project mutations", () => {
       error: {
         code: "PT422",
         message: "Needs attention",
-        details: '{"track_ids":"Unavailable track"}',
+        details: `{"track_ids":"Unavailable track","answers.${questionId}":"This question is required"}`,
       },
     })
     expect(await saveProject(input)).toEqual({
       error: "Needs attention",
-      fieldErrors: { track_ids: "Unavailable track" },
+      fieldErrors: {
+        track_ids: "Unavailable track",
+        [`answers.${questionId}`]: "This question is required",
+      },
     })
     expect(revalidatePath).not.toHaveBeenCalled()
   })

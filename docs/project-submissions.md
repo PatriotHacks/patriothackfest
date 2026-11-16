@@ -13,7 +13,7 @@ This implements Person B's workflow on `feat/submissions-and-judging`. C1 judge 
 - Optional multi-track selection; all submitted projects enter general judging.
 - Closed/disabled/withdrawn projects remain readable to associated people, but not editable.
 - OTP login returns to a validated project link without changing ordinary admissions login routing.
-- Organizers/owners can inspect submitted projects inside admin `/judging`; see [Organizer submitted projects](organizer-projects.md) for that read-only view and its permission checks.
+- Organizers/owners can inspect submitted projects inside admin `/submission-forms`; see [Organizer submitted projects](organizer-projects.md) for that read-only view and its permission checks.
 
 ## 1. Apply to a development project
 
@@ -59,8 +59,8 @@ In the admin app:
 1. In Forms, create/publish a simple participant application for this event with admissions deadlines in the future. One short required question is enough.
 2. Have A, B, and C sign in through `http://localhost:3001/login` and submit that event's application using the existing admissions flow.
 3. In Applications, mark A and B accepted; leave C pending/rejected. You do not need to release decisions. The new workflow deliberately checks submitted-plus-accepted even when the admissions status is not yet released.
-4. In `/judging?event=project-submission-test`, save competition settings: enabled, project opening tomorrow, no project closing, judging end several days later.
-5. Add active sponsor tracks A and B. These are project tracks, not admissions forms.
+4. In `/judging?event=project-submission-test`, save a judging end several days later. Then in `/submission-forms?event=project-submission-test`, enable submissions with opening tomorrow and no closing.
+5. In Submission Forms, add active sponsor tracks A and B. These are project tracks, not admissions forms.
 
 Start the existing apps in separate terminals:
 
@@ -140,7 +140,7 @@ participant_project_detail(p_project_id, p_event_id)
 participant_create_project(p_event_id)
 participant_add_project_collaborator(p_project_id, p_email)
 participant_remove_project_collaborator(p_project_id, p_user_id)
-participant_save_project(p_project_id, p_content, p_track_ids, p_submit, p_expected_updated_at)
+participant_save_project(p_project_id, p_content, p_answers, p_track_ids, p_submit, p_expected_updated_at)
 participant_withdraw_project(p_project_id)
 ```
 

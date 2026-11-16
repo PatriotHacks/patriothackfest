@@ -8,8 +8,10 @@ import { useEffect, useId, useState, useTransition } from "react"
 
 import { saveProject } from "@/app/(projects)/projects/actions"
 import {
+  projectAnswers,
   projectContent,
   projectContentSchema,
+  type ProjectAnswers,
   type ProjectContent,
   type ProjectDetail,
 } from "@/lib/projects"
@@ -74,6 +76,14 @@ export function ProjectReadOnly({ detail }: { detail: ProjectDetail }) {
           ) : null
         })}
       </ul>
+      {detail.questions.map((question) => (
+        <div key={question.id} className="flex flex-col gap-1">
+          <h3 className="font-semibold">{question.label}</h3>
+          <p className="break-words whitespace-pre-wrap">
+            {detail.project.answers[question.id] || "No answer"}
+          </p>
+        </div>
+      ))}
       <p className="text-sm">
         <strong>Sponsor tracks:</strong>{" "}
         {detail.selected_tracks.map((track) => track.name).join(", ") || "None"}
@@ -92,6 +102,7 @@ export function ProjectEditor({
 }) {
   const id = useId()
   const [content, setContent] = useState(() => projectContent(detail))
+  const [answers, setAnswers] = useState(() => projectAnswers(detail))
   const [trackIds, setTrackIds] = useState(() =>
     detail.selected_tracks.map((track) => track.id)
   )
@@ -100,13 +111,14 @@ export function ProjectEditor({
   const [saved, setSaved] = useState(() =>
     JSON.stringify({
       content: projectContent(detail),
+      answers: projectAnswers(detail),
       trackIds: detail.selected_tracks.map((track) => track.id),
     })
   )
   const [message, setMessage] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [pending, startTransition] = useTransition()
-  const dirty = saved !== JSON.stringify({ content, trackIds })
+  const dirty = saved !== JSON.stringify({ content, answers, trackIds })
 
   useEffect(() => {
     if (!dirty || !editable) return
@@ -160,6 +172,7 @@ export function ProjectEditor({
         const result = await saveProject({
           projectId: detail.project.id,
           content,
+          answers,
           trackIds,
           submit,
           updatedAt,
@@ -170,8 +183,18 @@ export function ProjectEditor({
           return
         }
         const normalized = projectContentSchema.parse(content)
+        const normalizedAnswers: ProjectAnswers = Object.fromEntries(
+          Object.entries(answers).map(([key, value]) => [key, value.trim()])
+        )
         setContent(normalized)
-        setSaved(JSON.stringify({ content: normalized, trackIds }))
+        setAnswers(normalizedAnswers)
+        setSaved(
+          JSON.stringify({
+            content: normalized,
+            answers: normalizedAnswers,
+            trackIds,
+          })
+        )
         if (result.updatedAt) setUpdatedAt(result.updatedAt)
         if (submit) setStatus("submitted")
         setMessage(
@@ -245,6 +268,57 @@ export function ProjectEditor({
             )}
           </div>
         ))}
+        {detail.questions.map((question) => {
+          const key = `answers.${question.id}`
+          const value = answers[question.id] ?? ""
+          return (
+            <div key={question.id} className="flex flex-col gap-1">
+              <Label htmlFor={`${id}-${question.id}`}>
+                {question.label}
+                {question.required ? " (required)" : " (optional)"}
+              </Label>
+              {question.help_text && (
+                <p
+                  id={`${id}-${question.id}-help`}
+                  className="text-sm text-[#6E6E68]"
+                >
+                  {question.help_text}
+                </p>
+              )}
+              <Textarea
+                id={`${id}-${question.id}`}
+                rows={5}
+                maxLength={question.max_length}
+                value={value}
+                onChange={(event) =>
+                  setAnswers({ ...answers, [question.id]: event.target.value })
+                }
+                aria-invalid={Boolean(errors[key])}
+                aria-describedby={[
+                  question.help_text && `${id}-${question.id}-help`,
+                  `${id}-${question.id}-count`,
+                  errors[key] && `${id}-${question.id}-error`,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              />
+              <p
+                id={`${id}-${question.id}-count`}
+                className="text-right text-xs text-[#6E6E68]"
+              >
+                {value.length}/{question.max_length} characters
+              </p>
+              {errors[key] && (
+                <p
+                  id={`${id}-${question.id}-error`}
+                  className="text-sm text-red-700"
+                >
+                  {errors[key]}
+                </p>
+              )}
+            </div>
+          )
+        })}
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 font-semibold">
             Sponsor tracks (optional)

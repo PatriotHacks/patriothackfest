@@ -50,6 +50,7 @@ export async function saveProject(input: unknown): Promise<ProjectResult> {
   const { data, error } = await supabase.rpc("participant_save_project", {
     p_project_id: value.projectId,
     p_content: value.content,
+    p_answers: value.answers,
     p_track_ids: value.trackIds,
     p_submit: value.submit,
     p_expected_updated_at: value.updatedAt,

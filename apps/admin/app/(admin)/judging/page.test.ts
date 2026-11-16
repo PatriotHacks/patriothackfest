@@ -5,7 +5,6 @@ const {
   getAdmin,
   from,
   rpc,
-  getSubmittedProjects,
   getAssignmentOverview,
   getJudgingResults,
   redirect,
@@ -13,7 +12,6 @@ const {
   getAdmin: vi.fn(),
   from: vi.fn(),
   rpc: vi.fn(),
-  getSubmittedProjects: vi.fn(),
   getAssignmentOverview: vi.fn(),
   getJudgingResults: vi.fn(),
   redirect: vi.fn(() => {
@@ -21,15 +19,11 @@ const {
   }),
 }))
 vi.mock("@/lib/admin", () => ({ getAdmin }))
-vi.mock("@/lib/organizer-project-data", () => ({ getSubmittedProjects }))
 vi.mock("@/lib/assignment-data", () => ({ getAssignmentOverview }))
 vi.mock("@/lib/judging-results-data", () => ({ getJudgingResults }))
 vi.mock("next/navigation", () => ({ redirect }))
 vi.mock("@/components/judging/settings-form", () => ({
-  CompetitionSettingsForm: () => "Existing settings",
-}))
-vi.mock("@/components/judging/track-form", () => ({
-  CompetitionTrackForm: () => "Existing track settings",
+  JudgingSettingsForm: () => "Existing settings",
 }))
 vi.mock("@/components/judging/judges", () => ({
   JudgeRoster: () => "Existing judge roster",
@@ -107,7 +101,6 @@ beforeEach(() => {
   })
   getAdmin.mockResolvedValue({ level: "organizer", supabase: { from, rpc } })
   rpc.mockResolvedValue({ data: [], error: null })
-  getSubmittedProjects.mockResolvedValue({ projects: [], has_more: true })
   getAssignmentOverview.mockResolvedValue({
     missing: 0,
     coverage: [],
@@ -134,7 +127,7 @@ describe("organizer judging page results integration", () => {
       page: 1,
     })
     for (const text of [
-      "Submitted projects",
+      "Judging Management",
       "Existing settings",
       "Existing judge roster",
       "Assignments",
@@ -144,6 +137,8 @@ describe("organizer judging page results integration", () => {
       expect(html).toContain(text)
     expect(html).toContain('href="/judging?event=other"')
     expect(html).not.toContain("follow-up work")
+    expect(html).not.toContain("Submitted projects")
+    expect(html).not.toContain("Sponsor tracks")
   })
   it("loads the exact event/track/page and preserves all sections during navigation", async () => {
     getJudgingResults.mockResolvedValue({
@@ -165,7 +160,6 @@ describe("organizer judging page results integration", () => {
       })
     )
     expect(getJudgingResults).toHaveBeenCalledWith(id, { trackId, page: 2 })
-    expect(getSubmittedProjects).toHaveBeenCalledWith(id, 3)
     expect(getAssignmentOverview).toHaveBeenCalledWith(id, {
       coveragePage: 5,
       assignmentPage: 4,
@@ -176,7 +170,7 @@ describe("organizer judging page results integration", () => {
     expect(html).toContain(`name="resultsTrack" value="${trackId}"`)
     expect(html).toContain('name="resultsPage" value="2"')
     expect(html).toContain(`resultsTrack=${trackId}&amp;resultsPage=3#results`)
-    expect(html).toContain("projectsPage=4#submitted-projects")
+    expect(html).toContain("projectsPage=3")
     expect(html).toContain("assignmentPage=5")
     expect(html).toContain("coveragePage=6")
     expect(html).toContain('name="assignmentProject"')

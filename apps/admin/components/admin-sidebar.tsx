@@ -29,6 +29,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ChevronsUpDownIcon,
+  ClipboardListIcon,
   FileTextIcon,
   InboxIcon,
   MailIcon,
@@ -59,7 +60,18 @@ const NAV: {
     min: "reviewer",
   },
   { href: "/email", label: "Email", icon: MailIcon, min: "owner" },
-  { href: "/judging", label: "Judging", icon: TrophyIcon, min: "organizer" },
+  {
+    href: "/submission-forms",
+    label: "Submission Forms",
+    icon: ClipboardListIcon,
+    min: "organizer",
+  },
+  {
+    href: "/judging",
+    label: "Judging Management",
+    icon: TrophyIcon,
+    min: "organizer",
+  },
   { href: "/admins", label: "Admins", icon: ShieldIcon, min: "owner" },
 ]
 

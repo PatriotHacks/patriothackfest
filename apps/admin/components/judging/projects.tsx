@@ -40,12 +40,10 @@ export function SubmittedProjectsList({
   eventSlug,
   page,
   data,
-  judgingQuery = {},
 }: {
   eventSlug: string
   page: number
   data: SubmittedProjects
-  judgingQuery?: Record<string, string>
 }) {
   return (
     <section
@@ -120,13 +118,13 @@ export function SubmittedProjectsList({
         {page > 1 && (
           <>
             <Link
-              href={submittedProjectsHref(eventSlug, 1, judgingQuery)}
+              href={submittedProjectsHref(eventSlug, 1)}
               className="underline"
             >
               First page
             </Link>
             <Link
-              href={submittedProjectsHref(eventSlug, page - 1, judgingQuery)}
+              href={submittedProjectsHref(eventSlug, page - 1)}
               className="underline"
             >
               Previous
@@ -136,7 +134,7 @@ export function SubmittedProjectsList({
         <span>Page {page}</span>
         {data.has_more && (
           <Link
-            href={submittedProjectsHref(eventSlug, page + 1, judgingQuery)}
+            href={submittedProjectsHref(eventSlug, page + 1)}
             className="underline"
           >
             Next

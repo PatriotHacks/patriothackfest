@@ -47,6 +47,9 @@ export const submittedProjectDetailSchema = z.object({
   owner: personSchema,
   collaborators: z.array(personSchema),
   tracks: z.array(trackSchema),
+  answers: z.array(
+    z.object({ question_id: z.guid(), label: z.string(), answer: z.string() })
+  ),
 })
 
 export type SubmittedProjects = z.infer<typeof submittedProjectsSchema>
@@ -60,12 +63,8 @@ export function parseProjectsPage(value: unknown) {
   return parsed.success ? parsed.data : 1
 }
 
-export function submittedProjectsHref(
-  eventSlug: string,
-  page: number,
-  preserved: Record<string, string> = {}
-) {
-  return `/judging?${new URLSearchParams({ ...preserved, event: eventSlug, projectsPage: String(page) })}#submitted-projects`
+export function submittedProjectsHref(eventSlug: string, page: number) {
+  return `/submission-forms?${new URLSearchParams({ event: eventSlug, projectsPage: String(page) })}#submitted-projects`
 }
 
 export function submittedProjectHref(
@@ -73,7 +72,7 @@ export function submittedProjectHref(
   projectId: string,
   page: number
 ) {
-  return `/judging/projects/${encodeURIComponent(projectId)}?${new URLSearchParams({ event: eventSlug, projectsPage: String(page) })}`
+  return `/submission-forms/projects/${encodeURIComponent(projectId)}?${new URLSearchParams({ event: eventSlug, projectsPage: String(page) })}`
 }
 
 export function projectPersonLabel(person: {

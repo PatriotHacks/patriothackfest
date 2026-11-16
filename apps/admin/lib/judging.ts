@@ -1,4 +1,5 @@
 import { fromZonedInputValue, toZonedInputValue } from "@workspace/forms"
+import type { Tables } from "@workspace/supabase/types"
 import * as z from "zod"
 
 const localDateTime = z.string().refine((value) => {
@@ -20,6 +21,39 @@ export const competitionSettingsInput = z.object({
 })
 
 export type CompetitionSettingsInput = z.infer<typeof competitionSettingsInput>
+
+export const submissionSettingsInput = competitionSettingsInput.pick({
+  eventId: true,
+  enabled: true,
+  open: true,
+  close: true,
+})
+export const judgingSettingsInput = competitionSettingsInput.pick({
+  eventId: true,
+  judgingEnd: true,
+  generalReviews: true,
+})
+export type SubmissionSettingsInput = z.infer<typeof submissionSettingsInput>
+export type JudgingSettingsInput = z.infer<typeof judgingSettingsInput>
+
+// Saved settings as form values, so each half can be saved with the other's stored values.
+export function competitionSettingsValues(
+  eventId: string,
+  settings: Tables<"event_competition_settings"> | null
+): CompetitionSettingsInput {
+  return {
+    eventId,
+    enabled: settings?.enabled ?? false,
+    open: settings?.project_submissions_open_at
+      ? toZonedInputValue(settings.project_submissions_open_at)
+      : "",
+    close: settings?.project_submissions_close_at
+      ? toZonedInputValue(settings.project_submissions_close_at)
+      : "",
+    judgingEnd: judgingEndInputValue(settings?.judging_close_at ?? null),
+    generalReviews: settings?.general_reviews_per_project ?? 3,
+  }
+}
 
 export function competitionDates(input: CompetitionSettingsInput) {
   const open = input.open ? fromZonedInputValue(input.open) : null
@@ -65,3 +99,14 @@ export const competitionTrackInput = z.object({
 })
 
 export type CompetitionTrackInput = z.infer<typeof competitionTrackInput>
+
+export const projectQuestionInput = z.object({
+  eventId: z.guid(),
+  questionId: z.guid().optional(),
+  label: z.string().trim().min(1, "Enter a question").max(300),
+  helpText: z.string().trim().max(1000),
+  required: z.boolean(),
+  maxLength: z.number().int().min(1).max(10_000),
+})
+
+export type ProjectQuestionInput = z.infer<typeof projectQuestionInput>

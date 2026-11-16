@@ -83,7 +83,7 @@ describe("organizer results section", () => {
     expect(html).toContain("&lt;Project&gt;")
     expect(html).not.toContain("<Project>")
     expect(html).toContain(
-      `/judging/projects/${id}?event=event+%26+one&amp;projectsPage=4`
+      `/submission-forms/projects/${id}?event=event+%26+one&amp;projectsPage=4`
     )
   })
   it("selects General/active sponsor tracks and resets results page on context submit", () => {

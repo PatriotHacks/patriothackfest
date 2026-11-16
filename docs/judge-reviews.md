@@ -144,6 +144,8 @@ judge_save_review(p_event_slug, p_assignment_id, p_scores, p_notes, p_submit=fal
 
 Queue/detail denial returns null; operational failures remain errors. Queue rows
 omit scores/notes. Detail/save returns only the current judge's scorecard and the
-minimum project content. Private helpers have no authenticated execute grant;
+minimum project content, plus project question `answers` only when the
+event's `judges_see_answers` switch is on (otherwise `[]`; see
+[Project paragraph questions](project-questions.md)). Private helpers have no authenticated execute grant;
 direct project/assignment/roster directory access remains denied. A3 can consume
 the existing assignment score columns, generated total and submitted timestamp.

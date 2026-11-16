@@ -31,10 +31,10 @@ describe("project page parsing", () => {
   })
   it("keeps event and page in detail/back links with query-safe encoding", () => {
     expect(submittedProjectHref("fall-2026", "project-id", 2)).toBe(
-      "/judging/projects/project-id?event=fall-2026&projectsPage=2"
+      "/submission-forms/projects/project-id?event=fall-2026&projectsPage=2"
     )
     expect(submittedProjectsHref("event&other=value", 3)).toBe(
-      "/judging?event=event%26other%3Dvalue&projectsPage=3#submitted-projects"
+      "/submission-forms?event=event%26other%3Dvalue&projectsPage=3#submitted-projects"
     )
   })
 })
