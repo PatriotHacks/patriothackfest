@@ -44,5 +44,10 @@ export async function verifyCode(
   })
   if (error) return failure(error)
 
-  redirect(loginReturnPath(returnTo))
+  const path = loginReturnPath(returnTo)
+  if (path !== "/start") redirect(path)
+
+  const { data, error: judgeError } = await supabase.rpc("judge_events")
+  if (judgeError) return failure(judgeError)
+  redirect(Array.isArray(data) && data.length > 0 ? "/judge" : "/start")
 }

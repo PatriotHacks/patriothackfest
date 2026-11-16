@@ -67,7 +67,7 @@ http://localhost:3001/judge
 7. With C2/C3 applied, the event page shows the real assigned queue/counts. No assignments means an honest empty state; use the review rehearsal for scoring checks.
 8. Confirm no participant application/name is required for a fresh judge account. No new access to admin forms, admissions answers, or unrelated projects is granted. An account that independently already owns a participant project retains its separate participant permissions.
 
-Ordinary login opened directly at `/login` without a judge destination still goes to `/start`. Use `/judge` or a direct `/judge/YOUR_SANDBOX_SLUG` link for judge-only login. Project destinations and normal admissions behavior remain supported.
+Login opened directly at `/login` without a destination checks the verified email against active judge rosters: an account with at least one judge event goes to `/judge`, any other account goes to `/start`. A valid explicit destination such as `/judge/YOUR_SANDBOX_SLUG` or a project path always wins. If the roster lookup fails, the code screen shows the error instead of guessing a destination. Normal admissions behavior remains supported.
 
 ## 5. Revocation, reactivation, and identity checks
 
