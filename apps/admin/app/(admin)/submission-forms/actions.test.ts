@@ -43,7 +43,9 @@ const question = {
   label: " What inspired you? ",
   helpText: " One paragraph ",
   required: true,
+  type: "long_text" as const,
   maxLength: 2000,
+  options: [],
 }
 
 beforeEach(() => {
@@ -151,7 +153,10 @@ describe("submission form server actions", () => {
       p_label: "What inspired you?",
       p_help_text: "One paragraph",
       p_required: true,
+      p_type: "long_text",
       p_max_length: 2000,
+      p_options: undefined,
+      p_validation: undefined,
     })
     expect(revalidatePath).toHaveBeenCalledWith("/submission-forms")
   })
@@ -188,6 +193,20 @@ describe("submission form server actions", () => {
       p_event_id: eventId,
       p_value: false,
     })
+  })
+
+  it("surfaces the answered-question type lock", async () => {
+    const message =
+      "This question already has answers, so its type cannot change. Archive it and add a new question instead."
+    rpc.mockResolvedValue({ error: { message } })
+    expect(
+      await saveProjectQuestion({ ...question, questionId, type: "url" })
+    ).toEqual({ error: message })
+    expect(rpc).toHaveBeenCalledWith(
+      "admin_save_project_question",
+      expect.objectContaining({ p_type: "url", p_max_length: undefined })
+    )
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 
   it("preserves database errors without revalidating", async () => {

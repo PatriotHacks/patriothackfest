@@ -9,6 +9,7 @@ import { saveCompetitionSettingsPatch } from "@/lib/competition-settings"
 import {
   competitionTrackInput,
   projectQuestionInput,
+  projectQuestionRpcArgs,
   submissionSettingsInput,
   type CompetitionTrackInput,
   type ProjectQuestionInput,
@@ -65,15 +66,10 @@ export async function saveProjectQuestion(
     return failure({
       message: parsed.error.issues[0]?.message ?? "Invalid question",
     })
-  const value = parsed.data
-  const { error } = await supabase.rpc("admin_save_project_question", {
-    p_event_id: value.eventId,
-    p_question_id: value.questionId,
-    p_label: value.label,
-    p_help_text: value.helpText,
-    p_required: value.required,
-    p_max_length: value.maxLength,
-  })
+  const { error } = await supabase.rpc(
+    "admin_save_project_question",
+    projectQuestionRpcArgs(parsed.data)
+  )
   if (error) return failure(error)
   revalidatePath("/submission-forms")
   return ok
