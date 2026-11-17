@@ -23,14 +23,20 @@ export function fileMaxSizeMb(field: Extract<Field, { type: "file" }>) {
   )
 }
 
-export function fileUploadError(
-  field: Extract<Field, { type: "file" }>,
-  file: { type: string; size: number }
+export function pdfUploadError(
+  file: { type: string; size: number },
+  maxSizeMb: number
 ) {
   if (file.type !== PDF_TYPE) return "Upload a PDF file"
-  const maxSizeMb = fileMaxSizeMb(field)
   if (file.size > maxSizeMb * 1024 * 1024)
     return `Files must be ${maxSizeMb} MB or smaller`
   if (file.size === 0) return "This file is empty"
   return null
+}
+
+export function fileUploadError(
+  field: Extract<Field, { type: "file" }>,
+  file: { type: string; size: number }
+) {
+  return pdfUploadError(file, fileMaxSizeMb(field))
 }
