@@ -44,7 +44,7 @@ It shows current project content, owner/collaborator names, selected tracks, saf
 ## 3. Inclusion and permissions
 
 - Only `status = submitted` projects appear in list or detail. Drafts and withdrawn projects are excluded, even if a withdrawn project retains its earlier submission timestamp.
-- Multiple submitted projects by the same owner are all included.
+- Each person is on at most one non-withdrawn project per event, so a person appears on at most one listed project ([Project teams](project-teams.md)).
 - There is no new acceptance/decision-release check on organizer reads. The saved project submission status determines inclusion.
 - Disabled events, closed submissions, started judging, or an elapsed judging deadline do not hide submitted projects from organizers.
 - This is a current read-only view, not a snapshot. Before closing, participants can still save valid changes or withdraw; refresh to see the current state. New submissions can move rows between pages until closing.
@@ -56,7 +56,7 @@ It shows current project content, owner/collaborator names, selected tracks, saf
 ## 4. Manual verification with your existing B3 data
 
 1. Sign into admin as organizer/owner and select the sandbox used for submission testing.
-2. Verify every submitted project is listed, including multiple submissions by the same owner. A saved-only draft and withdrawn spare project must not appear.
+2. Verify every submitted project is listed. A saved-only draft and withdrawn spare project must not appear.
 3. Open View project. Compare content, owner/collaborator names, tracks, and timestamps with the participant's saved submission. Confirm there are no Edit/Save/Withdraw/assignment/score controls.
 4. Open the demo/repository link: it should open a new tab. Viewing must not change the participant's project state or timestamps.
 5. Use Back to submitted projects; event and page should be preserved. Switch events and verify only that event's projects appear.

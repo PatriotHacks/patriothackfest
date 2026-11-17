@@ -70,7 +70,7 @@ the two pages do not clobber each other's saved values.
 - Answers are validated per type in the database (`project_answer_errors`).
   Required questions apply on submit and on any save of an already-submitted
   project. Adding a required question later does not unsubmit existing projects;
-  the requirement applies the next time the owner saves.
+  the requirement applies the next time a team member saves.
 - Saving with an unknown or archived question id fails with a reload message, like
   other stale-form errors. Per-question errors are returned in the `PT422` detail
   map under `answers.<question_id>`.
@@ -86,17 +86,17 @@ the two pages do not clobber each other's saved values.
   object's metadata (`mimetype`, `size`), never from the client, and the saved
   answer records those real values. An organizer cannot lower a file question's
   limit below the largest file already saved for it.
-- Only the project owner can upload or delete, and only while the project can be
-  saved (submissions enabled and open, not closed, judging not started, project not
-  withdrawn, owner still eligible). This mirrors `lock_participant_project`;
-  collaborators cannot save projects, so they cannot upload either. Files
+- Any team member (owner or collaborator) can upload or delete, and only while the
+  project can be saved (submissions enabled and open, not closed, judging not
+  started, project not withdrawn, the member still eligible). This mirrors
+  `lock_participant_project`. Files
   referenced by saved answers cannot be deleted. After a successful save, the
   server action deletes (through the Storage API) files the previous answers
   referenced and the new ones do not. The editor deletes an upload that was never
   saved as soon as it is replaced or removed. An upload abandoned without saving
   (closed tab, failed request) stays in the bucket; there is no sweep job.
 - Nobody downloads directly. The only read policy allows the Storage `sign`
-  operations (plus the owner's own deletes), so every link is a 60-second signed
+  operations (plus members' own deletes), so every link is a 60-second signed
   URL created by a server action with the caller's session:
   - owner and collaborators: any file in their project;
   - organizers: any project file;

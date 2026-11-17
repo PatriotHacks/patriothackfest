@@ -184,6 +184,9 @@ contract for the participant/judge implementations.
 See [Participant project submissions](docs/project-submissions.md) for participant
 setup, permissions, and the full manual submission rehearsal.
 
+See [Project teams](docs/project-teams.md) for shared editing, one team per event,
+team size limits, and judge visibility of team names.
+
 See [Judge roster and access](docs/judge-access.md) for C1 setup, judge login,
 revocation checks, and the assignment/review integration contract.
 
