@@ -67,7 +67,12 @@ export async function addField(
 
 export async function saveField(field: Field): Promise<ActionResult> {
   const parsed = fieldSchema.safeParse(field)
-  if (!parsed.success) return { error: "Invalid question settings" }
+  if (!parsed.success)
+    return {
+      error:
+        parsed.error.issues.find((issue) => issue.code === "custom")?.message ??
+        "Invalid question settings",
+    }
   const {
     id,
     type,

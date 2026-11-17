@@ -7,6 +7,7 @@ import {
   MAX_FILE_SIZE_MB,
   type FileAnswer,
 } from "./schema"
+import { lengthUnitSchema } from "./text-length"
 
 export const PROJECT_QUESTION_TYPES = [
   "short_text",
@@ -54,6 +55,7 @@ export const projectQuestionSchema = z.object({
   required: z.boolean(),
   type: projectQuestionTypeSchema,
   max_length: z.number().int().positive().nullable(),
+  length_unit: lengthUnitSchema,
   options: z.array(choiceOptionSchema).nullable(),
   validation: projectFileValidationSchema.nullable(),
 })

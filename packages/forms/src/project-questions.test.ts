@@ -35,6 +35,7 @@ describe("projectQuestionSchema", () => {
       required: true,
       type: "single_choice",
       max_length: null,
+      length_unit: "characters",
       options,
       validation: null,
     })
@@ -48,6 +49,7 @@ describe("projectQuestionSchema", () => {
       help_text: null,
       required: false,
       max_length: null,
+      length_unit: "characters",
       options: null,
     }
     expect(

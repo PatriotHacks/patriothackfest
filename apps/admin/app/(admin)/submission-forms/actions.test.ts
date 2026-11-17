@@ -48,6 +48,7 @@ const question = {
   required: true,
   type: "long_text" as const,
   maxLength: 2000,
+  lengthUnit: "characters" as const,
   options: [],
 }
 
@@ -160,6 +161,7 @@ describe("submission form server actions", () => {
       p_required: true,
       p_type: "long_text",
       p_max_length: 2000,
+      p_length_unit: "characters",
       p_options: undefined,
       p_validation: undefined,
     })

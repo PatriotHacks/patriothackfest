@@ -199,6 +199,7 @@ describe("project question input", () => {
     required: false,
     type: "long_text" as const,
     maxLength: 5000,
+    lengthUnit: "characters" as const,
     options: [],
   }
   const optionId = "a0000000-0000-4000-8000-000000000001"
@@ -219,6 +220,20 @@ describe("project question input", () => {
     ).toBe(false)
     expect(
       projectQuestionInput.safeParse({ ...question, maxLength: 10_001 }).success
+    ).toBe(false)
+  })
+  it("caps word limits", () => {
+    const words = { ...question, lengthUnit: "words" as const }
+    expect(
+      projectQuestionInput.safeParse({ ...words, maxLength: 1500 }).success
+    ).toBe(true)
+    expect(
+      projectQuestionInput.safeParse({ ...words, maxLength: 1501 }).error
+        ?.issues[0]?.message
+    ).toBe("Word limits must be at most 1500 words")
+    expect(
+      projectQuestionInput.safeParse({ ...question, lengthUnit: "lines" })
+        .success
     ).toBe(false)
   })
   it("requires distinct, labeled options for choice types", () => {
@@ -294,9 +309,14 @@ describe("project question input", () => {
       Object.keys(
         projectQuestionRpcArgs(projectQuestionInput.parse(value))
       ).filter((key) =>
-        ["p_max_length", "p_options", "p_validation"].includes(key)
+        ["p_max_length", "p_length_unit", "p_options", "p_validation"].includes(
+          key
+        )
       )
-    expect(keys({ ...question, options })).toEqual(["p_max_length"])
+    expect(keys({ ...question, options })).toEqual([
+      "p_max_length",
+      "p_length_unit",
+    ])
     expect(keys({ ...question, type: "single_choice", options })).toEqual([
       "p_options",
     ])
@@ -325,6 +345,7 @@ describe("admin project questions", () => {
         required: true,
         type: "file",
         max_length: null,
+        length_unit: "characters",
         options: null,
         validation: { max_size_mb: 5 },
         archived_options: null,

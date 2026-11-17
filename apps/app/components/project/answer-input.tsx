@@ -2,14 +2,18 @@
 
 import {
   fileAnswer,
+  formatLength,
+  MAX_PROJECT_ANSWER_LENGTH,
   MAX_PROJECT_URL_LENGTH,
   type ProjectAnswer,
+  textLength,
   type ProjectQuestion,
 } from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
+import { cn } from "@workspace/ui/lib/utils"
 
 import { ProjectFileAnswer } from "./file-answer"
 
@@ -34,11 +38,16 @@ export function ProjectAnswerInput({
 }) {
   const inputId = `${id}-${question.id}`
   const helpId = question.help_text ? `${inputId}-help` : undefined
-  const countId = question.max_length ? `${inputId}-count` : undefined
+  const limit = question.max_length
+  const countId = limit ? `${inputId}-count` : undefined
   const errorId = error ? `${inputId}-error` : undefined
   const describedBy =
     [helpId, countId, errorId].filter(Boolean).join(" ") || undefined
   const text = typeof value === "string" ? value : ""
+  const words = question.length_unit === "words"
+  const count = textLength(text, question.length_unit)
+  const inputMax = words ? MAX_PROJECT_ANSWER_LENGTH : question.max_length
+  const overLimit = limit !== null && count > limit
   const selected = Array.isArray(value) ? value : []
   const choice = question.type === "single_choice" ? text : null
   const grouped =
@@ -53,7 +62,7 @@ export function ProjectAnswerInput({
           <Input
             id={inputId}
             type={question.type === "url" ? "url" : "text"}
-            maxLength={question.max_length ?? MAX_PROJECT_URL_LENGTH}
+            maxLength={inputMax ?? MAX_PROJECT_URL_LENGTH}
             value={text}
             onChange={(event) => onChange(event.target.value)}
             aria-invalid={Boolean(error)}
@@ -65,7 +74,7 @@ export function ProjectAnswerInput({
           <Textarea
             id={inputId}
             rows={5}
-            maxLength={question.max_length ?? undefined}
+            maxLength={inputMax ?? undefined}
             value={text}
             onChange={(event) => onChange(event.target.value)}
             aria-invalid={Boolean(error)}
@@ -143,9 +152,15 @@ export function ProjectAnswerInput({
         </p>
       )}
       {control()}
-      {countId && (
-        <p id={countId} className="text-right text-xs text-[#6E6E68]">
-          {text.length}/{question.max_length} characters
+      {countId && limit && (
+        <p
+          id={countId}
+          className={cn(
+            "text-right text-xs",
+            overLimit ? "text-red-700" : "text-[#6E6E68]"
+          )}
+        >
+          {`${count}/${formatLength(limit, question.length_unit)}`}
         </p>
       )}
       {errorId && (

@@ -1,13 +1,18 @@
 "use client"
 
-import type { Question } from "@workspace/forms"
+import { textLimit, type Question } from "@workspace/forms"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import {
   RadioGroup,
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group"
 
-import { fieldErrorId, fieldInputId, fieldLabelId } from "./field-ids"
+import {
+  fieldCountId,
+  fieldErrorId,
+  fieldInputId,
+  fieldLabelId,
+} from "./field-ids"
 import { FormInput, FormTextarea, OLIVE_CHECK, TILE } from "./form-controls"
 import { NumberInput } from "./number-input"
 
@@ -29,7 +34,13 @@ export function FieldInput({
   const inputId = fieldInputId(field.id)
   const a11y = {
     "aria-invalid": invalid,
-    "aria-describedby": invalid ? fieldErrorId(field.id) : undefined,
+    "aria-describedby":
+      [
+        textLimit(field) && fieldCountId(field.id),
+        invalid && fieldErrorId(field.id),
+      ]
+        .filter(Boolean)
+        .join(" ") || undefined,
   }
   const text = typeof value === "string" ? value : ""
 

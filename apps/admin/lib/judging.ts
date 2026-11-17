@@ -2,9 +2,13 @@ import {
   fromZonedInputValue,
   MAX_FILE_SIZE_MB,
   MAX_PROJECT_ANSWER_LENGTH,
+  MAX_WORD_LIMIT,
   adminProjectQuestionSchema,
+  lengthUnitSchema,
   toZonedInputValue,
+  WORD_LIMIT_MESSAGE,
   type ChoiceOption,
+  type LengthUnit,
   type ProjectQuestionType,
 } from "@workspace/forms"
 import type { Tables } from "@workspace/supabase/types"
@@ -116,7 +120,10 @@ const questionBase = {
   required: z.boolean(),
 }
 
-const maxLength = z.number().int().min(1).max(MAX_PROJECT_ANSWER_LENGTH)
+const textLimit = {
+  maxLength: z.number().int().min(1).max(MAX_PROJECT_ANSWER_LENGTH),
+  lengthUnit: lengthUnitSchema,
+}
 
 const choiceOptions = z
   .array(
@@ -157,26 +164,39 @@ export function parseMaxSizeMb(draft: string) {
       }
 }
 
-export const projectQuestionInput = z.discriminatedUnion("type", [
-  z.object({ ...questionBase, type: z.literal("short_text"), maxLength }),
-  z.object({ ...questionBase, type: z.literal("long_text"), maxLength }),
-  z.object({ ...questionBase, type: z.literal("url") }),
-  z.object({
-    ...questionBase,
-    type: z.literal("single_choice"),
-    options: choiceOptions,
-  }),
-  z.object({
-    ...questionBase,
-    type: z.literal("multiple_choice"),
-    options: choiceOptions,
-  }),
-  z.object({
-    ...questionBase,
-    type: z.literal("file"),
-    maxSizeMb: maxSizeMbSchema.optional(),
-  }),
-])
+export const projectQuestionInput = z
+  .discriminatedUnion("type", [
+    z.object({ ...questionBase, type: z.literal("short_text"), ...textLimit }),
+    z.object({ ...questionBase, type: z.literal("long_text"), ...textLimit }),
+    z.object({ ...questionBase, type: z.literal("url") }),
+    z.object({
+      ...questionBase,
+      type: z.literal("single_choice"),
+      options: choiceOptions,
+    }),
+    z.object({
+      ...questionBase,
+      type: z.literal("multiple_choice"),
+      options: choiceOptions,
+    }),
+    z.object({
+      ...questionBase,
+      type: z.literal("file"),
+      maxSizeMb: maxSizeMbSchema.optional(),
+    }),
+  ])
+  .refine(
+    (value) =>
+      !(
+        (value.type === "short_text" || value.type === "long_text") &&
+        value.lengthUnit === "words" &&
+        value.maxLength > MAX_WORD_LIMIT
+      ),
+    {
+      message: WORD_LIMIT_MESSAGE,
+      path: ["maxLength"],
+    }
+  )
 
 export type ProjectQuestionInput = z.infer<typeof projectQuestionInput>
 
@@ -188,6 +208,7 @@ export type ProjectQuestionFormValues = {
   required: boolean
   type: ProjectQuestionType
   maxLength: number
+  lengthUnit: LengthUnit
   options: ChoiceOption[]
   maxSizeMb?: number
 }
@@ -204,7 +225,11 @@ export function projectQuestionRpcArgs(value: ProjectQuestionInput) {
   switch (value.type) {
     case "short_text":
     case "long_text":
-      return { ...base, p_max_length: value.maxLength }
+      return {
+        ...base,
+        p_max_length: value.maxLength,
+        p_length_unit: value.lengthUnit,
+      }
     case "single_choice":
     case "multiple_choice":
       return { ...base, p_options: value.options }

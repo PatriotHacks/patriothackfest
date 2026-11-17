@@ -68,7 +68,7 @@ describe("validateAnswers", () => {
 
   it("validates text length", () => {
     const bio = field("long_text", {
-      validation: { min_length: 3, max_length: 5 },
+      validation: { min_length: 3, max_length: 5, length_unit: "characters" },
     })
     expect(errorFor(bio, "ab")).toBe("Enter at least 3 characters")
     expect(errorFor(bio, "abcdef")).toBe("Enter at most 5 characters")
@@ -78,12 +78,37 @@ describe("validateAnswers", () => {
 
   it("counts text length in code points", () => {
     const bio = field("short_text", {
-      validation: { min_length: 3, max_length: 3 },
+      validation: { min_length: 3, max_length: 3, length_unit: "characters" },
     })
     expect(errorFor(bio, "\u{1F600}\u{1F600}\u{1F600}")).toBeUndefined()
     expect(errorFor(bio, "\u{1F600}\u{1F600}")).toBe(
       "Enter at least 3 characters"
     )
+  })
+
+  it("validates word limits", () => {
+    const bio = field("long_text", {
+      validation: { min_length: 2, max_length: 3, length_unit: "words" },
+    })
+    expect(errorFor(bio, "one")).toBe("Enter at least 2 words")
+    expect(errorFor(bio, " one  two\nthree ")).toBeUndefined()
+    expect(errorFor(bio, "one two three four")).toBe("Enter at most 3 words")
+    expect(errorFor(bio, "x".repeat(50))).toBe("Enter at least 2 words")
+  })
+
+  it("uses the singular for a limit of one", () => {
+    const one = field("short_text", {
+      validation: { max_length: 1, length_unit: "words" },
+    })
+    expect(errorFor(one, "one two")).toBe("Enter at most 1 word")
+    const char = field("short_text", {
+      validation: { min_length: 2, max_length: 1, length_unit: "characters" },
+    })
+    expect(errorFor(char, "ab")).toBe("Enter at most 1 character")
+  })
+
+  it("ignores text length when there is no validation", () => {
+    expect(errorFor(field("short_text"), "x".repeat(500))).toBeUndefined()
   })
 
   it("validates emails and urls", () => {

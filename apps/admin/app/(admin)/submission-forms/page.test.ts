@@ -91,6 +91,7 @@ beforeEach(() => {
         required: false,
         type: "long_text",
         max_length: 5000,
+        length_unit: "characters" as const,
         options: null,
         validation: null,
         archived_options: null,

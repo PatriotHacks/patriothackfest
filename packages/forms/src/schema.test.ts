@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { fieldSchema, publishedSchemaSchema } from "./schema"
+import { fieldSchema, publishedSchemaSchema, textLimit } from "./schema"
+import { field } from "./test-utils"
 
 const id = "3f1c2b8e-5d4a-4e7b-9c1d-2a3b4c5d6e7f"
 
@@ -45,6 +46,42 @@ describe("fieldSchema", () => {
       condition: { field_id: id, operator: "gt", value: "x" },
     })
     expect(result.success).toBe(false)
+  })
+
+  it("defaults text validation to characters", () => {
+    const field = fieldSchema.parse({
+      id,
+      type: "long_text",
+      label: "Why",
+      help_text: null,
+      required: false,
+      options: null,
+      validation: { max_length: 500 },
+      condition: null,
+    })
+    expect(field.validation).toEqual({
+      max_length: 500,
+      length_unit: "characters",
+    })
+  })
+
+  it("caps word limits", () => {
+    const text = (validation: object) =>
+      fieldSchema.safeParse({
+        id,
+        type: "short_text",
+        label: "Why",
+        help_text: null,
+        required: false,
+        options: null,
+        validation,
+        condition: null,
+      }).success
+    expect(text({ max_length: 1500, length_unit: "words" })).toBe(true)
+    expect(text({ max_length: 1501, length_unit: "words" })).toBe(false)
+    expect(text({ min_length: 1501, length_unit: "words" })).toBe(false)
+    expect(text({ max_length: 5000, length_unit: "characters" })).toBe(true)
+    expect(text({ max_length: 10, length_unit: "lines" })).toBe(false)
   })
 
   it("parses file validation", () => {
@@ -126,5 +163,26 @@ describe("publishedSchemaSchema", () => {
       fields: [],
     })
     expect(schema.fields).toEqual([])
+  })
+})
+
+describe("textLimit", () => {
+  it("returns the maximum and unit for limited text fields only", () => {
+    expect(
+      textLimit(
+        field("long_text", {
+          validation: { max_length: 200, length_unit: "words" },
+        })
+      )
+    ).toEqual({ max: 200, unit: "words" })
+    expect(
+      textLimit(
+        field("short_text", {
+          validation: { min_length: 2, length_unit: "characters" },
+        })
+      )
+    ).toBeNull()
+    expect(textLimit(field("short_text"))).toBeNull()
+    expect(textLimit(field("number", { validation: { max: 5 } }))).toBeNull()
   })
 })
