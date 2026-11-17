@@ -8,6 +8,7 @@ import {
   projectAnswerSchema,
   projectFileMaxSizeMb,
   projectFilePath,
+  knownOptions,
   projectQuestionSchema,
   reuseOptionIds,
 } from "./project-questions"
@@ -164,5 +165,26 @@ describe("reuseOptionIds", () => {
       { id: a, label: "Renamed" },
       { id: fresh, label: "Alpha" },
     ])
+  })
+})
+
+describe("knownOptions", () => {
+  it("lets an archived label restore its id in a later save", () => {
+    const archived = [{ id: b, label: "Beta" }]
+    const known = knownOptions({
+      options: [options[0]!],
+      archived_options: archived,
+    })
+    expect(known).toEqual([options[0], archived[0]])
+    expect(
+      reuseOptionIds(
+        [
+          options[0]!,
+          { id: "a0000000-0000-4000-8000-000000000009", label: "beta " },
+        ],
+        known
+      )
+    ).toEqual([options[0], { id: b, label: "beta " }])
+    expect(knownOptions({ options: null, archived_options: null })).toEqual([])
   })
 })

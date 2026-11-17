@@ -7,7 +7,9 @@ import {
   MAX_PROJECT_ANSWER_LENGTH,
   PROJECT_QUESTION_TYPE_LABELS,
   PROJECT_QUESTION_TYPES,
+  knownOptions,
   reuseOptionIds,
+  type AdminProjectQuestion,
   type ChoiceOption,
   type ProjectQuestionType,
 } from "@workspace/forms"
@@ -31,7 +33,7 @@ import {
 } from "@/app/(admin)/submission-forms/actions"
 import { ChoiceOptionsEditor } from "@/components/builder/options-editor"
 import { FileSizeInput } from "@/components/builder/validation-editor"
-import { parseMaxSizeMb, type AdminProjectQuestion } from "@/lib/judging"
+import { parseMaxSizeMb } from "@/lib/judging"
 
 function QuestionForm({
   eventId,
@@ -87,7 +89,10 @@ function QuestionForm({
               required,
               type,
               maxLength,
-              options: reuseOptionIds(options, question?.options ?? []),
+              options: reuseOptionIds(
+                options,
+                question ? knownOptions(question) : []
+              ),
               maxSizeMb: size.value,
             })
             setMessage(

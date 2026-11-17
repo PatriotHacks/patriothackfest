@@ -59,6 +59,18 @@ export const projectQuestionSchema = z.object({
 })
 export type ProjectQuestion = z.infer<typeof projectQuestionSchema>
 
+export const adminProjectQuestionSchema = projectQuestionSchema.extend({
+  archived_options: z.array(choiceOptionSchema).nullable(),
+  answered: z.boolean(),
+})
+export type AdminProjectQuestion = z.infer<typeof adminProjectQuestionSchema>
+
+export function knownOptions(
+  question: Pick<AdminProjectQuestion, "options" | "archived_options">
+) {
+  return [...(question.options ?? []), ...(question.archived_options ?? [])]
+}
+
 export const projectAnswerSchema = z
   .union([z.string(), z.array(z.string()), fileAnswerSchema])
   .nullable()

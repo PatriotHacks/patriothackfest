@@ -327,6 +327,7 @@ describe("admin project questions", () => {
         max_length: null,
         options: null,
         validation: { max_size_mb: 5 },
+        archived_options: null,
         archived_at: null,
         created_at: "2026-11-15T05:00:00Z",
         updated_at: "2026-11-15T05:00:00Z",

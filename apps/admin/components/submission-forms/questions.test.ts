@@ -22,6 +22,7 @@ const question = {
   max_length: 2000,
   options: null,
   validation: null,
+  archived_options: null,
   answered: false,
 }
 

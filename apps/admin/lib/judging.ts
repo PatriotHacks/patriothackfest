@@ -2,7 +2,7 @@ import {
   fromZonedInputValue,
   MAX_FILE_SIZE_MB,
   MAX_PROJECT_ANSWER_LENGTH,
-  projectQuestionSchema,
+  adminProjectQuestionSchema,
   toZonedInputValue,
   type ChoiceOption,
   type ProjectQuestionType,
@@ -217,10 +217,4 @@ export function projectQuestionRpcArgs(value: ProjectQuestionInput) {
   }
 }
 
-export const adminProjectQuestionsSchema = z.array(
-  projectQuestionSchema.extend({ answered: z.boolean() })
-)
-
-export type AdminProjectQuestion = z.infer<
-  typeof adminProjectQuestionsSchema
->[number]
+export const adminProjectQuestionsSchema = z.array(adminProjectQuestionSchema)
