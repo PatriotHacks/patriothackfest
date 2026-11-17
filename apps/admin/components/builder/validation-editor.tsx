@@ -2,17 +2,67 @@
 
 import {
   DEFAULT_FILE_MAX_SIZE_MB,
+  LENGTH_UNIT_LABELS,
+  LENGTH_UNITS,
   MAX_FILE_SIZE_MB,
+  MAX_WORD_LIMIT,
   type Field,
+  type LengthUnit,
+  type TextValidation,
 } from "@workspace/forms"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import { Switch } from "@workspace/ui/components/switch"
 import { useId, useState } from "react"
 
 function compact<T extends Record<string, unknown>>(value: T): T | null {
   const entries = Object.entries(value).filter(([, v]) => v !== undefined)
   return entries.length > 0 ? (Object.fromEntries(entries) as T) : null
+}
+
+function textValidation(v: TextValidation) {
+  return v.min_length === undefined &&
+    v.max_length === undefined &&
+    v.length_unit === "characters"
+    ? null
+    : compact(v)
+}
+
+function LengthUnitSetting({
+  value,
+  onChange,
+}: {
+  value: LengthUnit
+  onChange: (value: LengthUnit) => void
+}) {
+  const id = useId()
+  return (
+    <div className="flex flex-col gap-1">
+      <Label htmlFor={id}>Count</Label>
+      <Select
+        value={value}
+        onValueChange={(next) => onChange(next as LengthUnit)}
+      >
+        <SelectTrigger id={id} className="w-32">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {LENGTH_UNITS.map((unit) => (
+            <SelectItem key={unit} value={unit}>
+              {LENGTH_UNIT_LABELS[unit]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
 }
 
 function toNumber(value: string) {
@@ -152,23 +202,35 @@ export function ValidationEditor({
   switch (field.type) {
     case "short_text":
     case "long_text": {
-      const v = field.validation ?? {}
+      const v = field.validation ?? { length_unit: "characters" }
+      const set = (next: Partial<TextValidation>) =>
+        onChange({ ...field, validation: textValidation({ ...v, ...next }) })
+      const overCap =
+        v.length_unit === "words" &&
+        Math.max(v.min_length ?? 0, v.max_length ?? 0) > MAX_WORD_LIMIT
       return (
-        <div className="flex gap-3">
-          <NumberSetting
-            label="Min length"
-            value={v.min_length}
-            onChange={(min_length) =>
-              onChange({ ...field, validation: compact({ ...v, min_length }) })
-            }
-          />
-          <NumberSetting
-            label="Max length"
-            value={v.max_length}
-            onChange={(max_length) =>
-              onChange({ ...field, validation: compact({ ...v, max_length }) })
-            }
-          />
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-3">
+            <NumberSetting
+              label="Min length"
+              value={v.min_length}
+              onChange={(min_length) => set({ min_length })}
+            />
+            <NumberSetting
+              label="Max length"
+              value={v.max_length}
+              onChange={(max_length) => set({ max_length })}
+            />
+            <LengthUnitSetting
+              value={v.length_unit}
+              onChange={(length_unit) => set({ length_unit })}
+            />
+          </div>
+          {overCap && (
+            <p className="text-xs text-destructive">
+              Word limits must be at most {MAX_WORD_LIMIT} words
+            </p>
+          )}
         </div>
       )
     }

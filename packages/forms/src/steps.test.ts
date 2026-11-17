@@ -51,7 +51,9 @@ describe("sectionErrors", () => {
   })
 
   it("reports invalid optional answers", () => {
-    const short = field("short_text", { validation: { max_length: 2 } })
+    const short = field("short_text", {
+      validation: { max_length: 2, length_unit: "characters" },
+    })
     const fields = [about, short]
     expect(
       sectionErrors(

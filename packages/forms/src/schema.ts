@@ -1,5 +1,7 @@
 import * as z from "zod"
 
+import { lengthUnitSchema, MAX_WORD_LIMIT } from "./text-length"
+
 export const FIELD_TYPES = [
   "short_text",
   "long_text",
@@ -55,10 +57,21 @@ export const DEFAULT_FILE_ACCEPT = ["application/pdf"]
 export const DEFAULT_FILE_MAX_SIZE_MB = 10
 export const MAX_FILE_SIZE_MB = 10
 
-export const textValidationSchema = z.object({
-  min_length: z.int().nonnegative().optional(),
-  max_length: z.int().positive().optional(),
-})
+export const textValidationSchema = z
+  .object({
+    min_length: z.int().nonnegative().optional(),
+    max_length: z.int().positive().optional(),
+    length_unit: lengthUnitSchema.default("characters"),
+  })
+  .refine(
+    (v) =>
+      v.length_unit === "characters" ||
+      Math.max(v.min_length ?? 0, v.max_length ?? 0) <= MAX_WORD_LIMIT,
+    {
+      message: `Word limits must be at most ${MAX_WORD_LIMIT} words`,
+      path: ["max_length"],
+    }
+  )
 
 export const numberValidationSchema = z.object({
   min: z.number().optional(),

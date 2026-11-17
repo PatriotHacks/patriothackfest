@@ -47,6 +47,42 @@ describe("fieldSchema", () => {
     expect(result.success).toBe(false)
   })
 
+  it("defaults text validation to characters", () => {
+    const field = fieldSchema.parse({
+      id,
+      type: "long_text",
+      label: "Why",
+      help_text: null,
+      required: false,
+      options: null,
+      validation: { max_length: 500 },
+      condition: null,
+    })
+    expect(field.validation).toEqual({
+      max_length: 500,
+      length_unit: "characters",
+    })
+  })
+
+  it("caps word limits", () => {
+    const text = (validation: object) =>
+      fieldSchema.safeParse({
+        id,
+        type: "short_text",
+        label: "Why",
+        help_text: null,
+        required: false,
+        options: null,
+        validation,
+        condition: null,
+      }).success
+    expect(text({ max_length: 1500, length_unit: "words" })).toBe(true)
+    expect(text({ max_length: 1501, length_unit: "words" })).toBe(false)
+    expect(text({ min_length: 1501, length_unit: "words" })).toBe(false)
+    expect(text({ max_length: 5000, length_unit: "characters" })).toBe(true)
+    expect(text({ max_length: 10, length_unit: "lines" })).toBe(false)
+  })
+
   it("parses file validation", () => {
     const field = fieldSchema.parse({
       id,
