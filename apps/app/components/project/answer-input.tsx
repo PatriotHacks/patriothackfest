@@ -1,11 +1,12 @@
 "use client"
 
 import {
-  countWords,
   fileAnswer,
+  formatLength,
   MAX_PROJECT_ANSWER_LENGTH,
   MAX_PROJECT_URL_LENGTH,
   type ProjectAnswer,
+  textLength,
   type ProjectQuestion,
 } from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
@@ -37,15 +38,16 @@ export function ProjectAnswerInput({
 }) {
   const inputId = `${id}-${question.id}`
   const helpId = question.help_text ? `${inputId}-help` : undefined
-  const countId = question.max_length ? `${inputId}-count` : undefined
+  const limit = question.max_length
+  const countId = limit ? `${inputId}-count` : undefined
   const errorId = error ? `${inputId}-error` : undefined
   const describedBy =
     [helpId, countId, errorId].filter(Boolean).join(" ") || undefined
   const text = typeof value === "string" ? value : ""
   const words = question.length_unit === "words"
-  const count = words ? countWords(text) : text.length
+  const count = textLength(text, question.length_unit)
   const inputMax = words ? MAX_PROJECT_ANSWER_LENGTH : question.max_length
-  const overLimit = question.max_length !== null && count > question.max_length
+  const overLimit = limit !== null && count > limit
   const selected = Array.isArray(value) ? value : []
   const choice = question.type === "single_choice" ? text : null
   const grouped =
@@ -150,7 +152,7 @@ export function ProjectAnswerInput({
         </p>
       )}
       {control()}
-      {countId && (
+      {countId && limit && (
         <p
           id={countId}
           className={cn(
@@ -158,7 +160,7 @@ export function ProjectAnswerInput({
             overLimit ? "text-red-700" : "text-[#6E6E68]"
           )}
         >
-          {count}/{question.max_length} {question.length_unit}
+          {`${count}/${formatLength(limit, question.length_unit)}`}
         </p>
       )}
       {errorId && (

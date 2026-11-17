@@ -1,4 +1,4 @@
-import { textLength, type LengthUnit } from "@workspace/forms"
+import { formatLength, textLength, type LengthUnit } from "@workspace/forms"
 import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { SERIF } from "@workspace/ui/lib/brand"
@@ -101,7 +101,7 @@ export function TextLengthCounter({
         length > limit ? "text-destructive" : "text-[#6E6E68]"
       )}
     >
-      {length}/{limit} {unit}
+      {length}/{formatLength(limit, unit)}
     </p>
   )
 }
