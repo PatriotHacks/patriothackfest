@@ -53,10 +53,17 @@ alter table public.project_questions
   add column type public.field_type not null default 'long_text',
   add column options jsonb,
   add column validation jsonb,
+  add column archived_options jsonb,
   alter column max_length drop not null,
   alter column max_length drop default,
   add constraint project_questions_config_check
-    check (public.project_question_config_error(type, max_length, options, validation) is null);
+    check (public.project_question_config_error(type, max_length, options, validation) is null),
+  add constraint project_questions_archived_options_check
+    check (archived_options is null
+      or (type in ('single_choice', 'multiple_choice') and jsonb_typeof(archived_options) = 'array'));
+
+comment on column public.project_questions.archived_options is
+  'Options removed from a choice question, kept only so re-adding a label restores its id. Never shown to participants or judges.';
 
 create function public.project_question_answered(p_event_id uuid, p_question_id uuid)
 returns boolean language sql stable security definer set search_path = '' as $$
@@ -85,7 +92,7 @@ drop function public.admin_project_questions(uuid);
 create function public.admin_project_questions(p_event_id uuid)
 returns table (
   id uuid, event_id uuid, "position" integer, label text, help_text text, required boolean,
-  max_length integer, type public.field_type, options jsonb, validation jsonb,
+  max_length integer, type public.field_type, options jsonb, validation jsonb, archived_options jsonb,
   archived_at timestamptz, created_at timestamptz, updated_at timestamptz, answered boolean
 )
 language plpgsql stable security definer set search_path = '' as $$
@@ -93,7 +100,7 @@ begin
   if not public.has_admin_level('organizer') then raise exception 'Not authorized' using errcode = '42501'; end if;
   return query
   select q.id, q.event_id, q.position, q.label, q.help_text, q.required, q.max_length, q.type, q.options,
-    q.validation, q.archived_at, q.created_at, q.updated_at, public.project_question_answered(q.event_id, q.id)
+    q.validation, q.archived_options, q.archived_at, q.created_at, q.updated_at, public.project_question_answered(q.event_id, q.id)
   from public.project_questions q
   where q.event_id = p_event_id and q.archived_at is null order by q.position, q.id;
 end;
@@ -112,24 +119,41 @@ declare
   v_error text;
   v_options jsonb;
   v_validation jsonb := nullif(p_validation, '{}'::jsonb);
+  v_known jsonb;
+  v_archived jsonb;
   v_limit numeric := coalesce((nullif(p_validation, '{}'::jsonb) ->> 'max_size_mb')::numeric, 10);
 begin
   perform public.lock_project_questions(p_event_id);
   v_error := public.project_question_config_error(p_type, p_max_length, p_options, v_validation);
   if v_error is not null then raise exception '%', v_error using errcode = '22023'; end if;
-  -- A re-added label keeps its old id so answers that still hold it stay valid.
+  -- Every option the question has ever had, active first. A new option whose
+  -- label matches one of these takes its id back, even across separate saves.
+  select coalesce(jsonb_agg(known.entry order by known.tier, known.n), '[]'::jsonb) into v_known
+  from public.project_questions q,
+    lateral (
+      select a, 0, n from jsonb_array_elements(coalesce(q.options, '[]'::jsonb)) with ordinality x(a, n)
+      union all
+      select a, 1, n from jsonb_array_elements(coalesce(q.archived_options, '[]'::jsonb)) with ordinality y(a, n)
+    ) known(entry, tier, n)
+  where q.id = p_question_id and q.event_id = p_event_id;
   if p_options is not null then
     select jsonb_agg(jsonb_build_object('id', coalesce(reused.id, o ->> 'id'), 'label', btrim(o ->> 'label')) order by n)
     into v_options
     from jsonb_array_elements(p_options) with ordinality x(o, n)
     left join lateral (
       select old_option ->> 'id' as id
-      from public.project_questions q, jsonb_array_elements(q.options) old_option
-      where q.id = p_question_id and q.event_id = p_event_id
-        and lower(btrim(old_option ->> 'label')) = lower(btrim(o ->> 'label'))
+      from jsonb_array_elements(v_known) with ordinality k(old_option, pos)
+      where lower(btrim(old_option ->> 'label')) = lower(btrim(o ->> 'label'))
         and not exists (select 1 from jsonb_array_elements(p_options) kept where kept ->> 'id' = old_option ->> 'id')
-        and not exists (select 1 from jsonb_array_elements(q.options) same where same ->> 'id' = o ->> 'id')
+        and not exists (select 1 from jsonb_array_elements(v_known) same where same ->> 'id' = o ->> 'id')
+      order by pos
+      limit 1
     ) reused on true;
+  end if;
+  if p_type in ('single_choice', 'multiple_choice') then
+    select coalesce(jsonb_agg(old_option order by pos), '[]'::jsonb) into v_archived
+    from jsonb_array_elements(v_known) with ordinality k(old_option, pos)
+    where not exists (select 1 from jsonb_array_elements(v_options) kept where kept ->> 'id' = old_option ->> 'id');
   end if;
   if p_question_id is not null and p_type = 'file' and exists (
     select 1 from public.projects p
@@ -146,7 +170,8 @@ begin
     returning id into v_id;
   else
     update public.project_questions set label = btrim(p_label), help_text = nullif(btrim(p_help_text), ''),
-      required = p_required, max_length = p_max_length, type = p_type, options = v_options, validation = v_validation
+      required = p_required, max_length = p_max_length, type = p_type, options = v_options, validation = v_validation,
+      archived_options = v_archived
     where id = p_question_id and event_id = p_event_id and archived_at is null returning id into v_id;
     if not found then raise exception 'Question not found for this event'; end if;
   end if;

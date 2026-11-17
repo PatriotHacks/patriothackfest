@@ -873,6 +873,7 @@ export type Database = {
       project_questions: {
         Row: {
           archived_at: string | null
+          archived_options: Json | null
           created_at: string
           event_id: string
           help_text: string | null
@@ -889,6 +890,7 @@ export type Database = {
         ComputedFields: never
         Insert: {
           archived_at?: string | null
+          archived_options?: Json | null
           created_at?: string
           event_id: string
           help_text?: string | null
@@ -904,6 +906,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          archived_options?: Json | null
           created_at?: string
           event_id?: string
           help_text?: string | null
@@ -1164,6 +1167,7 @@ export type Database = {
         Returns: {
           answered: boolean
           archived_at: string
+          archived_options: Json
           created_at: string
           event_id: string
           help_text: string

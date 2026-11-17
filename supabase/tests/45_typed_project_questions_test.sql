@@ -76,7 +76,7 @@ select set_config('test.options',jsonb_build_array(
   jsonb_build_object('id',current_setting('test.a'),'label',' Web '),
   jsonb_build_object('id',current_setting('test.b'),'label','Mobile'))::text,true);
 
-select plan(88);
+select plan(96);
 
 -- Type column and question configuration.
 select is((select type::text from public.project_questions where label='Legacy'),'long_text','existing and untyped rows default to long_text');
@@ -194,12 +194,25 @@ reset role;
 select pg_temp.login(1,'oauth');
 select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
   pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Web'))),'organizer removes an option');
+reset role;
+select is((select archived_options from public.project_questions where id=pg_temp.q('Many')::uuid),
+  jsonb_build_array(jsonb_build_object('id',current_setting('test.b'),'label','Mobile')),'removed option is archived');
+select pg_temp.login(1,'oauth');
 select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
   pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Web'),
-    jsonb_build_object('id','c4500000-0000-4000-8000-0000000000c1','label',' mobile '))),'organizer re-adds the option by label');
+    jsonb_build_object('id','c4500000-0000-4000-8000-0000000000c1','label',' mobile '))),'organizer re-adds the option in a later save');
 reset role;
 select is((select options->1->>'id' from public.project_questions where id=pg_temp.q('Many')::uuid),current_setting('test.b'),
-  're-added label reuses the previous option id');
+  're-added label in a later save restores the archived id');
+select is((select archived_options from public.project_questions where id=pg_temp.q('Many')::uuid),'[]'::jsonb,
+  'restored option leaves the archive');
+select pg_temp.login(1,'oauth');
+select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
+  pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Web'),
+    jsonb_build_object('id','c4500000-0000-4000-8000-0000000000c3','label',' MOBILE '))),'organizer replaces an option with the same label');
+reset role;
+select is((select options->1->>'id' from public.project_questions where id=pg_temp.q('Many')::uuid),current_setting('test.b'),
+  'same-save re-add keeps the id');
 select pg_temp.login(1,'oauth');
 select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
   pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Mobile'),
@@ -208,6 +221,16 @@ reset role;
 select is((select array_agg(o->>'id' order by n) from public.project_questions q, jsonb_array_elements(q.options) with ordinality x(o,n)
   where q.id=pg_temp.q('Many')::uuid),array[current_setting('test.a'),'c4500000-0000-4000-8000-0000000000c2'],
   'kept options never take another option''s id');
+select is((select archived_options->0->>'id' from public.project_questions where id=pg_temp.q('Many')::uuid),current_setting('test.b'),
+  'swapped-out option is archived');
+select pg_temp.login(2);
+select is(pg_temp.save_errors(jsonb_build_object(
+  pg_temp.q('Short'),'hi',pg_temp.q('Pick'),current_setting('test.b'),pg_temp.q('Deck'),pg_temp.file(current_setting('test.file1')),
+  pg_temp.q('Many'),jsonb_build_array(current_setting('test.b')))),'{}'::jsonb,'archived option ids are dropped like removed ones');
+select ok(not (pg_temp.detail()->'project'->'answers' ? pg_temp.q('Many')),'archived option id is not stored');
+select ok(not exists (select 1 from jsonb_array_elements(pg_temp.detail()->'questions') q where q ? 'archived_options'),
+  'participants never receive archived options');
+reset role;
 update storage.objects set metadata=jsonb_build_object('size',3*1024*1024,'mimetype','application/pdf')
 where bucket_id='project-files' and name=current_setting('test.file1');
 select pg_temp.login(1,'oauth');
