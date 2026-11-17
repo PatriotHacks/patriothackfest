@@ -7,9 +7,11 @@ const { rpc, remove, getApplicant, revalidatePath } = vi.hoisted(() => ({
 }))
 vi.mock("@/lib/applicant", () => ({ getApplicant }))
 vi.mock("next/cache", () => ({ revalidatePath }))
+import { STALE_PROJECT_MESSAGE } from "@/lib/projects"
 import {
   addProjectCollaborator,
   createProject,
+  leaveProject,
   removeProjectCollaborator,
   saveProject,
   withdrawProject,
@@ -52,8 +54,9 @@ describe("project mutations", () => {
     await saveProject(input)
     await addProjectCollaborator(id, "a@example.com")
     await removeProjectCollaborator(id, id)
+    await leaveProject(id)
     await withdrawProject(id)
-    expect(getApplicant).toHaveBeenCalledTimes(5)
+    expect(getApplicant).toHaveBeenCalledTimes(6)
   })
   it("does not write when authentication fails", async () => {
     getApplicant.mockRejectedValue(new Error("Sign in"))
@@ -94,6 +97,7 @@ describe("project mutations", () => {
         .error
     ).toBeTruthy()
     expect((await removeProjectCollaborator(id, "bad")).error).toBeTruthy()
+    expect((await leaveProject("bad")).error).toBeTruthy()
     expect(rpc).not.toHaveBeenCalled()
   })
   it("saves incomplete drafts without requiring a reviewable link", async () => {
@@ -135,6 +139,18 @@ describe("project mutations", () => {
     })
     expect(revalidatePath).not.toHaveBeenCalled()
   })
+  it("leaves a team and surfaces the owner restriction", async () => {
+    expect(await leaveProject(id)).toEqual({ error: null })
+    expect(rpc).toHaveBeenCalledWith("participant_leave_project", {
+      p_project_id: id,
+    })
+    rpc.mockResolvedValue({
+      error: { message: "The project owner cannot leave the team" },
+    })
+    expect((await leaveProject(id)).error).toBe(
+      "The project owner cannot leave the team"
+    )
+  })
 })
 
 describe("replaced project files", () => {
@@ -162,7 +178,9 @@ describe("replaced project files", () => {
       updated_at: updatedAt,
       answers,
     },
+    owner: { user_id: id, full_name: "Owner" },
     collaborators: [],
+    max_team_size: null,
     selected_tracks: [],
     available_tracks: [],
     questions: [],
@@ -201,9 +219,10 @@ describe("replaced project files", () => {
       data: null,
       error: { code: "PT409", message: "This project changed." },
     })
-    expect((await saveProject({ ...input, answers: {} })).error).toBe(
-      "This project changed."
-    )
+    expect(await saveProject({ ...input, answers: {} })).toEqual({
+      error: STALE_PROJECT_MESSAGE,
+      stale: true,
+    })
     expect(remove).not.toHaveBeenCalled()
   })
 })

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   canManageProject,
   completeProjectContentSchema,
+  memberName,
   normalizedProjectAnswers,
   projectAnswers,
   projectContentSchema,
@@ -10,6 +11,9 @@ import {
   projectPhase,
   projectSaveSchema,
   replacedFilePaths,
+  STALE_PROJECT_MESSAGE,
+  teamMembers,
+  type ProjectDetail,
   type ProjectEvent,
 } from "./projects"
 
@@ -145,7 +149,9 @@ describe("typed project answers", () => {
         updated_at: "2026-11-15T05:00:00Z",
         answers: { [questionId]: ["removed", optionId], [id]: file },
       },
+      owner: { user_id: id, full_name: "Owner" },
       collaborators: [],
+      max_team_size: null,
       selected_tracks: [],
       available_tracks: [],
       questions: [
@@ -232,7 +238,33 @@ describe("project availability", () => {
       projectFailure({ code: "PT422", message: "Invalid", details: "bad json" })
     ).toEqual({ error: "Invalid" })
     expect(projectFailure({ code: "PT409", message: "Reload" })).toEqual({
-      error: "Reload",
+      error: STALE_PROJECT_MESSAGE,
+      stale: true,
     })
+  })
+})
+
+describe("team members", () => {
+  const other = "a0000000-0000-4000-8000-000000000002"
+  it("lists the owner first, then collaborators", () => {
+    expect(
+      teamMembers({
+        owner: { user_id: id, full_name: "Owner" },
+        collaborators: [{ user_id: other, full_name: null }],
+      } as ProjectDetail)
+    ).toEqual([
+      { user_id: id, full_name: "Owner", owner: true },
+      { user_id: other, full_name: null, owner: false },
+    ])
+  })
+  it("labels blank names", () => {
+    expect(memberName(null)).toBe("Unnamed participant")
+    expect(memberName("  ")).toBe("Unnamed participant")
+    expect(memberName(" Ada ")).toBe("Ada")
+  })
+  it("rejects a non-positive team size limit", () => {
+    expect(projectDetailSchema.shape.max_team_size.safeParse(0).success).toBe(
+      false
+    )
   })
 })

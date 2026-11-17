@@ -30,7 +30,9 @@ const detail: ProjectDetail = {
     updated_at: "2026-11-15T05:00:00Z",
     answers: { [questionId]: "Our <b>story</b>" },
   },
+  owner: { user_id: id, full_name: "Participant One" },
   collaborators: [{ user_id: id, full_name: "Participant Two" }],
+  max_team_size: null,
   selected_tracks: [],
   available_tracks: [],
   questions: [
