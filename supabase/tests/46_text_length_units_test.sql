@@ -50,7 +50,7 @@ insert into public.projects(id,event_id,owner_user_id) values
 insert into public.project_questions(event_id,position,label,max_length)
 values ('e4600000-0000-0000-0000-000000000001',100,'Legacy',300);
 
-select plan(52);
+select plan(59);
 
 -- Word counting matches countWords in @workspace/forms.
 select is(public.word_count(''),0,'empty text has no words');
@@ -62,6 +62,9 @@ select is(public.word_count(U&'one\00A0two\3000three\2003four\2028five'),5,'Unic
 select is(public.word_count(U&'zero\200Bwidth'),1,'zero-width space is not whitespace, as in JavaScript');
 select is(public.word_count('don''t stop-me now.'),3,'punctuation stays inside words');
 select is(public.word_count(null),null,'null text has no count');
+select is(public.format_length(1,'words'),'1 word','singular word');
+select is(public.format_length(1,'characters'),'1 character','singular character');
+select is(public.format_length(2,'words'),'2 words','plural words');
 
 -- Project question configuration.
 select is((select length_unit::text from public.project_questions where label='Legacy'),'characters','existing questions keep character limits');
@@ -73,6 +76,7 @@ select throws_ok($$select public.admin_save_project_question(p_event_id=>'e46000
   '22023','Choose characters or words','unit required');
 select lives_ok($$select pg_temp.save('Essay','long_text',1500,'words')$$,'word limit at the cap');
 select lives_ok($$select pg_temp.save('Brief','short_text',3,'words',true)$$,'short text word limit');
+select lives_ok($$select pg_temp.save('One','short_text',1,'words')$$,'one-word limit');
 select lives_ok($$select public.admin_save_project_question('e4600000-0000-0000-0000-000000000001','Chars','',false,10)$$,
   'calls without a unit keep character limits');
 select lives_ok($$select pg_temp.save('Long','long_text',10000)$$,'character limits keep the 10,000 cap');
@@ -96,6 +100,7 @@ select is(pg_temp.project_error('Brief','"one two three"'),null,'answer at the w
 select is(pg_temp.project_error('Brief',to_jsonb(E'  one  two\nthree  ')),null,'whitespace runs count once');
 select is(pg_temp.project_error('Brief','"one two three four"'),'Use 3 words or fewer','answer over the word limit');
 select is(pg_temp.project_error('Brief',to_jsonb(repeat('x',50))),null,'word limits ignore characters per word');
+select is(pg_temp.project_error('One','"one two"'),'Use 1 word or fewer','singular word limit');
 select is(pg_temp.project_error('Brief','"   "',true),'This question is required','whitespace-only answers are empty');
 select is(pg_temp.project_error('Essay',to_jsonb(repeat('a ',1500))),null,'answer at the word cap');
 select is(pg_temp.project_error('Essay',to_jsonb(repeat('a ',1501))),'Use 1500 words or fewer','answer over the word cap');
@@ -131,6 +136,8 @@ select is(pg_temp.application_error('{"max_length":3,"length_unit":"words"}','on
 select is(pg_temp.application_error('{"min_length":2,"length_unit":"words"}',repeat('x',50)),'Enter at least 2 words','answer under the word minimum');
 select is(pg_temp.application_error('{"max_length":3,"length_unit":"words"}',U&'one\00A0two\3000three\2003four'),'Enter at most 3 words','Unicode whitespace separates words');
 select is(pg_temp.application_error('{"max_length":3,"length_unit":"words"}',' ',true),'Required','whitespace-only answers are empty');
+select is(pg_temp.application_error('{"max_length":1,"length_unit":"words"}','one two'),'Enter at most 1 word','singular word maximum');
+select is(pg_temp.application_error('{"min_length":2,"max_length":1}','ab'),'Enter at most 1 character','singular character maximum');
 
 select * from finish(true);
 rollback;

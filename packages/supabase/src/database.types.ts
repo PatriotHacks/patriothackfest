@@ -1392,6 +1392,10 @@ export type Database = {
         Returns: boolean
       }
       form_locked_field_ids: { Args: { p_schema: Json }; Returns: string[] }
+      format_length: {
+        Args: { p_count: number; p_unit: string }
+        Returns: string
+      }
       has_admin_level: {
         Args: { min_level: Database["public"]["Enums"]["admin_level"] }
         Returns: boolean

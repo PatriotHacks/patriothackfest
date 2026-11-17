@@ -70,9 +70,9 @@ begin
           v_length := case v_unit when 'words' then public.word_count(v_text)
             else char_length(public.js_trim(v_text)) end;
           if v_length < (v_rules ->> 'min_length')::integer then
-            v_error := format('Enter at least %s %s', v_rules -> 'min_length', v_unit);
+            v_error := 'Enter at least ' || public.format_length((v_rules ->> 'min_length')::integer, v_unit);
           elsif v_length > (v_rules ->> 'max_length')::integer then
-            v_error := format('Enter at most %s %s', v_rules -> 'max_length', v_unit);
+            v_error := 'Enter at most ' || public.format_length((v_rules ->> 'max_length')::integer, v_unit);
           end if;
         end if;
       when 'email' then

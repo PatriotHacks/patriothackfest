@@ -160,7 +160,7 @@ begin
             v_error := 'Use 10000 characters or fewer';
           elsif case v_question.length_unit when 'words' then public.word_count(v_text) else length(v_text) end
               > v_question.max_length then
-            v_error := format('Use %s %s or fewer', v_question.max_length, v_question.length_unit);
+            v_error := format('Use %s or fewer', public.format_length(v_question.max_length, v_question.length_unit::text));
           end if;
         when 'url' then
           if v_kind <> 'string' or length(v_text) > 2048 or not public.project_http_url_valid(v_text) then
