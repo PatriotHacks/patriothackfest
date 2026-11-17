@@ -1,16 +1,22 @@
 "use client"
 
-import type { Question } from "@workspace/forms"
+import { textLimit, type Question } from "@workspace/forms"
 
 import {
   fieldContainerId,
+  fieldCountId,
   fieldErrorId,
   fieldInputId,
   fieldLabelId,
 } from "./field-ids"
 import { FieldInput } from "./field-input"
 import { FileField } from "./file-field"
-import { FormFieldError, FormHelp, QuestionLabel } from "./form-controls"
+import {
+  FormFieldError,
+  FormHelp,
+  QuestionLabel,
+  TextLengthCounter,
+} from "./form-controls"
 
 export function QuestionField({
   field,
@@ -33,6 +39,7 @@ export function QuestionField({
   onBlur: () => void
   onUploadingChange: (uploading: boolean) => void
 }) {
+  const limit = textLimit(field)
   return (
     <div id={fieldContainerId(field.id)} className="flex flex-col gap-[8px]">
       <QuestionLabel
@@ -62,6 +69,14 @@ export function QuestionField({
           disabled={disabled}
           onChange={onChange}
           onBlur={onBlur}
+        />
+      )}
+      {limit && (
+        <TextLengthCounter
+          id={fieldCountId(field.id)}
+          text={typeof value === "string" ? value : ""}
+          limit={limit.max}
+          unit={limit.unit}
         />
       )}
       {error && (

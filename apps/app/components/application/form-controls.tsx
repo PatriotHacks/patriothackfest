@@ -1,3 +1,4 @@
+import { textLength, type LengthUnit } from "@workspace/forms"
 import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { SERIF } from "@workspace/ui/lib/brand"
@@ -78,6 +79,31 @@ export function FormHelp({ className, ...props }: React.ComponentProps<"p">) {
 
 export function FormFieldError(props: React.ComponentProps<"p">) {
   return <p className="text-[14px] text-destructive" {...props} />
+}
+
+export function TextLengthCounter({
+  id,
+  text,
+  limit,
+  unit,
+}: {
+  id: string
+  text: string
+  limit: number
+  unit: LengthUnit
+}) {
+  const length = textLength(text, unit)
+  return (
+    <p
+      id={id}
+      className={cn(
+        "text-right text-[13px]",
+        length > limit ? "text-destructive" : "text-[#6E6E68]"
+      )}
+    >
+      {length}/{limit} {unit}
+    </p>
+  )
 }
 
 export function SectionHeading({
