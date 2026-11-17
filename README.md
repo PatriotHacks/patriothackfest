@@ -187,7 +187,7 @@ setup, permissions, and the full manual submission rehearsal.
 See [Judge roster and access](docs/judge-access.md) for C1 setup, judge login,
 revocation checks, and the assignment/review integration contract.
 
-See [Project paragraph questions](docs/project-questions.md) for organizer-defined
+See [Project questions](docs/project-questions.md) for organizer-defined
 questions, judge answer visibility, and the admin page split.
 
 See [Organizer submitted projects](docs/organizer-projects.md) for the submitted-only
