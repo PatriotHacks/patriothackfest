@@ -27,7 +27,7 @@ insert into public.competition_tracks(id,event_id,name,active) values
  ('cd100000-0000-0000-0000-000000000003','ed100000-0000-0000-0000-000000000001','Inactive',false),
  ('cd100000-0000-0000-0000-000000000004','ed100000-0000-0000-0000-000000000002','Foreign',true);
 select set_config('test.content','{"name":" Demo ","summary":"Summary","description":"Description","demo_url":"https://example.com"}',true);
-select plan(43);
+select plan(44);
 select pg_temp.login(1);
 select set_config('test.project',public.participant_create_project('ed100000-0000-0000-0000-000000000001')::text,true);
 select throws_ok($$select pg_temp.save()$$,'P0001','Project submissions have not opened yet','cannot save even empty content before opening');
@@ -66,18 +66,18 @@ select is(public.participant_project_detail(current_setting('test.project')::uui
 select throws_ok($$select public.participant_save_project(current_setting('test.project')::uuid,'{}','{}','{}',false,'2000-01-01')$$,'PT409','This project changed. Reload before saving again.','stale content save rejected');
 reset role;
 select pg_temp.login(2);
-select throws_ok($$select pg_temp.save(current_setting('test.content')::jsonb)$$,'PT404','Project not found','collaborator cannot edit');
-select throws_ok($$select public.participant_withdraw_project(current_setting('test.project')::uuid)$$,'PT404','Project not found','collaborator cannot withdraw');
+select lives_ok($$select pg_temp.save(current_setting('test.content')::jsonb)$$,'collaborator can edit');
+select throws_ok($$select public.participant_withdraw_project(current_setting('test.project')::uuid)$$,'42501','Only the project owner can withdraw the project','collaborator cannot withdraw');
 reset role;
 update public.application_decisions set decision='rejected' where application_id='ad100000-0000-0000-0000-000000000002';
 select pg_temp.login(1);
-select throws_ok($$select pg_temp.save(current_setting('test.content')::jsonb)$$,'P0001','A collaborator is no longer eligible for this event. Remove them before submitting or saving changes.','current collaborators rechecked for submitted changes');
+select throws_ok($$select pg_temp.save(current_setting('test.content')::jsonb)$$,'P0001','A team member is no longer eligible for this event. The owner must remove them before submitting or saving changes.','current collaborators rechecked for submitted changes');
 select lives_ok($$select public.participant_remove_project_collaborator(current_setting('test.project')::uuid,'dd100000-0000-0000-0000-000000000002')$$,'owner can resolve ineligible collaborator');
 select lives_ok($$select pg_temp.save(current_setting('test.content')::jsonb)$$,'submitted content editable with no scheduled closing');
-select set_config('test.withdrawn',public.participant_create_project('ed100000-0000-0000-0000-000000000001')::text,true);
-select lives_ok($$select public.participant_withdraw_project(current_setting('test.withdrawn')::uuid)$$,'owner can withdraw before closing');
-select is(public.participant_project_detail(current_setting('test.withdrawn')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'status','withdrawn','withdrawn project remains readable');
-select throws_ok($$select public.participant_save_project(current_setting('test.withdrawn')::uuid,'{}','{}')$$,'P0001','This project has been withdrawn','withdrawn project cannot be restored');
+select lives_ok($$select public.participant_withdraw_project(current_setting('test.project')::uuid)$$,'owner can withdraw before closing');
+select is(public.participant_project_detail(current_setting('test.project')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'status','withdrawn','withdrawn project remains readable');
+select throws_ok($$select public.participant_save_project(current_setting('test.project')::uuid,'{}','{}')$$,'P0001','This project has been withdrawn','withdrawn project cannot be restored');
+select lives_ok($$select public.participant_create_project('ed100000-0000-0000-0000-000000000001')$$,'withdrawn project no longer counts as a team');
 reset role;
 update public.event_competition_settings set project_submissions_open_at=now()-interval '1 day',project_submissions_close_at=clock_timestamp()
 where event_id='ed100000-0000-0000-0000-000000000001';

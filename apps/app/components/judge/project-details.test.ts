@@ -91,9 +91,13 @@ describe("judge project rendering", () => {
               },
             },
           ],
+          team: ["Ada <b>Lovelace</b>", null],
         },
       })
     )
+    expect(html).toContain('<h2 class="text-lg font-semibold">Team</h2>')
+    expect(html).toContain("<li>Ada &lt;b&gt;Lovelace&lt;/b&gt;</li>")
+    expect(html).toContain("<li>Unnamed participant</li>")
     expect(html).toContain("General judging")
     expect(html).toContain("&lt;script&gt;")
     expect(html).toContain('rel="noopener noreferrer"')
@@ -108,5 +112,37 @@ describe("judge project rendering", () => {
     expect(html).toContain("ftp://files.example.test</p>")
     expect(html).toContain("View deck.pdf")
     expect(html).not.toContain("p/q/f.pdf")
+  })
+  it("omits the team section when names are hidden", () => {
+    const html = renderToStaticMarkup(
+      createElement(JudgeProjectDetails, {
+        detail: {
+          project: {
+            name: "Project",
+            summary: "",
+            description: "",
+            technologies: "",
+            demo_url: null,
+            video_url: null,
+            repository_url: null,
+          },
+          assignment: {
+            id: "a0000000-0000-4000-8000-000000000001",
+            track_id: null,
+            track_name: null,
+            creativity_score: null,
+            technical_score: null,
+            impact_score: null,
+            presentation_score: null,
+            total_score: null,
+            submitted_at: null,
+            notes: "",
+          },
+          answers: [],
+          team: [],
+        },
+      })
+    )
+    expect(html).not.toContain(">Team</h2>")
   })
 })

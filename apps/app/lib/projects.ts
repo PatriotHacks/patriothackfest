@@ -96,6 +96,11 @@ export type ProjectEvent = Omit<
   judging_started_at: string | null
 }
 
+const teamMemberSchema = z.object({
+  user_id: z.guid(),
+  full_name: z.string().nullable(),
+})
+
 export const projectDetailSchema = z.object({
   project: z.object({
     id: z.guid(),
@@ -113,9 +118,9 @@ export const projectDetailSchema = z.object({
     updated_at: z.string(),
     answers: z.record(z.string(), z.unknown()),
   }),
-  collaborators: z.array(
-    z.object({ user_id: z.guid(), full_name: z.string().nullable() })
-  ),
+  owner: teamMemberSchema,
+  collaborators: z.array(teamMemberSchema),
+  max_team_size: z.number().int().positive().nullable(),
   selected_tracks: z.array(
     z.object({ id: z.guid(), name: z.string(), active: z.boolean() })
   ),
@@ -131,6 +136,21 @@ export const projectDetailSchema = z.object({
 })
 
 export type ProjectDetail = z.infer<typeof projectDetailSchema>
+export type TeamMember = z.infer<typeof teamMemberSchema> & { owner: boolean }
+
+export function teamMembers(detail: ProjectDetail): TeamMember[] {
+  return [
+    { ...detail.owner, owner: true },
+    ...detail.collaborators.map((person) => ({ ...person, owner: false })),
+  ]
+}
+
+export function memberName(fullName: string | null) {
+  return fullName?.trim() || "Unnamed participant"
+}
+
+export const STALE_PROJECT_MESSAGE =
+  "Someone else saved this project after you opened it. Copy any unsaved text, then reload the page to see the latest version."
 export type ProjectPhase =
   "disabled" | "scheduled" | "open" | "closed" | "judging"
 
@@ -219,7 +239,9 @@ export function projectFailure(error: {
   code?: string
   message: string
   details?: string | null
-}) {
+}): { error: string; fieldErrors?: Record<string, string>; stale?: true } {
+  if (error.code === "PT409")
+    return { error: STALE_PROJECT_MESSAGE, stale: true }
   if (error.code === "PT422" && error.details) {
     try {
       const parsed = z

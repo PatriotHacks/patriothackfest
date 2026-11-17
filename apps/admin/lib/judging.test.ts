@@ -171,6 +171,8 @@ describe("split settings forms", () => {
       judging_close_at: "2026-11-21T05:00:00Z",
       general_reviews_per_project: 3,
       judges_see_answers: false,
+      judges_see_team: false,
+      max_team_size: null,
       created_at: "2026-11-01T00:00:00Z",
       updated_at: "2026-11-01T00:00:00Z",
     })

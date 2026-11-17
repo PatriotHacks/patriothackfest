@@ -132,7 +132,7 @@ select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000
 select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000001'))),'Upload the file again','file must exist in storage');
 select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000001',pg_temp.q('Short')))),'Upload the file again','file path must match its question');
 
--- Owner-only uploads while the project is editable.
+-- Member uploads while the project is editable.
 select set_config('test.file1',pg_temp.path('c4500000-0000-4000-8000-000000000001'),true);
 select set_config('test.file2',pg_temp.path('c4500000-0000-4000-8000-000000000002'),true);
 select ok(public.project_file_writable(current_setting('test.file1')),'owner may upload to a file question');
@@ -158,10 +158,9 @@ select is(pg_temp.signable(current_setting('test.file2')),1::bigint,'owner can s
 select is(pg_temp.downloadable(current_setting('test.file1')),0::bigint,'no direct downloads');
 reset role;
 select pg_temp.login(3);
-select ok(not public.project_file_writable(current_setting('test.file1')),'collaborator cannot upload');
-select throws_ok(format($$insert into storage.objects(bucket_id,name) values('project-files',%L)$$,pg_temp.path('c4500000-0000-4000-8000-000000000006')),
-  '42501',null,'collaborator upload denied by policy');
-select ok(not public.project_file_deletable(current_setting('test.file2')),'collaborator cannot delete');
+select ok(public.project_file_writable(current_setting('test.file1')),'collaborator may upload');
+select lives_ok($$select pg_temp.upload(pg_temp.path('c4500000-0000-4000-8000-000000000006'))$$,'collaborator upload allowed by policy');
+select ok(public.project_file_deletable(current_setting('test.file2')),'collaborator can delete unreferenced files');
 select is(pg_temp.signable(current_setting('test.file1')),1::bigint,'collaborator can sign project files');
 reset role;
 select pg_temp.login(4);

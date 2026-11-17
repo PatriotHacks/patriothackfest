@@ -73,6 +73,7 @@ export const judgeAssignmentSchema = z.object({
     video_url: z.string().nullable(),
   }),
   answers: z.array(projectQuestionAnswerSchema),
+  team: z.array(z.string().nullable()),
 })
 export type ReviewScores = z.infer<typeof reviewScoresSchema>
 export type JudgeScorecard = z.infer<typeof judgeScorecardSchema>

@@ -131,6 +131,49 @@ export async function setJudgesSeeAnswers(
   return ok
 }
 
+export async function setJudgesSeeTeam(
+  eventId: string,
+  value: boolean
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin("organizer")
+  const input = z
+    .object({ eventId: z.guid(), value: z.boolean() })
+    .safeParse({ eventId, value })
+  if (!input.success) return failure({ message: "Invalid setting" })
+  const { error } = await supabase.rpc("admin_set_judges_see_team", {
+    p_event_id: input.data.eventId,
+    p_value: input.data.value,
+  })
+  if (error) return failure(error)
+  revalidatePath("/submission-forms")
+  return ok
+}
+
+export async function setMaxTeamSize(
+  eventId: string,
+  value: number | null
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin("organizer")
+  const input = z
+    .object({
+      eventId: z.guid(),
+      value: z.int().min(1).max(2_147_483_647).nullable(),
+    })
+    .safeParse({ eventId, value })
+  if (!input.success)
+    return failure({
+      message:
+        "Enter a whole number of at least 1, or leave blank for no limit",
+    })
+  const { error } = await supabase.rpc("admin_set_max_team_size", {
+    p_event_id: input.data.eventId,
+    p_value: input.data.value ?? undefined,
+  })
+  if (error) return failure(error)
+  revalidatePath("/submission-forms")
+  return ok
+}
+
 export async function projectFileUrl(
   path: string
 ): Promise<ActionResult & { url?: string }> {

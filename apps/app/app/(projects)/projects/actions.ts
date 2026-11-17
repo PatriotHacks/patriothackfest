@@ -19,6 +19,7 @@ export type ProjectResult = {
   projectId?: string
   updatedAt?: string
   fieldErrors?: Record<string, string>
+  stale?: true
 }
 
 export async function createProject(eventId: string): Promise<ProjectResult> {
@@ -88,8 +89,7 @@ export async function addProjectCollaborator(
       email: z.string().trim().toLowerCase().pipe(z.email()),
     })
     .safeParse({ projectId, email })
-  if (!input.success)
-    return { error: "Enter a valid project and collaborator email" }
+  if (!input.success) return { error: "Enter a valid email address" }
   const { error } = await supabase.rpc("participant_add_project_collaborator", {
     p_project_id: input.data.projectId,
     p_email: input.data.email,
@@ -107,13 +107,26 @@ export async function removeProjectCollaborator(
   const input = z
     .object({ projectId: z.guid(), userId: z.guid() })
     .safeParse({ projectId, userId })
-  if (!input.success) return { error: "Invalid collaborator" }
+  if (!input.success) return { error: "Invalid teammate" }
   const { error } = await supabase.rpc(
     "participant_remove_project_collaborator",
     { p_project_id: input.data.projectId, p_user_id: input.data.userId }
   )
   if (error) return projectFailure(error)
   revalidatePath("/projects", "layout")
+  return { error: null }
+}
+
+// No revalidation: the page would re-render as not found before the client
+// navigates away with a full load.
+export async function leaveProject(projectId: string): Promise<ProjectResult> {
+  const { supabase } = await getApplicant()
+  const id = z.guid().safeParse(projectId)
+  if (!id.success) return { error: "Invalid project" }
+  const { error } = await supabase.rpc("participant_leave_project", {
+    p_project_id: id.data,
+  })
+  if (error) return projectFailure(error)
   return { error: null }
 }
 

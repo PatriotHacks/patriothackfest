@@ -5,10 +5,10 @@ This implements Person B's workflow on `feat/submissions-and-judging`. C1 judge 
 ## What's available
 
 - `/projects`: your eligible enabled events, plus events containing a project you own/collaborate on.
-- `/projects/[eventSlug]`: owned and collaborated projects; multiple projects per person are allowed.
-- `/projects/[eventSlug]/[projectId]`: collaborator setup and, after opening, content editing/submission.
-- Owner-only creation/editing/submission/withdrawal; collaborators can view.
-- Exact-email addition of registered eligible collaborators; no user directory or invitations.
+- `/projects/[eventSlug]`: your team's project. Each person can be on one team (non-withdrawn project) per event.
+- `/projects/[eventSlug]/[projectId]`: a Team section at the top and, after opening, content editing/submission.
+- Every team member can edit, upload files, and submit; only the owner can remove teammates or withdraw. See [Project teams](project-teams.md).
+- Exact-email addition of registered eligible teammates by any member; no user directory or invitations.
 - Save draft, Submit project, Save changes, and final pre-close withdrawal.
 - Optional multi-track selection; all submitted projects enter general judging.
 - Closed/disabled/withdrawn projects remain readable to associated people, but not editable.
@@ -77,7 +77,7 @@ pnpm --filter admin dev
 2. Verify the project has no content form or track selector yet. Its title is Untitled project, and the opening time is shown in America/New_York.
 3. Add B using the exact registered email. Upper/lowercase should not matter.
 4. Try C's email and a nonexistent email: both fail with the same generic unavailable/ineligible response. There is no email search/list endpoint.
-5. Reload; the roster persists. B can view it but has no content/roster mutation controls. C cannot create a project or open A's copied project link.
+5. Reload; the roster persists. B can add teammates and leave, but has no Remove buttons. C cannot create a project or open A's copied project link.
 
 ### Open, save, and submit
 
@@ -85,20 +85,20 @@ pnpm --filter admin dev
 2. Save an incomplete draft. Reload; it persists, without being marked submitted.
 3. Fill in name, short summary, description, and just one HTTP(S) repository/demo/video link. No upload, hosted deployment, long essay, or all-three-links requirement.
 4. Select tracks A and B and submit **without saving those latest edits first**. Submission atomically saves the latest form/track values.
-5. Verify Submitted status after reload, both selected tracks, and a working external link. B sees read-only content.
+5. Verify Submitted status after reload, both selected tracks, and a working external link. B can edit and save the same project.
 6. Make and save a complete change before closing. The project stays submitted. Clearing required fields and saving should fail with field errors; the previous valid submission remains intact.
-7. Create a second project using the same owner/collaborator. This is permitted. A solo project and zero sponsor tracks are also valid.
+7. A and B no longer see Create project for this event, and the database rejects a second project. A solo project and zero sponsor tracks are also valid.
 
 ### Unavailable tracks and errors
 
 1. Before judging starts, deactivate a selected sponsor track in admin. Reload the project.
 2. Verify the selected track is shown as unavailable, not silently removed. Uncheck it before saving again.
 3. Edit a field, then click an internal back/sidebar link: confirm before discarding unsaved changes. A full reload/tab close also warns. This is a basic warning, not cross-tab synchronization or local draft storage.
-4. Open the project in two tabs, save content in one, then try saving old content in the other. It should ask for a reload, preserving that tab's input rather than overwriting the newer save. Reload deliberately after copying any changes you want to keep.
+4. Open the project in two tabs (or as A and B), save content in one, then try saving old content in the other. It should say someone else saved and offer Reload page, preserving that tab's input rather than overwriting the newer save. Reload deliberately after copying any changes you want to keep.
 
 ### Withdraw and close
 
-1. On a spare project, click Withdraw project and confirm. It remains visible as withdrawn, cannot be restored/edited, and does not withdraw the admissions application.
+1. On a spare project (a different owner, or after withdrawing the first), click Withdraw project and confirm. A withdrawn project no longer counts as a team. It remains visible as withdrawn, cannot be restored/edited, and does not withdraw the admissions application.
 2. Keep another project open in a tab. As organizer, set submission closing in the past (after opening).
 3. A refreshed project becomes read-only. A save from the already-open old tab must fail without silently submitting or discarding its local field values.
 4. Roster changes, new projects, and withdrawals are also blocked after closing.
@@ -140,14 +140,15 @@ participant_project_detail(p_project_id, p_event_id)
 participant_create_project(p_event_id)
 participant_add_project_collaborator(p_project_id, p_email)
 participant_remove_project_collaborator(p_project_id, p_user_id)
+participant_leave_project(p_project_id)
 participant_save_project(p_project_id, p_content, p_answers, p_track_ids, p_submit, p_expected_updated_at)
 participant_withdraw_project(p_project_id)
 ```
 
 - Eligibility helpers and mutation locks are private, not user-directory APIs.
-- `participant_project_detail` returns project content, minimal collaborator names/IDs, selected tracks (including inactive selections), and currently available tracks.
+- `participant_project_detail` returns project content, the owner's and collaborators' names/IDs, the event's `max_team_size`, selected tracks (including inactive selections), and currently available tracks.
 - Save returns the exact stored `updated_at`. Preserve its microsecond precision when sending it back; do not round-trip through JavaScript `Date` for revision checks.
-- Submit and changes to submitted projects revalidate current collaborator eligibility. Remove an ineligible collaborator before saving/submitting.
+- Submit and changes to submitted projects revalidate every member's eligibility, owner included. The owner removes an ineligible collaborator before saving/submitting.
 - `PT422` includes a JSON field-error map; `PT409` means stale content; `PT404` means inaccessible/missing project.
 - Mutations lock settings before the project and check current database time. Existing Start judging triggers remain the final freeze guard.
 - Read RPCs use caller identity; never query them with a service-role browser key.

@@ -6,6 +6,7 @@ import { SubmittedProjectsList } from "@/components/judging/projects"
 import { JudgeVisibilityToggle } from "@/components/submission-forms/judge-visibility"
 import { ProjectQuestions } from "@/components/submission-forms/questions"
 import { SubmissionSettingsForm } from "@/components/submission-forms/settings-form"
+import { TeamSettings } from "@/components/submission-forms/team-settings"
 import { EventTabs } from "@/components/event-tabs"
 import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
@@ -105,6 +106,27 @@ export default async function SubmissionFormsPage({
         ) : (
           <p className="text-sm text-muted-foreground">
             Save event settings before choosing whether judges see answers.
+          </p>
+        )}
+      </section>
+      <section className="flex flex-col gap-4" aria-labelledby="teams-heading">
+        <h2 id="teams-heading" className="text-xl font-semibold">
+          Teams
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Each participant can be on one team per event. Every member can edit
+          and submit the project; only the owner can remove teammates.
+        </p>
+        {settings.data ? (
+          <TeamSettings
+            key={`teams-${event.id}`}
+            eventId={event.id}
+            maxTeamSize={settings.data.max_team_size}
+            judgesSeeTeam={settings.data.judges_see_team}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Save event settings before configuring teams.
           </p>
         )}
       </section>

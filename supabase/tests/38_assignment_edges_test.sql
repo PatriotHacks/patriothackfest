@@ -5,7 +5,10 @@ insert into public.admin_allowlist(email,level) values('a2-edge-1@example.test',
 insert into public.events(id,slug,name) values('ea500000-0000-0000-0000-000000000001','a2-edges','A2 edges');
 insert into public.event_competition_settings(event_id,enabled,project_submissions_open_at,project_submissions_close_at,judging_close_at,general_reviews_per_project)
 values('ea500000-0000-0000-0000-000000000001',true,now()-interval '2 days',now()-interval '1 day',now()+interval '1 day',2);
+-- Fixture: one owner with several projects; team rules are tested in 47.
+alter table public.projects disable trigger projects_one_team;
 insert into public.projects(id,event_id,owner_user_id,name,status,submitted_at) select ('aa500000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'ea500000-0000-0000-0000-000000000001','da500000-0000-0000-0000-000000000002','Project '||n,case when n=2 then 'draft' when n=3 then 'withdrawn' else 'submitted' end,now() from generate_series(1,3)n;
+alter table public.projects enable trigger projects_one_team;
 insert into public.project_collaborators(project_id,event_id,user_id) values('aa500000-0000-0000-0000-000000000001','ea500000-0000-0000-0000-000000000001','da500000-0000-0000-0000-000000000003');
 insert into public.competition_tracks(id,event_id,name,active) select ('ca500000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'ea500000-0000-0000-0000-000000000001','Track '||n,n<3 from generate_series(1,3)n;
 insert into public.project_tracks(project_id,track_id,event_id) select 'aa500000-0000-0000-0000-000000000001',id,event_id from public.competition_tracks where event_id='ea500000-0000-0000-0000-000000000001';

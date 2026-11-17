@@ -43,8 +43,8 @@ select is((select count(*) from public.application_decisions),0::bigint,'unrelea
 select is((select count(*) from public.participant_project_events()),1::bigint,'unreleased acceptance enables only the eligible event');
 select throws_ok($$select public.project_user_is_eligible('eb000000-0000-0000-0000-000000000001','db000000-0000-0000-0000-000000000002')$$,'42501',null,'private helper cannot inspect other eligibility');
 select set_config('test.project',public.participant_create_project('eb000000-0000-0000-0000-000000000001')::text,true);
-select lives_ok($$select public.participant_create_project('eb000000-0000-0000-0000-000000000001')$$,'multiple projects allowed before opening');
-select is((select count(*) from public.participant_projects('eb000000-0000-0000-0000-000000000001')),2::bigint,'owner can read own roster-only drafts');
+select throws_ok($$select public.participant_create_project('eb000000-0000-0000-0000-000000000001')$$,'P0001','You are already on a team for this event','one team per event');
+select is((select count(*) from public.participant_projects('eb000000-0000-0000-0000-000000000001')),1::bigint,'owner can read own roster-only draft');
 select is(public.participant_project_detail(current_setting('test.project')::uuid,'eb000000-0000-0000-0000-000000000001')->'project'->>'name','','pre-opening project content empty');
 select is(public.participant_project_detail(current_setting('test.project')::uuid,'eb000000-0000-0000-0000-000000000002'),null::jsonb,'wrong event detail is not found');
 select throws_ok($$select public.participant_create_project('eb000000-0000-0000-0000-000000000002')$$,'42501','A submitted and accepted application for this event is required','no cross-event eligibility');
@@ -69,13 +69,14 @@ select pg_temp.login(5);
 select lives_ok($$select public.participant_create_project('eb000000-0000-0000-0000-000000000001')$$,'submitted and accepted still qualifies despite declined status');
 reset role;
 update public.applications set declined_at=null,status='withdrawn',withdrawn_at=now() where user_id='db000000-0000-0000-0000-000000000005';
+update public.projects set status='withdrawn' where owner_user_id='db000000-0000-0000-0000-000000000005';
 select pg_temp.login(5);
 select lives_ok($$select public.participant_create_project('eb000000-0000-0000-0000-000000000001')$$,'submitted and accepted still qualifies despite withdrawn status');
 reset role;
 update public.event_competition_settings set enabled=false where event_id='eb000000-0000-0000-0000-000000000001';
 select pg_temp.login(1);
 select throws_ok($$select public.participant_create_project('eb000000-0000-0000-0000-000000000001')$$,'P0001','Project submissions are disabled','disabled event cannot create');
-select is((select count(*) from public.participant_projects('eb000000-0000-0000-0000-000000000001')),2::bigint,'disabled event does not hide owned projects');
+select is((select count(*) from public.participant_projects('eb000000-0000-0000-0000-000000000001')),1::bigint,'disabled event does not hide owned projects');
 select is((select count(*) from public.participant_project_events()),1::bigint,'associated disabled event remains discoverable');
 reset role;
 update public.event_competition_settings set enabled=true,project_submissions_open_at=now()-interval '2 days',project_submissions_close_at=clock_timestamp()

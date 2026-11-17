@@ -25,9 +25,13 @@ export default async function EventProjectsPage({
       </Link>
       <h1 className={cn(SERIF, "text-4xl")}>{event.name}: projects</h1>
       <ProjectAvailability event={event} />
-      {canManageProject(event) && (
-        <CreateProjectButton eventId={event.event_id} eventSlug={event.slug} />
-      )}
+      {canManageProject(event) &&
+        !projects.some((project) => project.status !== "withdrawn") && (
+          <CreateProjectButton
+            eventId={event.event_id}
+            eventSlug={event.slug}
+          />
+        )}
       {projects.length === 0 && <p>You have no projects for this event yet.</p>}
       {projects.map((project) => (
         <Link
@@ -40,7 +44,7 @@ export default async function EventProjectsPage({
           </h2>
           <p className="text-sm capitalize">
             {project.status} ·{" "}
-            {project.owner_user_id === userId ? "Your project" : "Collaborator"}
+            {project.owner_user_id === userId ? "Your project" : "Team member"}
           </p>
           {project.summary && <p>{project.summary}</p>}
         </Link>

@@ -130,6 +130,7 @@ export function ProjectEditor({
     })
   )
   const [message, setMessage] = useState<string | null>(null)
+  const [stale, setStale] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(0)
   const unsavedUploads = useRef(new Set<string>())
@@ -197,8 +198,10 @@ export function ProjectEditor({
         if (result.error) {
           setMessage(result.error)
           setErrors(result.fieldErrors ?? {})
+          setStale(Boolean(result.stale))
           return
         }
+        setStale(false)
         const normalized = projectContentSchema.parse(content)
         const normalizedAnswers = normalizedProjectAnswers(answers)
         unsavedUploads.current.clear()
@@ -395,6 +398,16 @@ export function ProjectEditor({
       <p role="status" aria-live="polite" className="text-sm">
         {message}
       </p>
+      {stale && (
+        <Button
+          type="button"
+          variant="outline"
+          className="self-start"
+          onClick={() => window.location.reload()}
+        >
+          Reload page
+        </Button>
+      )}
     </form>
   )
 }

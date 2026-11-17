@@ -107,6 +107,7 @@ describe("judge assignment payload", () => {
         answer: "Because",
       },
     ],
+    team: [],
   }
   it("accepts question answers and an empty list when hidden", () => {
     expect(judgeAssignmentSchema.parse(payload).answers).toHaveLength(1)
@@ -131,6 +132,13 @@ describe("judge assignment payload", () => {
         answers: [{ ...answer, type: "date" }],
       }).success
     ).toBe(false)
+  })
+  it("accepts team names, including blank ones", () => {
+    expect(
+      judgeAssignmentSchema.parse({ ...payload, team: ["Ada", null] }).team
+    ).toEqual(["Ada", null])
+    const { team: _team, ...rest } = payload
+    expect(judgeAssignmentSchema.safeParse(rest).success).toBe(false)
   })
   it("rejects payloads without the answers list", () => {
     const { answers: _answers, ...rest } = payload

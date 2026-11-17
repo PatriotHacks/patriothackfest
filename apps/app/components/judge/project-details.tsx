@@ -3,6 +3,7 @@ import { PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { reviewContext, type JudgeAssignment } from "@/lib/judge-reviews"
+import { memberName } from "@/lib/projects"
 import { JudgeAnswers } from "./answers"
 import { OrganizerContact } from "./queue"
 
@@ -30,6 +31,16 @@ export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
       <p className="break-words">
         <strong>Technologies:</strong> {project.technologies || "Not provided"}
       </p>
+      {detail.team.length > 0 && (
+        <>
+          <h2 className="text-lg font-semibold">Team</h2>
+          <ul className="list-inside list-disc">
+            {detail.team.map((name, index) => (
+              <li key={index}>{memberName(name)}</li>
+            ))}
+          </ul>
+        </>
+      )}
       <JudgeAnswers answers={detail.answers} />
       <ul className="flex flex-wrap gap-4" aria-label="Project links">
         {links.map(
