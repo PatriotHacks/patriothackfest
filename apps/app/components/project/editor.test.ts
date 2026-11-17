@@ -154,6 +154,25 @@ describe("project form views", () => {
     expect(html).toContain("16/500 characters")
     expect(html).toContain("Our &lt;b&gt;story&lt;/b&gt;")
   })
+  it("counts words for word-limited questions and flags overruns", () => {
+    const words = (max_length: number) =>
+      renderToStaticMarkup(
+        createElement(ProjectEditor, {
+          detail: {
+            ...detail,
+            questions: [
+              { ...detail.questions[0]!, max_length, length_unit: "words" },
+            ],
+          },
+          editable: true,
+        })
+      )
+    expect(words(3)).toContain("2/3 words")
+    expect(words(3)).toContain('maxLength="10000"')
+    expect(words(3)).not.toContain("text-red-700")
+    expect(words(1)).toContain("2/1 words")
+    expect(words(1)).toContain("text-red-700")
+  })
   it("shows escaped answers in the read-only view", () => {
     const html = renderToStaticMarkup(
       createElement(ProjectReadOnly, { detail })

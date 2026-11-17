@@ -1,7 +1,9 @@
 "use client"
 
 import {
+  countWords,
   fileAnswer,
+  MAX_PROJECT_ANSWER_LENGTH,
   MAX_PROJECT_URL_LENGTH,
   type ProjectAnswer,
   type ProjectQuestion,
@@ -10,6 +12,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
+import { cn } from "@workspace/ui/lib/utils"
 
 import { ProjectFileAnswer } from "./file-answer"
 
@@ -39,6 +42,10 @@ export function ProjectAnswerInput({
   const describedBy =
     [helpId, countId, errorId].filter(Boolean).join(" ") || undefined
   const text = typeof value === "string" ? value : ""
+  const words = question.length_unit === "words"
+  const count = words ? countWords(text) : text.length
+  const inputMax = words ? MAX_PROJECT_ANSWER_LENGTH : question.max_length
+  const overLimit = question.max_length !== null && count > question.max_length
   const selected = Array.isArray(value) ? value : []
   const choice = question.type === "single_choice" ? text : null
   const grouped =
@@ -53,7 +60,7 @@ export function ProjectAnswerInput({
           <Input
             id={inputId}
             type={question.type === "url" ? "url" : "text"}
-            maxLength={question.max_length ?? MAX_PROJECT_URL_LENGTH}
+            maxLength={inputMax ?? MAX_PROJECT_URL_LENGTH}
             value={text}
             onChange={(event) => onChange(event.target.value)}
             aria-invalid={Boolean(error)}
@@ -65,7 +72,7 @@ export function ProjectAnswerInput({
           <Textarea
             id={inputId}
             rows={5}
-            maxLength={question.max_length ?? undefined}
+            maxLength={inputMax ?? undefined}
             value={text}
             onChange={(event) => onChange(event.target.value)}
             aria-invalid={Boolean(error)}
@@ -144,8 +151,14 @@ export function ProjectAnswerInput({
       )}
       {control()}
       {countId && (
-        <p id={countId} className="text-right text-xs text-[#6E6E68]">
-          {text.length}/{question.max_length} characters
+        <p
+          id={countId}
+          className={cn(
+            "text-right text-xs",
+            overLimit ? "text-red-700" : "text-[#6E6E68]"
+          )}
+        >
+          {count}/{question.max_length} {question.length_unit}
         </p>
       )}
       {errorId && (
