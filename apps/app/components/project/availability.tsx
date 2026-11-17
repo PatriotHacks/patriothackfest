@@ -6,7 +6,7 @@ export function ProjectAvailability({ event }: { event: ProjectEvent }) {
   const phase = projectPhase(event)
   let message: string
   if (phase === "scheduled")
-    message = `Project submissions open ${formatInZone(event.project_submissions_open_at!)}. For now, you can set up collaborators only.`
+    message = `Project submissions open ${formatInZone(event.project_submissions_open_at!)}. For now, you can set up your team only.`
   else if (phase === "open")
     message = event.project_submissions_close_at
       ? `Project submissions close ${formatInZone(event.project_submissions_close_at)}.`
@@ -17,7 +17,7 @@ export function ProjectAvailability({ event }: { event: ProjectEvent }) {
   else
     message =
       phase === "judging"
-        ? "Judging has started. Project content, collaborators, and tracks are read-only."
+        ? "Judging has started. Project content, teams, and tracks are read-only."
         : "Project submissions have closed. Existing projects are read-only."
   return (
     <p className="text-sm text-[#6E6E68]">

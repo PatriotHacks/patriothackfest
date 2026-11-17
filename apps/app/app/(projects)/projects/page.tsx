@@ -10,8 +10,8 @@ export default async function ProjectsPage() {
     <div className="flex max-w-3xl flex-col gap-5 text-[#3A4A2B]">
       <h1 className={cn(SERIF, "text-4xl")}>Projects</h1>
       <p>
-        Submit a project for your hackathon. Informal teams can list their
-        collaborators on the project.
+        Submit a project for your hackathon. Build it solo or as a team; you can
+        be on one team per event.
       </p>
       {events.length === 0 ? (
         <div className={cn(PAPER, "p-6")}>
