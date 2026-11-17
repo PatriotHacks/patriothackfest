@@ -41,6 +41,7 @@ const detail: ProjectDetail = {
       required: true,
       type: "long_text",
       max_length: 500,
+      length_unit: "characters" as const,
       options: null,
       validation: null,
     },
@@ -54,6 +55,7 @@ const base = {
   help_text: null,
   required: false,
   max_length: null,
+  length_unit: "characters" as const,
   options: null,
   validation: null,
 }

@@ -20,6 +20,7 @@ const question = {
   required: true,
   type: "long_text" as const,
   max_length: 2000,
+  length_unit: "characters" as const,
   options: null,
   validation: null,
   archived_options: null,
@@ -41,6 +42,7 @@ describe("project question editor", () => {
       'value="2000"',
       "Required to submit",
       "Answer type",
+      "Limit unit",
       "Move up",
       "Move down",
       "Archive",
@@ -78,6 +80,7 @@ describe("project question editor", () => {
             ...question,
             type: "multiple_choice",
             max_length: null,
+            length_unit: "characters",
             options: [{ id: eventId, label: "Web" }],
           },
           {
@@ -85,6 +88,7 @@ describe("project question editor", () => {
             id: eventId,
             type: "file",
             max_length: null,
+            length_unit: "characters",
             validation: { max_size_mb: 4 },
           },
         ],
@@ -93,7 +97,7 @@ describe("project question editor", () => {
     )
     for (const text of ['value="Web"', "Add option", "PDF only", 'value="4"'])
       expect(html).toContain(text)
-    expect(html.split("Maximum characters")).toHaveLength(2)
+    expect(html.split("Maximum length")).toHaveLength(2)
   })
   it("locks the type of answered questions", () => {
     const html = renderToStaticMarkup(

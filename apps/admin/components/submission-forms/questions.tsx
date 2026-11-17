@@ -4,13 +4,17 @@ import {
   DEFAULT_PROJECT_ANSWER_LENGTH,
   isProjectChoiceType,
   isProjectTextType,
+  LENGTH_UNIT_LABELS,
+  LENGTH_UNITS,
   MAX_PROJECT_ANSWER_LENGTH,
+  MAX_WORD_LIMIT,
   PROJECT_QUESTION_TYPE_LABELS,
   PROJECT_QUESTION_TYPES,
   knownOptions,
   reuseOptionIds,
   type AdminProjectQuestion,
   type ChoiceOption,
+  type LengthUnit,
   type ProjectQuestionType,
 } from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
@@ -54,6 +58,9 @@ function QuestionForm({
   const [maxLength, setMaxLength] = useState(
     question?.max_length ?? DEFAULT_PROJECT_ANSWER_LENGTH
   )
+  const [lengthUnit, setLengthUnit] = useState<LengthUnit>(
+    question?.length_unit ?? "characters"
+  )
   const [options, setOptions] = useState<ChoiceOption[]>(
     question?.options ?? []
   )
@@ -89,6 +96,7 @@ function QuestionForm({
               required,
               type,
               maxLength,
+              lengthUnit,
               options: reuseOptionIds(
                 options,
                 question ? knownOptions(question) : []
@@ -104,6 +112,7 @@ function QuestionForm({
               setRequired(false)
               setType("long_text")
               setMaxLength(DEFAULT_PROJECT_ANSWER_LENGTH)
+              setLengthUnit("characters")
               setOptions([])
               setMaxSize("")
             }
@@ -120,8 +129,9 @@ function QuestionForm({
             className="rounded-md border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900"
           >
             Participants have already answered this question. Removing options
-            clears those answers, and lowering limits can make existing answers
-            fail on the participant&apos;s next save.
+            clears those answers, and lowering limits or switching between
+            characters and words can make existing answers fail on the
+            participant&apos;s next save.
           </p>
         )}
         <div className="flex flex-col gap-1">
@@ -194,17 +204,39 @@ function QuestionForm({
         <div className="flex flex-wrap items-end gap-4">
           {isProjectTextType(type) && (
             <div className="flex flex-col gap-1">
-              <Label htmlFor={`${id}-max`}>Maximum characters</Label>
-              <Input
-                id={`${id}-max`}
-                type="number"
-                min={1}
-                max={MAX_PROJECT_ANSWER_LENGTH}
-                value={maxLength}
-                onChange={(event) => setMaxLength(Number(event.target.value))}
-                required
-                className="max-w-32"
-              />
+              <Label htmlFor={`${id}-max`}>Maximum length</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id={`${id}-max`}
+                  type="number"
+                  min={1}
+                  max={
+                    lengthUnit === "words"
+                      ? MAX_WORD_LIMIT
+                      : MAX_PROJECT_ANSWER_LENGTH
+                  }
+                  value={maxLength}
+                  onChange={(event) => setMaxLength(Number(event.target.value))}
+                  required
+                  className="max-w-32"
+                />
+                <Select
+                  value={lengthUnit}
+                  onValueChange={(value) => setLengthUnit(value as LengthUnit)}
+                  disabled={pending || locked}
+                >
+                  <SelectTrigger aria-label="Limit unit" className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LENGTH_UNITS.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {LENGTH_UNIT_LABELS[value]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
           <label className="flex items-center gap-2 text-sm">
