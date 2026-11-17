@@ -13,7 +13,7 @@ import { Progress } from "@workspace/ui/components/progress"
 import { cn } from "@workspace/ui/lib/utils"
 import { useRef, useState } from "react"
 
-import { uploadPdf } from "@/lib/application-files"
+import { signedFileUrl, uploadPdf } from "@/lib/application-files"
 
 import { fieldErrorId, fieldInputId } from "./field-ids"
 import { FileLink } from "./file-link"
@@ -84,7 +84,10 @@ export function FileField({
     <div className="flex flex-col gap-[8px]">
       {current && (
         <div className="flex flex-wrap items-center gap-[12px] text-[14.5px]">
-          <FileLink path={current.path} name={current.name} />
+          <FileLink
+            name={current.name}
+            sign={() => signedFileUrl(current.path)}
+          />
           <span className="text-[#6E6E68]">{formatSize(current.size)}</span>
           {!disabled && (
             <button
