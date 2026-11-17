@@ -45,10 +45,13 @@ the two pages do not clobber each other's saved values.
   editor does the same when loading), so an optional question just loses that
   choice and a required one asks to be answered again. This never blocks a draft
   save for an unrelated edit; it only fails a complete save when the question is
-  required and now empty, with the error on that question.
+  required and now empty, with the error on that question. Re-adding a removed
+  label (trimmed, case-insensitive) reuses the old id, both in the editor and in
+  `admin_save_project_question`, so answers that still hold it become valid again.
 - Once any project has an answer for a question, its type cannot change (trigger
   on `project_questions`). The admin editor disables the type selector for
-  answered questions; to change type, archive the question and add a new one.
+  answered questions and warns that removing options or lowering limits can
+  affect existing answers; to change type, archive the question and add a new one.
 - Questions can be added, edited, reordered, and archived until **Start judging**;
   after that they are permanently locked (RPC check plus the shared freeze trigger).
 - Archiving is a soft delete. Archived questions disappear from the participant
@@ -69,13 +72,19 @@ the two pages do not clobber each other's saved values.
 
 - Private bucket `project-files`, PDF only, 10 MB. Object path
   `project_id/question_id/file_id.pdf`; the file answer must point at an existing
-  object under its own project and question.
+  object under its own project and question. Type and size come from the stored
+  object's metadata (`mimetype`, `size`), never from the client, and the saved
+  answer records those real values. An organizer cannot lower a file question's
+  limit below the largest file already saved for it.
 - Only the project owner can upload or delete, and only while the project can be
   saved (submissions enabled and open, not closed, judging not started, project not
   withdrawn, owner still eligible). This mirrors `lock_participant_project`;
   collaborators cannot save projects, so they cannot upload either. Files
-  referenced by saved answers cannot be deleted; the editor removes replaced and
-  unsaved uploads after a successful save.
+  referenced by saved answers cannot be deleted. After a successful save, the
+  server action deletes (through the Storage API) files the previous answers
+  referenced and the new ones do not. The editor deletes an upload that was never
+  saved as soon as it is replaced or removed. An upload abandoned without saving
+  (closed tab, failed request) stays in the bucket; there is no sweep job.
 - Nobody downloads directly. The only read policy allows the Storage `sign`
   operations (plus the owner's own deletes), so every link is a 60-second signed
   URL created by a server action with the caller's session:
@@ -83,6 +92,9 @@ the two pages do not clobber each other's saved values.
   - organizers: any project file;
   - judges: only files that answer an active file question on one of their current
     assignments, and only while **Judges can see question answers** is on.
+
+  The signing action takes only the path; `project_file_readable` in the storage
+  policy is the authorization check.
 
 ## Database contract
 
