@@ -1,3 +1,4 @@
+import { projectQuestionAnswerSchema } from "@workspace/forms"
 import * as z from "zod"
 
 export const PROJECT_PAGE_SIZE = 50
@@ -47,9 +48,7 @@ export const submittedProjectDetailSchema = z.object({
   owner: personSchema,
   collaborators: z.array(personSchema),
   tracks: z.array(trackSchema),
-  answers: z.array(
-    z.object({ question_id: z.guid(), label: z.string(), answer: z.string() })
-  ),
+  answers: z.array(projectQuestionAnswerSchema),
 })
 
 export type SubmittedProjects = z.infer<typeof submittedProjectsSchema>
@@ -82,20 +81,4 @@ export function projectPersonLabel(person: {
   return (
     person.full_name?.trim() || `Unnamed participant (${person.id.slice(-8)})`
   )
-}
-
-export function safeProjectUrl(value: string | null): string | null {
-  const candidate = value?.trim()
-  if (!candidate || /\s|\\/.test(candidate)) return null
-  try {
-    const url = new URL(candidate)
-    return ["http:", "https:"].includes(url.protocol) &&
-      url.host &&
-      !url.username &&
-      !url.password
-      ? candidate
-      : null
-  } catch {
-    return null
-  }
 }

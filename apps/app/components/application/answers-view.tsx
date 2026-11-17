@@ -8,6 +8,8 @@ import {
   type Question,
 } from "@workspace/forms"
 
+import { signedFileUrl } from "@/lib/application-files"
+
 import { FileLink } from "./file-link"
 
 function AnswerValue({ field, value }: { field: Field; value: unknown }) {
@@ -17,7 +19,10 @@ function AnswerValue({ field, value }: { field: Field; value: unknown }) {
   if (field.type === "file") {
     const file = fileAnswerSchema.safeParse(value)
     return file.success ? (
-      <FileLink path={file.data.path} name={file.data.name} />
+      <FileLink
+        name={file.data.name}
+        sign={() => signedFileUrl(file.data.path)}
+      />
     ) : (
       <span className="text-[#A3A39B]">No answer</span>
     )

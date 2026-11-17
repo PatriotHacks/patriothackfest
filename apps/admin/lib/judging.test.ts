@@ -5,8 +5,11 @@ import {
   competitionSettingsInput,
   competitionSettingsValues,
   competitionTrackInput,
+  adminProjectQuestionsSchema,
   judgingEndInputValue,
+  parseMaxSizeMb,
   projectQuestionInput,
+  projectQuestionRpcArgs,
   type CompetitionSettingsInput,
 } from "./judging"
 
@@ -194,8 +197,11 @@ describe("project question input", () => {
     label: " Why? ",
     helpText: " ",
     required: false,
+    type: "long_text" as const,
     maxLength: 5000,
+    options: [],
   }
+  const optionId = "a0000000-0000-4000-8000-000000000001"
   it("trims text and bounds length limits", () => {
     expect(projectQuestionInput.parse(question)).toMatchObject({
       label: "Why?",
@@ -215,4 +221,123 @@ describe("project question input", () => {
       projectQuestionInput.safeParse({ ...question, maxLength: 10_001 }).success
     ).toBe(false)
   })
+  it("requires distinct, labeled options for choice types", () => {
+    const choice = { ...question, type: "single_choice" as const }
+    expect(
+      projectQuestionInput.safeParse(choice).error?.issues[0]?.message
+    ).toBe("Add at least one option")
+    expect(
+      projectQuestionInput.safeParse({
+        ...choice,
+        options: [{ id: optionId, label: " " }],
+      }).success
+    ).toBe(false)
+    expect(
+      projectQuestionInput.safeParse({
+        ...choice,
+        options: [
+          { id: optionId, label: "Yes" },
+          { id: defaults.eventId, label: " yes " },
+        ],
+      }).error?.issues[0]?.message
+    ).toBe("Option labels must be unique")
+    expect(
+      projectQuestionInput.safeParse({
+        ...question,
+        type: "multiple_choice",
+        options: [{ id: optionId, label: " Yes " }],
+      }).data
+    ).toMatchObject({ options: [{ id: optionId, label: "Yes" }] })
+  })
+  it("ignores hidden settings of other types", () => {
+    const hidden = {
+      ...question,
+      maxLength: 0,
+      options: [{ id: optionId, label: " " }],
+      maxSizeMb: 99,
+    }
+    const url = projectQuestionInput.parse({ ...hidden, type: "url" })
+    expect(url).not.toHaveProperty("options")
+    expect(url).not.toHaveProperty("maxLength")
+    expect(url).not.toHaveProperty("maxSizeMb")
+    expect(
+      projectQuestionInput.parse({
+        ...hidden,
+        type: "single_choice",
+        options: [{ id: optionId, label: "Yes" }],
+      })
+    ).not.toHaveProperty("maxLength")
+    expect(
+      projectQuestionInput.safeParse({ ...hidden, type: "long_text" }).success
+    ).toBe(false)
+  })
+  it("parses the file size field exactly as typed", () => {
+    expect(parseMaxSizeMb("")).toEqual({ value: undefined, error: null })
+    expect(parseMaxSizeMb("2.5")).toEqual({ value: 2.5, error: null })
+    for (const draft of ["0", "-1", "11", "abc"])
+      expect(parseMaxSizeMb(draft).error).toBe(
+        "Enter a size greater than 0 and at most 10 MB"
+      )
+  })
+  it("bounds file size limits", () => {
+    expect(
+      projectQuestionInput.safeParse({
+        ...question,
+        type: "file",
+        maxSizeMb: 11,
+      }).success
+    ).toBe(false)
+  })
+  it("sends only the settings that apply to the type", () => {
+    const options = [{ id: optionId, label: "Yes" }]
+    const keys = (value: Parameters<typeof projectQuestionInput.parse>[0]) =>
+      Object.keys(
+        projectQuestionRpcArgs(projectQuestionInput.parse(value))
+      ).filter((key) =>
+        ["p_max_length", "p_options", "p_validation"].includes(key)
+      )
+    expect(keys({ ...question, options })).toEqual(["p_max_length"])
+    expect(keys({ ...question, type: "single_choice", options })).toEqual([
+      "p_options",
+    ])
+    expect(keys({ ...question, type: "file", maxSizeMb: 2 })).toEqual([
+      "p_validation",
+    ])
+    expect(keys({ ...question, type: "file" })).toEqual([])
+    expect(keys({ ...question, type: "url" })).toEqual([])
+    expect(
+      projectQuestionRpcArgs(
+        projectQuestionInput.parse({ ...question, type: "file", maxSizeMb: 2 })
+      )
+    ).toMatchObject({ p_validation: { max_size_mb: 2 } })
+  })
 })
+
+describe("admin project questions", () => {
+  it("parses typed questions with their answered flag", () => {
+    const [parsed] = adminProjectQuestionsSchema.parse([
+      {
+        id: optionIdFor(1),
+        event_id: defaults.eventId,
+        position: 1,
+        label: "Deck",
+        help_text: null,
+        required: true,
+        type: "file",
+        max_length: null,
+        options: null,
+        validation: { max_size_mb: 5 },
+        archived_options: null,
+        archived_at: null,
+        created_at: "2026-11-15T05:00:00Z",
+        updated_at: "2026-11-15T05:00:00Z",
+        answered: true,
+      },
+    ])
+    expect(parsed).toMatchObject({ type: "file", answered: true })
+  })
+})
+
+function optionIdFor(n: number) {
+  return `a0000000-0000-4000-8000-00000000000${n}`
+}

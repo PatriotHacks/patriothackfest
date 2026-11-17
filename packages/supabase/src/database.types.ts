@@ -873,40 +873,52 @@ export type Database = {
       project_questions: {
         Row: {
           archived_at: string | null
+          archived_options: Json | null
           created_at: string
           event_id: string
           help_text: string | null
           id: string
           label: string
-          max_length: number
+          max_length: number | null
+          options: Json | null
           position: number
           required: boolean
+          type: Database["public"]["Enums"]["field_type"]
           updated_at: string
+          validation: Json | null
         }
         ComputedFields: never
         Insert: {
           archived_at?: string | null
+          archived_options?: Json | null
           created_at?: string
           event_id: string
           help_text?: string | null
           id?: string
           label: string
-          max_length?: number
+          max_length?: number | null
+          options?: Json | null
           position: number
           required?: boolean
+          type?: Database["public"]["Enums"]["field_type"]
           updated_at?: string
+          validation?: Json | null
         }
         Update: {
           archived_at?: string | null
+          archived_options?: Json | null
           created_at?: string
           event_id?: string
           help_text?: string | null
           id?: string
           label?: string
-          max_length?: number
+          max_length?: number | null
+          options?: Json | null
           position?: number
           required?: boolean
+          type?: Database["public"]["Enums"]["field_type"]
           updated_at?: string
+          validation?: Json | null
         }
         Relationships: [
           {
@@ -1153,23 +1165,22 @@ export type Database = {
       admin_project_questions: {
         Args: { p_event_id: string }
         Returns: {
-          archived_at: string | null
+          answered: boolean
+          archived_at: string
+          archived_options: Json
           created_at: string
           event_id: string
-          help_text: string | null
+          help_text: string
           id: string
           label: string
           max_length: number
+          options: Json
           position: number
           required: boolean
+          type: Database["public"]["Enums"]["field_type"]
           updated_at: string
+          validation: Json
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "project_questions"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       admin_publish_form: { Args: { p_form_id: string }; Returns: undefined }
       admin_reassign_assignment: {
@@ -1254,9 +1265,12 @@ export type Database = {
           p_event_id: string
           p_help_text: string
           p_label: string
-          p_max_length: number
+          p_max_length?: number
+          p_options?: Json
           p_question_id?: string
           p_required: boolean
+          p_type?: Database["public"]["Enums"]["field_type"]
+          p_validation?: Json
         }
         Returns: string
       }
@@ -1514,16 +1528,35 @@ export type Database = {
         Returns: undefined
       }
       project_answer_errors: {
-        Args: { p_answers: Json; p_complete: boolean; p_event_id: string }
+        Args: {
+          p_answers: Json
+          p_complete: boolean
+          p_project: Omit<
+            Database["public"]["Tables"]["projects"]["Row"],
+            Database["public"]["Tables"]["projects"]["ComputedFields"]
+          >
+        }
+        Returns: Json
+      }
+      project_answers_normalized: {
+        Args: { p_answers: Json; p_event_id: string }
         Returns: Json
       }
       project_content_errors: {
         Args: { p_complete: boolean; p_content: Json }
         Returns: Json
       }
+      project_file_deletable: { Args: { p_name: string }; Returns: boolean }
+      project_file_parts: { Args: { p_name: string }; Returns: string[] }
+      project_file_readable: { Args: { p_name: string }; Returns: boolean }
+      project_file_writable: { Args: { p_name: string }; Returns: boolean }
       project_http_url_valid: { Args: { p_url: string }; Returns: boolean }
       project_is_accessible: {
         Args: { p_project_id: string }
+        Returns: boolean
+      }
+      project_question_answered: {
+        Args: { p_event_id: string; p_question_id: string }
         Returns: boolean
       }
       project_question_answers: {
@@ -1534,6 +1567,15 @@ export type Database = {
           >
         }
         Returns: Json
+      }
+      project_question_config_error: {
+        Args: {
+          p_max_length: number
+          p_options: Json
+          p_type: Database["public"]["Enums"]["field_type"]
+          p_validation: Json
+        }
+        Returns: string
       }
       project_user_is_eligible: {
         Args: { p_event_id: string; p_user_id: string }

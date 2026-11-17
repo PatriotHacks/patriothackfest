@@ -1,11 +1,9 @@
+import { safeHttpUrl } from "@workspace/forms"
 import { PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
-import {
-  judgeProjectUrl,
-  reviewContext,
-  type JudgeAssignment,
-} from "@/lib/judge-reviews"
+import { reviewContext, type JudgeAssignment } from "@/lib/judge-reviews"
+import { JudgeAnswers } from "./answers"
 import { OrganizerContact } from "./queue"
 
 export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
@@ -13,10 +11,10 @@ export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
   const links = [
     {
       label: "Repository/source",
-      url: judgeProjectUrl(project.repository_url),
+      url: safeHttpUrl(project.repository_url),
     },
-    { label: "Demo", url: judgeProjectUrl(project.demo_url) },
-    { label: "Video", url: judgeProjectUrl(project.video_url) },
+    { label: "Demo", url: safeHttpUrl(project.demo_url) },
+    { label: "Video", url: safeHttpUrl(project.video_url) },
   ]
   return (
     <article className={cn(PAPER, "flex flex-col gap-4 p-6")}>
@@ -32,14 +30,7 @@ export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
       <p className="break-words">
         <strong>Technologies:</strong> {project.technologies || "Not provided"}
       </p>
-      {detail.answers.map((item, index) => (
-        <section key={index} className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">{item.label}</h2>
-          <p className="break-words whitespace-pre-wrap">
-            {item.answer || "No answer"}
-          </p>
-        </section>
-      ))}
+      <JudgeAnswers answers={detail.answers} />
       <ul className="flex flex-wrap gap-4" aria-label="Project links">
         {links.map(
           (link) =>

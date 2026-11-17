@@ -2,6 +2,7 @@
 
 import { APPLICATION_FILES_BUCKET } from "@workspace/forms"
 import { ROLES } from "@workspace/supabase/roles"
+import { signedFileUrl } from "@workspace/supabase/storage"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -17,12 +18,7 @@ export async function applicationFileUrl(
   const filePath = z.string().min(1).parse(path)
   if (filePath.split("/")[1] !== id) return { error: "File not found" }
   const { supabase } = await requireAdmin("reviewer")
-
-  const { data, error } = await supabase.storage
-    .from(APPLICATION_FILES_BUCKET)
-    .createSignedUrl(filePath, 60)
-  if (error) return failure(error)
-  return { error: null, url: data.signedUrl }
+  return signedFileUrl(supabase, APPLICATION_FILES_BUCKET, filePath)
 }
 
 export async function setDecisions(

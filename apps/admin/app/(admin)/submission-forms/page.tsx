@@ -10,6 +10,7 @@ import { EventTabs } from "@/components/event-tabs"
 import { PageHeader } from "@/components/page-header"
 import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
+import { adminProjectQuestionsSchema } from "@/lib/judging"
 import { hasLevel } from "@/lib/levels"
 import { getSubmittedProjects } from "@/lib/organizer-project-data"
 import { parseProjectsPage } from "@/lib/organizer-projects"
@@ -60,7 +61,7 @@ export default async function SubmissionFormsPage({
     <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="Submission Forms"
-        description="Project submission dates, sponsor tracks, paragraph questions, and submitted projects. These do not change admissions applications."
+        description="Project submission dates, sponsor tracks, project questions, and submitted projects. These do not change admissions applications."
       />
       <EventTabs
         events={events}
@@ -81,7 +82,7 @@ export default async function SubmissionFormsPage({
         aria-labelledby="questions-heading"
       >
         <h2 id="questions-heading" className="text-xl font-semibold">
-          Paragraph questions
+          Project questions
         </h2>
         <p className="text-sm text-muted-foreground">
           Shown on every project form for this event. Required questions apply
@@ -92,7 +93,7 @@ export default async function SubmissionFormsPage({
         <ProjectQuestions
           key={`questions-${event.id}`}
           eventId={event.id}
-          questions={questions.data}
+          questions={adminProjectQuestionsSchema.parse(questions.data)}
           locked={started}
         />
         {settings.data ? (

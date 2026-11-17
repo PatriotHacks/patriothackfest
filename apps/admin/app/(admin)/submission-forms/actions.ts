@@ -1,5 +1,7 @@
 "use server"
 
+import { PROJECT_FILES_BUCKET } from "@workspace/forms"
+import { signedFileUrl } from "@workspace/supabase/storage"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -9,9 +11,10 @@ import { saveCompetitionSettingsPatch } from "@/lib/competition-settings"
 import {
   competitionTrackInput,
   projectQuestionInput,
+  projectQuestionRpcArgs,
   submissionSettingsInput,
   type CompetitionTrackInput,
-  type ProjectQuestionInput,
+  type ProjectQuestionFormValues,
   type SubmissionSettingsInput,
 } from "@/lib/judging"
 
@@ -57,7 +60,7 @@ export async function saveCompetitionTrack(
 }
 
 export async function saveProjectQuestion(
-  input: ProjectQuestionInput
+  input: ProjectQuestionFormValues
 ): Promise<ActionResult> {
   const { supabase } = await requireAdmin("organizer")
   const parsed = projectQuestionInput.safeParse(input)
@@ -65,15 +68,10 @@ export async function saveProjectQuestion(
     return failure({
       message: parsed.error.issues[0]?.message ?? "Invalid question",
     })
-  const value = parsed.data
-  const { error } = await supabase.rpc("admin_save_project_question", {
-    p_event_id: value.eventId,
-    p_question_id: value.questionId,
-    p_label: value.label,
-    p_help_text: value.helpText,
-    p_required: value.required,
-    p_max_length: value.maxLength,
-  })
+  const { error } = await supabase.rpc(
+    "admin_save_project_question",
+    projectQuestionRpcArgs(parsed.data)
+  )
   if (error) return failure(error)
   revalidatePath("/submission-forms")
   return ok
@@ -131,4 +129,13 @@ export async function setJudgesSeeAnswers(
   if (error) return failure(error)
   revalidatePath("/submission-forms")
   return ok
+}
+
+export async function projectFileUrl(
+  path: string
+): Promise<ActionResult & { url?: string }> {
+  const { supabase } = await requireAdmin("organizer")
+  const input = z.string().min(1).safeParse(path)
+  if (!input.success) return { error: "File not found" }
+  return signedFileUrl(supabase, PROJECT_FILES_BUCKET, input.data)
 }

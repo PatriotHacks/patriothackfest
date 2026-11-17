@@ -153,7 +153,7 @@ select pg_temp.login(1,'oauth');
 select lives_ok($$select public.admin_set_judges_see_answers('e4300000-0000-0000-0000-000000000001',true)$$,'switch editable after judging starts and ends');
 reset role;
 select pg_temp.login(4,'otp');
-select is(pg_temp.judge()->'answers',jsonb_build_array(
+select is((select jsonb_agg(x-'question_id'-'type'-'options' order by n) from jsonb_array_elements(pg_temp.judge()->'answers') with ordinality a(x,n)),jsonb_build_array(
   jsonb_build_object('label','Question 2','answer','Short'),
   jsonb_build_object('label','Question 1','answer','Long answer'),
   jsonb_build_object('label','Question 4','answer','Late')),'judge sees active answers in order when enabled');

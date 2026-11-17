@@ -47,23 +47,18 @@ function isValidFileSize(size: number) {
   return size > 0 && size <= MAX_FILE_SIZE_MB
 }
 
-function FileSizeSetting({
+export function FileSizeInput({
   value,
+  error,
   onChange,
+  onBlur,
 }: {
-  value: number | undefined
-  onChange: (value: number | undefined) => void
+  value: string
+  error: string | null
+  onChange: (value: string) => void
+  onBlur?: () => void
 }) {
   const id = useId()
-  const [draft, setDraft] = useState(value?.toString() ?? "")
-  const [invalid, setInvalid] = useState(false)
-
-  function commit() {
-    const ok = draft === "" || isValidFileSize(Number(draft))
-    setInvalid(!ok)
-    if (ok) onChange(draft === "" ? undefined : Number(draft))
-  }
-
   return (
     <div className="flex flex-col gap-1">
       <Label htmlFor={id}>
@@ -76,17 +71,48 @@ function FileSizeSetting({
         max={MAX_FILE_SIZE_MB}
         step="any"
         className="w-32"
-        value={draft}
-        aria-invalid={invalid}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
+        value={value}
+        aria-invalid={error !== null}
+        aria-describedby={error ? `${id}-error` : undefined}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
       />
-      {invalid && (
-        <p className="text-xs text-destructive">
-          Enter a size greater than 0 and at most {MAX_FILE_SIZE_MB} MB
+      {error && (
+        <p id={`${id}-error`} className="text-xs text-destructive">
+          {error}
         </p>
       )}
     </div>
+  )
+}
+
+function FileSizeSetting({
+  value,
+  onChange,
+}: {
+  value: number | undefined
+  onChange: (value: number | undefined) => void
+}) {
+  const [draft, setDraft] = useState(value?.toString() ?? "")
+  const [invalid, setInvalid] = useState(false)
+
+  function commit() {
+    const ok = draft === "" || isValidFileSize(Number(draft))
+    setInvalid(!ok)
+    if (ok) onChange(draft === "" ? undefined : Number(draft))
+  }
+
+  return (
+    <FileSizeInput
+      value={draft}
+      error={
+        invalid
+          ? `Enter a size greater than 0 and at most ${MAX_FILE_SIZE_MB} MB`
+          : null
+      }
+      onChange={setDraft}
+      onBlur={commit}
+    />
   )
 }
 

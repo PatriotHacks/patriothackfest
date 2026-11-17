@@ -1,12 +1,12 @@
-import { formatInZone } from "@workspace/forms"
+import { formatInZone, safeHttpUrl } from "@workspace/forms"
 import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 
+import { ProjectAnswers } from "@/components/judging/project-answers"
 import { ProjectTrackLabels } from "@/components/judging/projects"
 import {
   projectPersonLabel,
-  safeProjectUrl,
   submittedProjectsHref,
   type SubmittedProjectDetail,
 } from "@/lib/organizer-projects"
@@ -22,9 +22,9 @@ export function SubmittedProjectDetails({
 }) {
   const project = detail.project
   const links = [
-    { label: "Repository/source", url: safeProjectUrl(project.repository_url) },
-    { label: "Demo", url: safeProjectUrl(project.demo_url) },
-    { label: "Video", url: safeProjectUrl(project.video_url) },
+    { label: "Repository/source", url: safeHttpUrl(project.repository_url) },
+    { label: "Demo", url: safeHttpUrl(project.demo_url) },
+    { label: "Video", url: safeHttpUrl(project.video_url) },
   ].filter((link) => link.url !== null)
 
   return (
@@ -64,14 +64,7 @@ export function SubmittedProjectDetails({
             aria-label="Question answers"
             className="flex flex-col gap-3"
           >
-            {detail.answers.map((item) => (
-              <div key={item.question_id} className="flex flex-col gap-1">
-                <h2 className="text-xl font-semibold">{item.label}</h2>
-                <p className="break-words whitespace-pre-wrap">
-                  {item.answer || "No answer"}
-                </p>
-              </div>
-            ))}
+            <ProjectAnswers answers={detail.answers} />
           </section>
         )}
         <section

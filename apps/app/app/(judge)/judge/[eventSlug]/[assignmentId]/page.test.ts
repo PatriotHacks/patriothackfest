@@ -9,6 +9,7 @@ const { getJudgeEvent, getJudgeAssignment, notFound } = vi.hoisted(() => ({
 vi.mock("@/lib/judge-access", () => ({ getJudgeEvent }))
 vi.mock("@/lib/judge-review-data", () => ({ getJudgeAssignment }))
 vi.mock("next/navigation", () => ({ notFound }))
+vi.mock("@/lib/project-file-actions", () => ({ projectFileUrl: vi.fn() }))
 vi.mock("@/components/judge/scorecard", () => ({
   JudgeScorecardForm: () => null,
 }))

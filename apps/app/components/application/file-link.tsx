@@ -2,9 +2,13 @@
 
 import { useState } from "react"
 
-import { signedFileUrl } from "@/lib/application-files"
-
-export function FileLink({ path, name }: { path: string; name: string }) {
+export function FileLink({
+  name,
+  sign,
+}: {
+  name: string
+  sign: () => Promise<string>
+}) {
   const [error, setError] = useState<string | null>(null)
 
   async function open() {
@@ -15,7 +19,7 @@ export function FileLink({ path, name }: { path: string; name: string }) {
       return
     }
     try {
-      const url = await signedFileUrl(path)
+      const url = await sign()
       tab.opener = null
       tab.location.href = url
     } catch (e) {

@@ -1,13 +1,19 @@
 "use client"
 
+import { fileAnswer } from "@workspace/forms"
+import { signedUrlOrThrow } from "@workspace/supabase/storage"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import { ProjectAnswerView } from "@workspace/ui/components/project-answer"
 import { Textarea } from "@workspace/ui/components/textarea"
-import { useEffect, useId, useState, useTransition } from "react"
+import { useEffect, useId, useRef, useState, useTransition } from "react"
 
 import { saveProject } from "@/app/(projects)/projects/actions"
+import { projectFileUrl } from "@/lib/project-file-actions"
+import { removeProjectFiles } from "@/lib/project-files"
 import {
+  normalizedProjectAnswers,
   projectAnswers,
   projectContent,
   projectContentSchema,
@@ -16,6 +22,8 @@ import {
   type ProjectDetail,
 } from "@/lib/projects"
 import { projectNavigationLeavesPage } from "@/lib/project-navigation"
+
+import { ProjectAnswerInput } from "./answer-input"
 
 const fields: {
   key: keyof ProjectContent
@@ -43,6 +51,7 @@ function validLink(value: string) {
 }
 
 export function ProjectReadOnly({ detail }: { detail: ProjectDetail }) {
+  const answers = projectAnswers(detail)
   return (
     <section className="flex flex-col gap-3" aria-label="Project details">
       <h2 className="text-xl font-semibold">Project details</h2>
@@ -79,9 +88,14 @@ export function ProjectReadOnly({ detail }: { detail: ProjectDetail }) {
       {detail.questions.map((question) => (
         <div key={question.id} className="flex flex-col gap-1">
           <h3 className="font-semibold">{question.label}</h3>
-          <p className="break-words whitespace-pre-wrap">
-            {detail.project.answers[question.id] || "No answer"}
-          </p>
+          <ProjectAnswerView
+            item={{
+              type: question.type,
+              options: question.options,
+              answer: answers[question.id] ?? null,
+            }}
+            sign={(file) => signedUrlOrThrow(projectFileUrl(file.path))}
+          />
         </div>
       ))}
       <p className="text-sm">
@@ -117,6 +131,8 @@ export function ProjectEditor({
   )
   const [message, setMessage] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [uploading, setUploading] = useState(0)
+  const unsavedUploads = useRef(new Set<string>())
   const [pending, startTransition] = useTransition()
   const dirty = saved !== JSON.stringify({ content, answers, trackIds })
 
@@ -171,6 +187,7 @@ export function ProjectEditor({
       try {
         const result = await saveProject({
           projectId: detail.project.id,
+          eventId: detail.project.event_id,
           content,
           answers,
           trackIds,
@@ -183,9 +200,8 @@ export function ProjectEditor({
           return
         }
         const normalized = projectContentSchema.parse(content)
-        const normalizedAnswers: ProjectAnswers = Object.fromEntries(
-          Object.entries(answers).map(([key, value]) => [key, value.trim()])
-        )
+        const normalizedAnswers = normalizedProjectAnswers(answers)
+        unsavedUploads.current.clear()
         setContent(normalized)
         setAnswers(normalizedAnswers)
         setSaved(
@@ -225,8 +241,7 @@ export function ProjectEditor({
       </h2>
       <p className="text-sm text-[#6E6E68]">
         Submit a name, summary, description, and at least one repository, demo,
-        or video URL. Make links accessible to judges. No uploads or deployed
-        app required.
+        or video URL. Make links accessible to judges. No deployed app required.
       </p>
       <fieldset disabled={pending} className="flex flex-col gap-4">
         {fields.map(({ key, label, max, multiline }) => (
@@ -268,57 +283,30 @@ export function ProjectEditor({
             )}
           </div>
         ))}
-        {detail.questions.map((question) => {
-          const key = `answers.${question.id}`
-          const value = answers[question.id] ?? ""
-          return (
-            <div key={question.id} className="flex flex-col gap-1">
-              <Label htmlFor={`${id}-${question.id}`}>
-                {question.label}
-                {question.required ? " (required)" : " (optional)"}
-              </Label>
-              {question.help_text && (
-                <p
-                  id={`${id}-${question.id}-help`}
-                  className="text-sm text-[#6E6E68]"
-                >
-                  {question.help_text}
-                </p>
-              )}
-              <Textarea
-                id={`${id}-${question.id}`}
-                rows={5}
-                maxLength={question.max_length}
-                value={value}
-                onChange={(event) =>
-                  setAnswers({ ...answers, [question.id]: event.target.value })
-                }
-                aria-invalid={Boolean(errors[key])}
-                aria-describedby={[
-                  question.help_text && `${id}-${question.id}-help`,
-                  `${id}-${question.id}-count`,
-                  errors[key] && `${id}-${question.id}-error`,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              />
-              <p
-                id={`${id}-${question.id}-count`}
-                className="text-right text-xs text-[#6E6E68]"
-              >
-                {value.length}/{question.max_length} characters
-              </p>
-              {errors[key] && (
-                <p
-                  id={`${id}-${question.id}-error`}
-                  className="text-sm text-red-700"
-                >
-                  {errors[key]}
-                </p>
-              )}
-            </div>
-          )
-        })}
+        {detail.questions.map((question) => (
+          <ProjectAnswerInput
+            key={question.id}
+            id={id}
+            projectId={detail.project.id}
+            question={question}
+            value={answers[question.id] ?? null}
+            error={errors[`answers.${question.id}`]}
+            onChange={(value) => {
+              const previous = fileAnswer(answers[question.id])?.path
+              if (
+                previous &&
+                previous !== fileAnswer(value)?.path &&
+                unsavedUploads.current.delete(previous)
+              )
+                void removeProjectFiles([previous])
+              setAnswers((current) => ({ ...current, [question.id]: value }))
+            }}
+            onUploaded={(path) => unsavedUploads.current.add(path)}
+            onUploadingChange={(active) =>
+              setUploading((count) => count + (active ? 1 : -1))
+            }
+          />
+        ))}
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 font-semibold">
             Sponsor tracks (optional)
@@ -374,7 +362,7 @@ export function ProjectEditor({
           )}
         </fieldset>
         <div className="flex flex-wrap gap-3">
-          <Button type="submit" variant="outline">
+          <Button type="submit" variant="outline" disabled={uploading > 0}>
             {pending
               ? "Saving…"
               : status === "submitted"
@@ -382,7 +370,11 @@ export function ProjectEditor({
                 : "Save draft"}
           </Button>
           {status === "draft" && (
-            <Button type="button" onClick={() => save(true)}>
+            <Button
+              type="button"
+              disabled={uploading > 0}
+              onClick={() => save(true)}
+            >
               Submit project
             </Button>
           )}

@@ -1,5 +1,6 @@
 "use server"
 
+import { PROJECT_FILES_BUCKET } from "@workspace/forms"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -7,8 +8,10 @@ import { getApplicant } from "@/lib/applicant"
 import {
   completeProjectContentSchema,
   fieldErrors,
+  projectDetailSchema,
   projectFailure,
   projectSaveSchema,
+  replacedFilePaths,
 } from "@/lib/projects"
 
 export type ProjectResult = {
@@ -47,6 +50,11 @@ export async function saveProject(input: unknown): Promise<ProjectResult> {
         fieldErrors: fieldErrors(complete.error.issues),
       }
   }
+  const before = await supabase.rpc("participant_project_detail", {
+    p_project_id: value.projectId,
+    p_event_id: value.eventId,
+  })
+  if (before.error) return projectFailure(before.error)
   const { data, error } = await supabase.rpc("participant_save_project", {
     p_project_id: value.projectId,
     p_content: value.content,
@@ -56,6 +64,15 @@ export async function saveProject(input: unknown): Promise<ProjectResult> {
     p_expected_updated_at: value.updatedAt,
   })
   if (error) return projectFailure(error)
+  const replaced = before.data
+    ? replacedFilePaths(
+        value.projectId,
+        projectDetailSchema.parse(before.data).project.answers,
+        value.answers
+      )
+    : []
+  if (replaced.length > 0)
+    await supabase.storage.from(PROJECT_FILES_BUCKET).remove(replaced)
   revalidatePath("/projects", "layout")
   return { error: null, updatedAt: data }
 }

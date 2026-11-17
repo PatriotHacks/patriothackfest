@@ -1,4 +1,12 @@
-import { fromZonedInputValue, toZonedInputValue } from "@workspace/forms"
+import {
+  fromZonedInputValue,
+  MAX_FILE_SIZE_MB,
+  MAX_PROJECT_ANSWER_LENGTH,
+  adminProjectQuestionSchema,
+  toZonedInputValue,
+  type ChoiceOption,
+  type ProjectQuestionType,
+} from "@workspace/forms"
 import type { Tables } from "@workspace/supabase/types"
 import * as z from "zod"
 
@@ -100,13 +108,113 @@ export const competitionTrackInput = z.object({
 
 export type CompetitionTrackInput = z.infer<typeof competitionTrackInput>
 
-export const projectQuestionInput = z.object({
+const questionBase = {
   eventId: z.guid(),
   questionId: z.guid().optional(),
   label: z.string().trim().min(1, "Enter a question").max(300),
   helpText: z.string().trim().max(1000),
   required: z.boolean(),
-  maxLength: z.number().int().min(1).max(10_000),
-})
+}
+
+const maxLength = z.number().int().min(1).max(MAX_PROJECT_ANSWER_LENGTH)
+
+const choiceOptions = z
+  .array(
+    z.object({
+      id: z.guid(),
+      label: z
+        .string()
+        .trim()
+        .min(1, "Enter a label for every option")
+        .max(200, "Use 200 characters or fewer per option"),
+    })
+  )
+  .min(1, "Add at least one option")
+  .max(50, "Use 50 options or fewer")
+  .refine(
+    (options) =>
+      new Set(options.map((option) => option.label.toLowerCase())).size ===
+      options.length,
+    "Option labels must be unique"
+  )
+
+export const maxSizeMbSchema = z
+  .number()
+  .positive("Enter a size greater than 0")
+  .max(
+    MAX_FILE_SIZE_MB,
+    `Maximum file size must be at most ${MAX_FILE_SIZE_MB} MB`
+  )
+
+export function parseMaxSizeMb(draft: string) {
+  if (draft.trim() === "") return { value: undefined, error: null }
+  const parsed = maxSizeMbSchema.safeParse(Number(draft))
+  return parsed.success
+    ? { value: parsed.data, error: null }
+    : {
+        value: undefined,
+        error: `Enter a size greater than 0 and at most ${MAX_FILE_SIZE_MB} MB`,
+      }
+}
+
+export const projectQuestionInput = z.discriminatedUnion("type", [
+  z.object({ ...questionBase, type: z.literal("short_text"), maxLength }),
+  z.object({ ...questionBase, type: z.literal("long_text"), maxLength }),
+  z.object({ ...questionBase, type: z.literal("url") }),
+  z.object({
+    ...questionBase,
+    type: z.literal("single_choice"),
+    options: choiceOptions,
+  }),
+  z.object({
+    ...questionBase,
+    type: z.literal("multiple_choice"),
+    options: choiceOptions,
+  }),
+  z.object({
+    ...questionBase,
+    type: z.literal("file"),
+    maxSizeMb: maxSizeMbSchema.optional(),
+  }),
+])
 
 export type ProjectQuestionInput = z.infer<typeof projectQuestionInput>
+
+export type ProjectQuestionFormValues = {
+  eventId: string
+  questionId?: string
+  label: string
+  helpText: string
+  required: boolean
+  type: ProjectQuestionType
+  maxLength: number
+  options: ChoiceOption[]
+  maxSizeMb?: number
+}
+
+export function projectQuestionRpcArgs(value: ProjectQuestionInput) {
+  const base = {
+    p_event_id: value.eventId,
+    p_question_id: value.questionId,
+    p_label: value.label,
+    p_help_text: value.helpText,
+    p_required: value.required,
+    p_type: value.type,
+  }
+  switch (value.type) {
+    case "short_text":
+    case "long_text":
+      return { ...base, p_max_length: value.maxLength }
+    case "single_choice":
+    case "multiple_choice":
+      return { ...base, p_options: value.options }
+    case "file":
+      return value.maxSizeMb === undefined
+        ? base
+        : { ...base, p_validation: { max_size_mb: value.maxSizeMb } }
+    case "url":
+      return base
+  }
+}
+
+export const adminProjectQuestionsSchema = z.array(adminProjectQuestionSchema)

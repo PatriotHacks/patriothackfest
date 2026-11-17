@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import {
   judgeAssignmentSchema,
   judgeContinuation,
-  judgeProjectUrl,
   reviewContext,
   reviewSaveSchema,
 } from "./judge-reviews"
@@ -74,14 +73,6 @@ describe("judge scorecard contracts", () => {
       })
     ).toBe(`/judge/fall-2026/${id}`)
   })
-  it.each([
-    "javascript:alert(1)",
-    "//evil.test",
-    "https://user:pass@example.test",
-    "https://example.test\\bad",
-  ])("rejects unsafe project link %s", (url) => {
-    expect(judgeProjectUrl(url)).toBeNull()
-  })
 })
 
 describe("judge assignment payload", () => {
@@ -107,13 +98,39 @@ describe("judge assignment payload", () => {
       demo_url: null,
       video_url: null,
     },
-    answers: [{ label: "Why?", answer: "Because" }],
+    answers: [
+      {
+        question_id: "b0000000-0000-4000-8000-000000000001",
+        label: "Why?",
+        type: "long_text",
+        options: null,
+        answer: "Because",
+      },
+    ],
   }
   it("accepts question answers and an empty list when hidden", () => {
     expect(judgeAssignmentSchema.parse(payload).answers).toHaveLength(1)
     expect(
       judgeAssignmentSchema.parse({ ...payload, answers: [] }).answers
     ).toEqual([])
+  })
+  it("accepts typed answers and rejects unknown types", () => {
+    const [answer] = payload.answers
+    expect(
+      judgeAssignmentSchema.safeParse({
+        ...payload,
+        answers: [
+          { ...answer, type: "multiple_choice", options: [], answer: [] },
+          { ...answer, type: "file", answer: null },
+        ],
+      }).success
+    ).toBe(true)
+    expect(
+      judgeAssignmentSchema.safeParse({
+        ...payload,
+        answers: [{ ...answer, type: "date" }],
+      }).success
+    ).toBe(false)
   })
   it("rejects payloads without the answers list", () => {
     const { answers: _answers, ...rest } = payload

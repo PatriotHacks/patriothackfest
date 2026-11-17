@@ -1,6 +1,12 @@
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+vi.mock("@/app/(admin)/applications/actions", () => ({
+  applicationFileUrl: vi.fn(),
+}))
+vi.mock("@/app/(admin)/submission-forms/actions", () => ({
+  projectFileUrl: vi.fn(),
+}))
 
 import { SubmittedProjectsList } from "./projects"
 import { SubmittedProjectDetails } from "./project-details"
@@ -42,8 +48,20 @@ const detail: SubmittedProjectDetail = {
   collaborators: [{ id, full_name: "Collaborator" }],
   tracks: data.projects[0]!.tracks,
   answers: [
-    { question_id: id, label: "What inspired you?", answer: "<b>Bees</b>" },
-    { question_id: id, label: "Anything else?", answer: "" },
+    {
+      question_id: id,
+      label: "What inspired you?",
+      type: "long_text",
+      options: null,
+      answer: "<b>Bees</b>",
+    },
+    {
+      question_id: id,
+      label: "Anything else?",
+      type: "short_text",
+      options: null,
+      answer: null,
+    },
   ],
 }
 
@@ -157,5 +175,69 @@ describe("organizer submitted projects", () => {
     expect(html).not.toContain("<img src=x")
     expect(html).not.toContain('href="javascript:')
     expect(html).toContain("No usable HTTP(S) project links")
+  })
+  it("renders typed answers as labels, safe links, and signed file links", () => {
+    const optionA = "c0000000-0000-4000-8000-000000000001"
+    const optionB = "c0000000-0000-4000-8000-000000000002"
+    const options = [
+      { id: optionA, label: "Web" },
+      { id: optionB, label: "Mobile" },
+    ]
+    const base = { question_id: id, options: null }
+    const html = renderToStaticMarkup(
+      createElement(SubmittedProjectDetails, {
+        event,
+        page: 1,
+        detail: {
+          ...detail,
+          answers: [
+            {
+              ...base,
+              label: "Primary",
+              type: "single_choice",
+              options,
+              answer: optionB,
+            },
+            {
+              ...base,
+              label: "Platforms",
+              type: "multiple_choice",
+              options,
+              answer: [optionA, "removed"],
+            },
+            {
+              ...base,
+              label: "Slides",
+              type: "url",
+              answer: "https://slides.example.test/deck",
+            },
+            {
+              ...base,
+              label: "Legacy",
+              type: "url",
+              answer: "javascript:alert(1)",
+            },
+            {
+              ...base,
+              label: "Deck",
+              type: "file",
+              answer: {
+                path: `${id}/${id}/${id}.pdf`,
+                name: "deck.pdf",
+                size: 1,
+                type: "application/pdf",
+              },
+            },
+          ],
+        },
+      })
+    )
+    expect(html).toContain("<p>Mobile</p>")
+    expect(html).toContain("<li>Web</li>")
+    expect(html).not.toContain("removed")
+    expect(html).toContain('href="https://slides.example.test/deck"')
+    expect(html).not.toContain('href="javascript:')
+    expect(html).toContain("View deck.pdf")
+    expect(html).not.toContain(`${id}/${id}/${id}.pdf`)
   })
 })

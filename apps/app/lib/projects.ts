@@ -1,3 +1,12 @@
+import {
+  editableProjectAnswer,
+  fileAnswer,
+  fileAnswerSchema,
+  MAX_PROJECT_ANSWER_LENGTH,
+  normalizedProjectAnswer,
+  projectQuestionSchema,
+  type ProjectAnswer,
+} from "@workspace/forms"
 import type { Database } from "@workspace/supabase/types"
 import * as z from "zod"
 
@@ -54,8 +63,18 @@ export const completeProjectContentSchema = projectContentSchema.superRefine(
 export const projectSaveSchema = z
   .object({
     projectId: z.guid(),
+    eventId: z.guid(),
     content: projectContentSchema,
-    answers: z.record(z.guid(), z.string().trim().max(10_000)),
+    answers: z.record(
+      z.guid(),
+      z
+        .union([
+          z.string().trim().max(MAX_PROJECT_ANSWER_LENGTH),
+          z.array(z.guid()).max(50),
+          fileAnswerSchema,
+        ])
+        .nullable()
+    ),
     trackIds: z.array(z.guid()),
     submit: z.boolean(),
     updatedAt: z.iso.datetime({ offset: true }),
@@ -63,7 +82,7 @@ export const projectSaveSchema = z
   .strict()
 
 export type ProjectContent = z.infer<typeof projectContentSchema>
-export type ProjectAnswers = Record<string, string>
+export type ProjectAnswers = Record<string, ProjectAnswer>
 export type ProjectSaveInput = z.input<typeof projectSaveSchema>
 // SQL RETURNS TABLE metadata does not encode nullable output columns.
 export type ProjectEvent = Omit<
@@ -92,7 +111,7 @@ export const projectDetailSchema = z.object({
     status: z.enum(["draft", "submitted", "withdrawn"]),
     submitted_at: z.string().nullable(),
     updated_at: z.string(),
-    answers: z.record(z.string(), z.string()),
+    answers: z.record(z.string(), z.unknown()),
   }),
   collaborators: z.array(
     z.object({ user_id: z.guid(), full_name: z.string().nullable() })
@@ -108,15 +127,7 @@ export const projectDetailSchema = z.object({
       sponsor: z.string().nullable(),
     })
   ),
-  questions: z.array(
-    z.object({
-      id: z.guid(),
-      label: z.string(),
-      help_text: z.string().nullable(),
-      required: z.boolean(),
-      max_length: z.number().int().positive(),
-    })
-  ),
+  questions: z.array(projectQuestionSchema),
 })
 
 export type ProjectDetail = z.infer<typeof projectDetailSchema>
@@ -161,7 +172,35 @@ export function projectAnswers(detail: ProjectDetail): ProjectAnswers {
   return Object.fromEntries(
     detail.questions.map((question) => [
       question.id,
-      detail.project.answers[question.id] ?? "",
+      editableProjectAnswer(question, detail.project.answers[question.id]),
+    ])
+  )
+}
+
+function filePaths(answers: Record<string, unknown>) {
+  return Object.values(answers)
+    .map((value) => fileAnswer(value)?.path)
+    .filter((path) => path !== undefined)
+}
+
+export function replacedFilePaths(
+  projectId: string,
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+) {
+  const kept = new Set(filePaths(after))
+  return filePaths(before).filter(
+    (path) => !kept.has(path) && path.startsWith(`${projectId}/`)
+  )
+}
+
+export function normalizedProjectAnswers(
+  answers: ProjectAnswers
+): ProjectAnswers {
+  return Object.fromEntries(
+    Object.entries(answers).map(([key, value]) => [
+      key,
+      normalizedProjectAnswer(value),
     ])
   )
 }

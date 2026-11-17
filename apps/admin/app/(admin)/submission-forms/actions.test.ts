@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { rpc, from, stored, requireAdmin, revalidatePath } = vi.hoisted(() => ({
-  rpc: vi.fn(),
-  from: vi.fn(),
-  stored: { data: null as unknown, error: null as unknown },
-  requireAdmin: vi.fn(),
-  revalidatePath: vi.fn(),
-}))
+const { rpc, from, createSignedUrl, stored, requireAdmin, revalidatePath } =
+  vi.hoisted(() => ({
+    rpc: vi.fn(),
+    createSignedUrl: vi.fn(),
+    from: vi.fn(),
+    stored: { data: null as unknown, error: null as unknown },
+    requireAdmin: vi.fn(),
+    revalidatePath: vi.fn(),
+  }))
 
 vi.mock("server-only", () => ({}))
 vi.mock("@/lib/admin", () => ({ requireAdmin }))
@@ -14,6 +16,7 @@ vi.mock("next/cache", () => ({ revalidatePath }))
 
 import {
   archiveProjectQuestion,
+  projectFileUrl,
   reorderProjectQuestions,
   saveCompetitionTrack,
   saveProjectQuestion,
@@ -43,7 +46,9 @@ const question = {
   label: " What inspired you? ",
   helpText: " One paragraph ",
   required: true,
+  type: "long_text" as const,
   maxLength: 2000,
+  options: [],
 }
 
 beforeEach(() => {
@@ -62,7 +67,9 @@ beforeEach(() => {
     maybeSingle: () => Promise.resolve(stored),
   }
   from.mockReturnValue(query)
-  requireAdmin.mockResolvedValue({ supabase: { rpc, from } })
+  requireAdmin.mockResolvedValue({
+    supabase: { rpc, from, storage: { from: () => ({ createSignedUrl }) } },
+  })
   rpc.mockResolvedValue({ error: null })
 })
 
@@ -151,7 +158,10 @@ describe("submission form server actions", () => {
       p_label: "What inspired you?",
       p_help_text: "One paragraph",
       p_required: true,
+      p_type: "long_text",
       p_max_length: 2000,
+      p_options: undefined,
+      p_validation: undefined,
     })
     expect(revalidatePath).toHaveBeenCalledWith("/submission-forms")
   })
@@ -190,6 +200,21 @@ describe("submission form server actions", () => {
     })
   })
 
+  it("surfaces the answered-question type lock", async () => {
+    const message =
+      "This question already has answers, so its type cannot change. Archive it and add a new question instead."
+    rpc.mockResolvedValue({ error: { message } })
+    expect(
+      await saveProjectQuestion({ ...question, questionId, type: "url" })
+    ).toEqual({ error: message })
+    expect(rpc).toHaveBeenCalledWith(
+      "admin_save_project_question",
+      expect.objectContaining({ p_type: "url" })
+    )
+    expect(rpc.mock.calls[0]?.[1]).not.toHaveProperty("p_max_length")
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
   it("preserves database errors without revalidating", async () => {
     rpc.mockResolvedValue({
       error: { message: "Questions are locked because judging has started" },
@@ -198,5 +223,31 @@ describe("submission form server actions", () => {
       error: "Questions are locked because judging has started",
     })
     expect(revalidatePath).not.toHaveBeenCalled()
+  })
+})
+
+describe("organizer project file links", () => {
+  const projectId = "f0000000-0000-4000-8000-000000000001"
+  const path = `${projectId}/${questionId}/${otherQuestionId}.pdf`
+  it("signs project files for organizers only", async () => {
+    createSignedUrl.mockResolvedValue({
+      data: { signedUrl: "https://signed.test/deck" },
+      error: null,
+    })
+    expect(await projectFileUrl(path)).toEqual({
+      error: null,
+      url: "https://signed.test/deck",
+    })
+    expect(requireAdmin).toHaveBeenCalledWith("organizer")
+    expect(createSignedUrl).toHaveBeenCalledWith(path, 60)
+  })
+  it("rejects empty paths and reports storage denials", async () => {
+    expect(await projectFileUrl("")).toEqual({ error: "File not found" })
+    expect(createSignedUrl).not.toHaveBeenCalled()
+    createSignedUrl.mockResolvedValue({
+      data: null,
+      error: { message: "Object not found" },
+    })
+    expect(await projectFileUrl(path)).toEqual({ error: "Object not found" })
   })
 })

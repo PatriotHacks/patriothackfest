@@ -1,3 +1,4 @@
+import { projectQuestionAnswerSchema } from "@workspace/forms"
 import * as z from "zod"
 
 export const reviewCriteria = [
@@ -71,7 +72,7 @@ export const judgeAssignmentSchema = z.object({
     demo_url: z.string().nullable(),
     video_url: z.string().nullable(),
   }),
-  answers: z.array(z.object({ label: z.string(), answer: z.string() })),
+  answers: z.array(projectQuestionAnswerSchema),
 })
 export type ReviewScores = z.infer<typeof reviewScoresSchema>
 export type JudgeScorecard = z.infer<typeof judgeScorecardSchema>
@@ -99,18 +100,4 @@ export function reviewContext(assignment: {
   return assignment.track_id
     ? `Sponsor track: ${assignment.track_name ?? "Unnamed track"}`
     : "General judging"
-}
-export function judgeProjectUrl(value: string | null) {
-  if (!value || /\s|\\/.test(value)) return null
-  try {
-    const url = new URL(value)
-    return ["https:", "http:"].includes(url.protocol) &&
-      url.host &&
-      !url.username &&
-      !url.password
-      ? url.href
-      : null
-  } catch {
-    return null
-  }
 }
