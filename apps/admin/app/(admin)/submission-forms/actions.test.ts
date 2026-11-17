@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { rpc, from, stored, requireAdmin, revalidatePath } = vi.hoisted(() => ({
-  rpc: vi.fn(),
-  from: vi.fn(),
-  stored: { data: null as unknown, error: null as unknown },
-  requireAdmin: vi.fn(),
-  revalidatePath: vi.fn(),
-}))
+const { rpc, from, createSignedUrl, stored, requireAdmin, revalidatePath } =
+  vi.hoisted(() => ({
+    rpc: vi.fn(),
+    createSignedUrl: vi.fn(),
+    from: vi.fn(),
+    stored: { data: null as unknown, error: null as unknown },
+    requireAdmin: vi.fn(),
+    revalidatePath: vi.fn(),
+  }))
 
 vi.mock("server-only", () => ({}))
 vi.mock("@/lib/admin", () => ({ requireAdmin }))
@@ -14,6 +16,7 @@ vi.mock("next/cache", () => ({ revalidatePath }))
 
 import {
   archiveProjectQuestion,
+  projectFileUrl,
   reorderProjectQuestions,
   saveCompetitionTrack,
   saveProjectQuestion,
@@ -64,7 +67,9 @@ beforeEach(() => {
     maybeSingle: () => Promise.resolve(stored),
   }
   from.mockReturnValue(query)
-  requireAdmin.mockResolvedValue({ supabase: { rpc, from } })
+  requireAdmin.mockResolvedValue({
+    supabase: { rpc, from, storage: { from: () => ({ createSignedUrl }) } },
+  })
   rpc.mockResolvedValue({ error: null })
 })
 
@@ -217,5 +222,28 @@ describe("submission form server actions", () => {
       error: "Questions are locked because judging has started",
     })
     expect(revalidatePath).not.toHaveBeenCalled()
+  })
+})
+
+describe("organizer project file links", () => {
+  const projectId = "f0000000-0000-4000-8000-000000000001"
+  const path = `${projectId}/${questionId}/${otherQuestionId}.pdf`
+  it("signs project files for organizers only", async () => {
+    createSignedUrl.mockResolvedValue({
+      data: { signedUrl: "https://signed.test/deck" },
+      error: null,
+    })
+    expect(await projectFileUrl(projectId, path)).toEqual({
+      error: null,
+      url: "https://signed.test/deck",
+    })
+    expect(requireAdmin).toHaveBeenCalledWith("organizer")
+    expect(createSignedUrl).toHaveBeenCalledWith(path, 60)
+  })
+  it("refuses paths outside the project", async () => {
+    expect(
+      await projectFileUrl(projectId, `${questionId}/${questionId}/x.pdf`)
+    ).toEqual({ error: "File not found" })
+    expect(createSignedUrl).not.toHaveBeenCalled()
   })
 })

@@ -1,5 +1,6 @@
 "use server"
 
+import { PROJECT_FILES_BUCKET } from "@workspace/forms"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -127,4 +128,21 @@ export async function setJudgesSeeAnswers(
   if (error) return failure(error)
   revalidatePath("/submission-forms")
   return ok
+}
+
+export async function projectFileUrl(
+  projectId: string,
+  path: string
+): Promise<ActionResult & { url?: string }> {
+  const { supabase } = await requireAdmin("organizer")
+  const input = z
+    .object({ projectId: z.guid(), path: z.string().min(1) })
+    .safeParse({ projectId, path })
+  if (!input.success || input.data.path.split("/")[0] !== input.data.projectId)
+    return { error: "File not found" }
+  const { data, error } = await supabase.storage
+    .from(PROJECT_FILES_BUCKET)
+    .createSignedUrl(input.data.path, 60)
+  if (error) return failure(error)
+  return { error: null, url: data.signedUrl }
 }

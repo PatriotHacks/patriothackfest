@@ -4,15 +4,15 @@ import { Button } from "@workspace/ui/components/button"
 import { useState } from "react"
 
 import { applicationFileUrl } from "@/app/(admin)/applications/actions"
+import { projectFileUrl } from "@/app/(admin)/submission-forms/actions"
+import type { ActionResult } from "@/lib/action-result"
 
-export function FileLink({
-  applicationId,
-  path,
+function SignedFileLink({
   name,
+  sign,
 }: {
-  applicationId: string
-  path: string
   name: string
+  sign: () => Promise<ActionResult & { url?: string }>
 }) {
   const [error, setError] = useState<string | null>(null)
 
@@ -24,7 +24,7 @@ export function FileLink({
       return
     }
     try {
-      const result = await applicationFileUrl(applicationId, path)
+      const result = await sign()
       if (!result.url) throw new Error(result.error ?? "File not found")
       tab.opener = null
       tab.location.href = result.url
@@ -51,5 +51,36 @@ export function FileLink({
         </span>
       )}
     </span>
+  )
+}
+
+export function FileLink({
+  applicationId,
+  path,
+  name,
+}: {
+  applicationId: string
+  path: string
+  name: string
+}) {
+  return (
+    <SignedFileLink
+      name={name}
+      sign={() => applicationFileUrl(applicationId, path)}
+    />
+  )
+}
+
+export function ProjectFileLink({
+  projectId,
+  path,
+  name,
+}: {
+  projectId: string
+  path: string
+  name: string
+}) {
+  return (
+    <SignedFileLink name={name} sign={() => projectFileUrl(projectId, path)} />
   )
 }
