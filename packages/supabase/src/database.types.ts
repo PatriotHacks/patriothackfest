@@ -966,7 +966,7 @@ export type Database = {
       }
       projects: {
         Row: {
-          answers: Json
+          answers: NonNullable<Json>
           created_at: string
           demo_url: string | null
           description: string
@@ -985,7 +985,7 @@ export type Database = {
         }
         ComputedFields: "project_question_answers"
         Insert: {
-          answers?: Json
+          answers?: NonNullable<Json>
           created_at?: string
           demo_url?: string | null
           description?: string
@@ -1002,7 +1002,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
-          answers?: Json
+          answers?: NonNullable<Json>
           created_at?: string
           demo_url?: string | null
           description?: string
@@ -1426,7 +1426,7 @@ export type Database = {
       lock_participant_project: {
         Args: { p_project_id: string; p_roster_only?: boolean }
         Returns: {
-          answers: Json
+          answers: NonNullable<Json>
           created_at: string
           demo_url: string | null
           description: string
@@ -1485,7 +1485,7 @@ export type Database = {
       participant_projects: {
         Args: { p_event_id: string }
         Returns: {
-          answers: Json
+          answers: NonNullable<Json>
           created_at: string
           demo_url: string | null
           description: string
