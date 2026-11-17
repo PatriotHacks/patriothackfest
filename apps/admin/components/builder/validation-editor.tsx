@@ -4,8 +4,10 @@ import {
   DEFAULT_FILE_MAX_SIZE_MB,
   LENGTH_UNIT_LABELS,
   LENGTH_UNITS,
+  limitForUnit,
   MAX_FILE_SIZE_MB,
   MAX_WORD_LIMIT,
+  WORD_LIMIT_MESSAGE,
   type Field,
   type LengthUnit,
   type TextValidation,
@@ -223,13 +225,23 @@ export function ValidationEditor({
             />
             <LengthUnitSetting
               value={v.length_unit}
-              onChange={(length_unit) => set({ length_unit })}
+              onChange={(length_unit) =>
+                set({
+                  length_unit,
+                  min_length:
+                    v.min_length === undefined
+                      ? undefined
+                      : limitForUnit(v.min_length, length_unit),
+                  max_length:
+                    v.max_length === undefined
+                      ? undefined
+                      : limitForUnit(v.max_length, length_unit),
+                })
+              }
             />
           </div>
           {overCap && (
-            <p className="text-xs text-destructive">
-              Word limits must be at most {MAX_WORD_LIMIT} words
-            </p>
+            <p className="text-xs text-destructive">{WORD_LIMIT_MESSAGE}</p>
           )}
         </div>
       )

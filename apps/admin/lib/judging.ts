@@ -6,6 +6,7 @@ import {
   adminProjectQuestionSchema,
   lengthUnitSchema,
   toZonedInputValue,
+  WORD_LIMIT_MESSAGE,
   type ChoiceOption,
   type LengthUnit,
   type ProjectQuestionType,
@@ -192,7 +193,7 @@ export const projectQuestionInput = z
         value.maxLength > MAX_WORD_LIMIT
       ),
     {
-      message: `Word limits must be at most ${MAX_WORD_LIMIT} words`,
+      message: WORD_LIMIT_MESSAGE,
       path: ["maxLength"],
     }
   )

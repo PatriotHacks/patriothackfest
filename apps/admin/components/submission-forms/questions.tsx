@@ -11,6 +11,7 @@ import {
   PROJECT_QUESTION_TYPE_LABELS,
   PROJECT_QUESTION_TYPES,
   knownOptions,
+  limitForUnit,
   reuseOptionIds,
   type AdminProjectQuestion,
   type ChoiceOption,
@@ -222,7 +223,11 @@ function QuestionForm({
                 />
                 <Select
                   value={lengthUnit}
-                  onValueChange={(value) => setLengthUnit(value as LengthUnit)}
+                  onValueChange={(value) => {
+                    const unit = value as LengthUnit
+                    setLengthUnit(unit)
+                    setMaxLength(limitForUnit(maxLength, unit))
+                  }}
                   disabled={pending || locked}
                 >
                   <SelectTrigger aria-label="Limit unit" className="w-32">
