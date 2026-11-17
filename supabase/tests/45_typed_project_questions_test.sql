@@ -197,15 +197,17 @@ select lives_ok(format($$select public.admin_save_project_question('e4500000-000
 select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
   pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Web'),
     jsonb_build_object('id','c4500000-0000-4000-8000-0000000000c1','label',' mobile '))),'organizer re-adds the option by label');
+reset role;
 select is((select options->1->>'id' from public.project_questions where id=pg_temp.q('Many')::uuid),current_setting('test.b'),
   're-added label reuses the previous option id');
+select pg_temp.login(1,'oauth');
 select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
   pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Mobile'),
     jsonb_build_object('id','c4500000-0000-4000-8000-0000000000c2','label','Web'))),'organizer swaps labels');
+reset role;
 select is((select array_agg(o->>'id' order by n) from public.project_questions q, jsonb_array_elements(q.options) with ordinality x(o,n)
   where q.id=pg_temp.q('Many')::uuid),array[current_setting('test.a'),'c4500000-0000-4000-8000-0000000000c2'],
   'kept options never take another option''s id');
-reset role;
 update storage.objects set metadata=jsonb_build_object('size',3*1024*1024,'mimetype','application/pdf')
 where bucket_id='project-files' and name=current_setting('test.file1');
 select pg_temp.login(1,'oauth');
