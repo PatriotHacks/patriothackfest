@@ -209,8 +209,9 @@ describe("submission form server actions", () => {
     ).toEqual({ error: message })
     expect(rpc).toHaveBeenCalledWith(
       "admin_save_project_question",
-      expect.objectContaining({ p_type: "url", p_max_length: undefined })
+      expect.objectContaining({ p_type: "url" })
     )
+    expect(rpc.mock.calls[0]?.[1]).not.toHaveProperty("p_max_length")
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 

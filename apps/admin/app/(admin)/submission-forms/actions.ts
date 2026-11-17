@@ -13,7 +13,7 @@ import {
   projectQuestionRpcArgs,
   submissionSettingsInput,
   type CompetitionTrackInput,
-  type ProjectQuestionInput,
+  type ProjectQuestionFormValues,
   type SubmissionSettingsInput,
 } from "@/lib/judging"
 
@@ -59,7 +59,7 @@ export async function saveCompetitionTrack(
 }
 
 export async function saveProjectQuestion(
-  input: ProjectQuestionInput
+  input: ProjectQuestionFormValues
 ): Promise<ActionResult> {
   const { supabase } = await requireAdmin("organizer")
   const parsed = projectQuestionInput.safeParse(input)

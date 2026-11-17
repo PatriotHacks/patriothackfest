@@ -245,8 +245,30 @@ describe("project question input", () => {
         ...question,
         type: "multiple_choice",
         options: [{ id: optionId, label: " Yes " }],
-      }).data?.options
-    ).toEqual([{ id: optionId, label: "Yes" }])
+      }).data
+    ).toMatchObject({ options: [{ id: optionId, label: "Yes" }] })
+  })
+  it("ignores hidden settings of other types", () => {
+    const hidden = {
+      ...question,
+      maxLength: 0,
+      options: [{ id: optionId, label: " " }],
+      maxSizeMb: 99,
+    }
+    const url = projectQuestionInput.parse({ ...hidden, type: "url" })
+    expect(url).not.toHaveProperty("options")
+    expect(url).not.toHaveProperty("maxLength")
+    expect(url).not.toHaveProperty("maxSizeMb")
+    expect(
+      projectQuestionInput.parse({
+        ...hidden,
+        type: "single_choice",
+        options: [{ id: optionId, label: "Yes" }],
+      })
+    ).not.toHaveProperty("maxLength")
+    expect(
+      projectQuestionInput.safeParse({ ...hidden, type: "long_text" }).success
+    ).toBe(false)
   })
   it("bounds file size limits", () => {
     expect(
@@ -259,45 +281,26 @@ describe("project question input", () => {
   })
   it("sends only the settings that apply to the type", () => {
     const options = [{ id: optionId, label: "Yes" }]
-    expect(
-      projectQuestionRpcArgs(
-        projectQuestionInput.parse({ ...question, options })
+    const keys = (value: Parameters<typeof projectQuestionInput.parse>[0]) =>
+      Object.keys(
+        projectQuestionRpcArgs(projectQuestionInput.parse(value))
+      ).filter((key) =>
+        ["p_max_length", "p_options", "p_validation"].includes(key)
       )
-    ).toMatchObject({
-      p_type: "long_text",
-      p_max_length: 5000,
-      p_options: undefined,
-    })
-    expect(
-      projectQuestionRpcArgs(
-        projectQuestionInput.parse({
-          ...question,
-          type: "single_choice",
-          options,
-        })
-      )
-    ).toMatchObject({
-      p_max_length: undefined,
-      p_options: options,
-      p_validation: undefined,
-    })
+    expect(keys({ ...question, options })).toEqual(["p_max_length"])
+    expect(keys({ ...question, type: "single_choice", options })).toEqual([
+      "p_options",
+    ])
+    expect(keys({ ...question, type: "file", maxSizeMb: 2 })).toEqual([
+      "p_validation",
+    ])
+    expect(keys({ ...question, type: "file" })).toEqual([])
+    expect(keys({ ...question, type: "url" })).toEqual([])
     expect(
       projectQuestionRpcArgs(
         projectQuestionInput.parse({ ...question, type: "file", maxSizeMb: 2 })
       )
-    ).toMatchObject({
-      p_max_length: undefined,
-      p_validation: { max_size_mb: 2 },
-    })
-    expect(
-      projectQuestionRpcArgs(
-        projectQuestionInput.parse({ ...question, type: "url" })
-      )
-    ).toMatchObject({
-      p_max_length: undefined,
-      p_options: undefined,
-      p_validation: undefined,
-    })
+    ).toMatchObject({ p_validation: { max_size_mb: 2 } })
   })
 })
 
