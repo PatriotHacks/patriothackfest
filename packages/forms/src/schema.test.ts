@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { fieldSchema, publishedSchemaSchema } from "./schema"
+import { fieldSchema, publishedSchemaSchema, textLimit } from "./schema"
+import { field } from "./test-utils"
 
 const id = "3f1c2b8e-5d4a-4e7b-9c1d-2a3b4c5d6e7f"
 
@@ -162,5 +163,26 @@ describe("publishedSchemaSchema", () => {
       fields: [],
     })
     expect(schema.fields).toEqual([])
+  })
+})
+
+describe("textLimit", () => {
+  it("returns the maximum and unit for limited text fields only", () => {
+    expect(
+      textLimit(
+        field("long_text", {
+          validation: { max_length: 200, length_unit: "words" },
+        })
+      )
+    ).toEqual({ max: 200, unit: "words" })
+    expect(
+      textLimit(
+        field("short_text", {
+          validation: { min_length: 2, length_unit: "characters" },
+        })
+      )
+    ).toBeNull()
+    expect(textLimit(field("short_text"))).toBeNull()
+    expect(textLimit(field("number", { validation: { max: 5 } }))).toBeNull()
   })
 })

@@ -197,6 +197,13 @@ export function isSection(field: Field): field is Section {
   return field.type === "section"
 }
 
+export function textLimit(field: Field) {
+  return (field.type === "short_text" || field.type === "long_text") &&
+    field.validation?.max_length !== undefined
+    ? { max: field.validation.max_length, unit: field.validation.length_unit }
+    : null
+}
+
 export const publishedSchemaSchema = z.object({
   title: z.string(),
   description: z.string().nullable(),
