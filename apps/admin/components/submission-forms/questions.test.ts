@@ -18,10 +18,11 @@ const question = {
   label: "What inspired you?",
   help_text: "One paragraph",
   required: true,
+  type: "long_text" as const,
   max_length: 2000,
-  archived_at: null,
-  created_at: "2026-11-15T05:00:00Z",
-  updated_at: "2026-11-15T05:00:00Z",
+  options: null,
+  validation: null,
+  answered: false,
 }
 
 describe("project question editor", () => {
@@ -38,6 +39,7 @@ describe("project question editor", () => {
       "One paragraph",
       'value="2000"',
       "Required to submit",
+      "Answer type",
       "Move up",
       "Move down",
       "Archive",
@@ -63,7 +65,43 @@ describe("project question editor", () => {
     const html = renderToStaticMarkup(
       createElement(ProjectQuestions, { eventId, questions: [], locked: false })
     )
-    expect(html).toContain("No paragraph questions for this event")
+    expect(html).toContain("No project questions for this event")
+  })
+  it("renders options for choice questions and file limits for uploads", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectQuestions, {
+        eventId,
+        questions: [
+          {
+            ...question,
+            type: "multiple_choice",
+            max_length: null,
+            options: [{ id: eventId, label: "Web" }],
+          },
+          {
+            ...question,
+            id: eventId,
+            type: "file",
+            max_length: null,
+            validation: { max_size_mb: 4 },
+          },
+        ],
+        locked: false,
+      })
+    )
+    for (const text of ['value="Web"', "Add option", "PDF only", 'value="4"'])
+      expect(html).toContain(text)
+    expect(html.split("Maximum characters")).toHaveLength(2)
+  })
+  it("locks the type of answered questions", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectQuestions, {
+        eventId,
+        questions: [{ ...question, answered: true }],
+        locked: false,
+      })
+    )
+    expect(html).toContain("Type locked: this question has answers")
   })
   it("renders the judge visibility switch with its saved value", () => {
     const html = renderToStaticMarkup(

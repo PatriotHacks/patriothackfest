@@ -1,9 +1,25 @@
 "use client"
 
-import type { Tables } from "@workspace/supabase/types"
+import {
+  DEFAULT_PROJECT_ANSWER_LENGTH,
+  isProjectChoiceType,
+  isProjectTextType,
+  MAX_PROJECT_ANSWER_LENGTH,
+  PROJECT_QUESTION_TYPE_LABELS,
+  PROJECT_QUESTION_TYPES,
+  type ChoiceOption,
+  type ProjectQuestionType,
+} from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useId, useState, useTransition } from "react"
 
@@ -12,8 +28,9 @@ import {
   reorderProjectQuestions,
   saveProjectQuestion,
 } from "@/app/(admin)/submission-forms/actions"
-
-type Question = Tables<"project_questions">
+import { ChoiceOptionsEditor } from "@/components/builder/options-editor"
+import { FileSizeSetting } from "@/components/builder/validation-editor"
+import type { AdminProjectQuestion } from "@/lib/judging"
 
 function QuestionForm({
   eventId,
@@ -21,16 +38,27 @@ function QuestionForm({
   locked,
 }: {
   eventId: string
-  question?: Question
+  question?: AdminProjectQuestion
   locked: boolean
 }) {
   const id = useId()
   const [label, setLabel] = useState(question?.label ?? "")
   const [helpText, setHelpText] = useState(question?.help_text ?? "")
   const [required, setRequired] = useState(question?.required ?? false)
-  const [maxLength, setMaxLength] = useState(question?.max_length ?? 5000)
+  const [type, setType] = useState<ProjectQuestionType>(
+    question?.type ?? "long_text"
+  )
+  const [maxLength, setMaxLength] = useState(
+    question?.max_length ?? DEFAULT_PROJECT_ANSWER_LENGTH
+  )
+  const [options, setOptions] = useState<ChoiceOption[]>(
+    question?.options ?? []
+  )
+  const [maxSizeMb, setMaxSizeMb] = useState(question?.validation?.max_size_mb)
+  const [resets, setResets] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const typeLocked = question?.answered ?? false
 
   return (
     <form
@@ -46,7 +74,10 @@ function QuestionForm({
               label,
               helpText,
               required,
+              type,
               maxLength,
+              options,
+              maxSizeMb,
             })
             setMessage(
               result.error ?? (question ? "Question saved" : "Question added")
@@ -55,7 +86,11 @@ function QuestionForm({
               setLabel("")
               setHelpText("")
               setRequired(false)
-              setMaxLength(5000)
+              setType("long_text")
+              setMaxLength(DEFAULT_PROJECT_ANSWER_LENGTH)
+              setOptions([])
+              setMaxSizeMb(undefined)
+              setResets(resets + 1)
             }
           } catch {
             setMessage("Could not save question. Try again.")
@@ -85,20 +120,65 @@ function QuestionForm({
             maxLength={1000}
           />
         </div>
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex flex-col gap-1">
-            <Label htmlFor={`${id}-max`}>Maximum characters</Label>
-            <Input
-              id={`${id}-max`}
-              type="number"
-              min={1}
-              max={10_000}
-              value={maxLength}
-              onChange={(event) => setMaxLength(Number(event.target.value))}
-              required
-              className="max-w-32"
+        <div className="flex flex-col gap-1">
+          <Label htmlFor={`${id}-type`}>Answer type</Label>
+          <div className="flex flex-wrap items-center gap-3">
+            <Select
+              value={type}
+              onValueChange={(value) => setType(value as ProjectQuestionType)}
+              disabled={pending || locked || typeLocked}
+            >
+              <SelectTrigger id={`${id}-type`} className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PROJECT_QUESTION_TYPES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {PROJECT_QUESTION_TYPE_LABELS[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {typeLocked && (
+              <span className="text-xs text-muted-foreground">
+                Type locked: this question has answers. Archive it and add a new
+                question to change the type.
+              </span>
+            )}
+          </div>
+        </div>
+        {isProjectChoiceType(type) && (
+          <ChoiceOptionsEditor options={options} onChange={setOptions} />
+        )}
+        {type === "file" && (
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">Accepted file type</span>
+              <span className="text-sm text-muted-foreground">PDF only</span>
+            </div>
+            <FileSizeSetting
+              key={resets}
+              value={maxSizeMb}
+              onChange={setMaxSizeMb}
             />
           </div>
+        )}
+        <div className="flex flex-wrap items-end gap-4">
+          {isProjectTextType(type) && (
+            <div className="flex flex-col gap-1">
+              <Label htmlFor={`${id}-max`}>Maximum characters</Label>
+              <Input
+                id={`${id}-max`}
+                type="number"
+                min={1}
+                max={MAX_PROJECT_ANSWER_LENGTH}
+                value={maxLength}
+                onChange={(event) => setMaxLength(Number(event.target.value))}
+                required
+                className="max-w-32"
+              />
+            </div>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -127,7 +207,7 @@ export function ProjectQuestions({
   locked,
 }: {
   eventId: string
-  questions: Question[]
+  questions: AdminProjectQuestion[]
   locked: boolean
 }) {
   const [message, setMessage] = useState<string | null>(null)
@@ -156,7 +236,7 @@ export function ProjectQuestions({
     <div className="flex flex-col gap-4">
       {questions.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          No paragraph questions for this event.
+          No project questions for this event.
         </p>
       )}
       {questions.map((question, index) => (

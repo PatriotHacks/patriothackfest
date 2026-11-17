@@ -80,7 +80,27 @@ beforeEach(() => {
     })
   })
   getAdmin.mockResolvedValue({ level: "organizer", supabase: { from, rpc } })
-  rpc.mockResolvedValue({ data: [{ id }], error: null })
+  rpc.mockResolvedValue({
+    data: [
+      {
+        id,
+        event_id: id,
+        position: 1,
+        label: "Why?",
+        help_text: null,
+        required: false,
+        type: "long_text",
+        max_length: 5000,
+        options: null,
+        validation: null,
+        archived_at: null,
+        created_at: "2026-11-15T05:00:00Z",
+        updated_at: "2026-11-15T05:00:00Z",
+        answered: false,
+      },
+    ],
+    error: null,
+  })
   getSubmittedProjects.mockResolvedValue({ projects: [], has_more: false })
 })
 
