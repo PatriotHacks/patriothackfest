@@ -879,6 +879,7 @@ export type Database = {
           help_text: string | null
           id: string
           label: string
+          length_unit: Database["public"]["Enums"]["text_length_unit"]
           max_length: number | null
           options: Json | null
           position: number
@@ -896,6 +897,7 @@ export type Database = {
           help_text?: string | null
           id?: string
           label: string
+          length_unit?: Database["public"]["Enums"]["text_length_unit"]
           max_length?: number | null
           options?: Json | null
           position: number
@@ -912,6 +914,7 @@ export type Database = {
           help_text?: string | null
           id?: string
           label?: string
+          length_unit?: Database["public"]["Enums"]["text_length_unit"]
           max_length?: number | null
           options?: Json | null
           position?: number
@@ -1173,6 +1176,7 @@ export type Database = {
           help_text: string
           id: string
           label: string
+          length_unit: Database["public"]["Enums"]["text_length_unit"]
           max_length: number
           options: Json
           position: number
@@ -1265,6 +1269,7 @@ export type Database = {
           p_event_id: string
           p_help_text: string
           p_label: string
+          p_length_unit?: Database["public"]["Enums"]["text_length_unit"]
           p_max_length?: number
           p_options?: Json
           p_question_id?: string
@@ -1577,6 +1582,14 @@ export type Database = {
         }
         Returns: string
       }
+      project_question_length_unit_error: {
+        Args: {
+          p_length_unit: Database["public"]["Enums"]["text_length_unit"]
+          p_max_length: number
+          p_type: Database["public"]["Enums"]["field_type"]
+        }
+        Returns: string
+      }
       project_user_is_eligible: {
         Args: { p_event_id: string; p_user_id: string }
         Returns: boolean
@@ -1638,6 +1651,7 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: undefined
       }
+      word_count: { Args: { p_value: string }; Returns: number }
     }
     Enums: {
       admin_level: "owner" | "organizer" | "reviewer"
@@ -1658,6 +1672,7 @@ export type Database = {
         | "file"
         | "section"
       form_status: "draft" | "published"
+      text_length_unit: "characters" | "words"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1801,6 +1816,7 @@ export const Constants = {
         "section",
       ],
       form_status: ["draft", "published"],
+      text_length_unit: ["characters", "words"],
     },
   },
 } as const
