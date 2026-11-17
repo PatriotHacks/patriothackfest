@@ -1,9 +1,6 @@
 "use server"
 
-import { fileAnswer, PROJECT_FILES_BUCKET } from "@workspace/forms"
-import { signedFileUrl } from "@workspace/supabase/storage"
 import { revalidatePath } from "next/cache"
-import * as z from "zod"
 
 import { getApplicant } from "@/lib/applicant"
 import { getJudgeEvent, type JudgeEvent } from "@/lib/judge-access"
@@ -99,24 +96,4 @@ export async function checkJudgeReview(
         "Could not check the deadline. Your unsaved inputs are still here; try again.",
     }
   }
-}
-
-export async function judgeProjectFileUrl(
-  eventSlug: string,
-  assignmentId: string,
-  questionId: string
-): Promise<{ error: string | null; url?: string }> {
-  const { supabase } = await getApplicant()
-  const route = judgeRouteSchema
-    .extend({ questionId: z.guid() })
-    .safeParse({ eventSlug, assignmentId, questionId })
-  if (!route.success) return { error: "File not found" }
-  const detail = await getJudgeAssignment(eventSlug, assignmentId)
-  const file = fileAnswer(
-    detail?.answers.find(
-      (item) => item.question_id === questionId && item.type === "file"
-    )?.answer
-  )
-  if (!file) return { error: "File not found" }
-  return signedFileUrl(supabase, PROJECT_FILES_BUCKET, file.path)
 }

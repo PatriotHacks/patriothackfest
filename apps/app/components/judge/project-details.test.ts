@@ -1,9 +1,7 @@
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
-vi.mock("@/app/(judge)/judge/actions", () => ({
-  judgeProjectFileUrl: vi.fn(),
-}))
+vi.mock("@/lib/project-file-actions", () => ({ projectFileUrl: vi.fn() }))
 import { JudgeProjectDetails } from "./project-details"
 
 const q = (n: number) => `b0000000-0000-4000-8000-00000000000${n}`
@@ -15,7 +13,6 @@ describe("judge project rendering", () => {
   it("escapes content and rejects unsafe links without fetching URLs", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeProjectDetails, {
-        eventSlug: "fall-2026",
         detail: {
           project: {
             name: "Project",

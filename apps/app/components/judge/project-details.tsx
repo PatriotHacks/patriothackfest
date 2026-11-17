@@ -9,13 +9,7 @@ import {
 import { JudgeAnswers } from "./answers"
 import { OrganizerContact } from "./queue"
 
-export function JudgeProjectDetails({
-  eventSlug,
-  detail,
-}: {
-  eventSlug: string
-  detail: JudgeAssignment
-}) {
+export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
   const project = detail.project
   const links = [
     {
@@ -39,11 +33,7 @@ export function JudgeProjectDetails({
       <p className="break-words">
         <strong>Technologies:</strong> {project.technologies || "Not provided"}
       </p>
-      <JudgeAnswers
-        eventSlug={eventSlug}
-        assignmentId={detail.assignment.id}
-        answers={detail.answers}
-      />
+      <JudgeAnswers answers={detail.answers} />
       <ul className="flex flex-wrap gap-4" aria-label="Project links">
         {links.map(
           (link) =>
