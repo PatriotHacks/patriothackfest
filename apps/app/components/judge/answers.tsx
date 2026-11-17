@@ -1,11 +1,9 @@
 "use client"
 
 import type { ProjectQuestionAnswer } from "@workspace/forms"
+import { signedUrlOrThrow } from "@workspace/supabase/storage"
+import { ProjectAnswerView } from "@workspace/ui/components/project-answer"
 
-import {
-  ProjectAnswerView,
-  signedUrlOrThrow,
-} from "@/components/project/answer-view"
 import { projectFileUrl } from "@/lib/project-file-actions"
 
 export function JudgeAnswers({

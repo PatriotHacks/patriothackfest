@@ -8,6 +8,7 @@ import {
   type FileAnswer,
   type ProjectQuestion,
 } from "@workspace/forms"
+import { signedUrlOrThrow } from "@workspace/supabase/storage"
 import { Button } from "@workspace/ui/components/button"
 import { Progress } from "@workspace/ui/components/progress"
 import { useRef, useState } from "react"
@@ -15,8 +16,6 @@ import { useRef, useState } from "react"
 import { projectFileUrl } from "@/lib/project-file-actions"
 import { FileLink } from "@/components/application/file-link"
 import { uploadProjectPdf } from "@/lib/project-files"
-
-import { signedUrlOrThrow } from "./answer-view"
 
 export function ProjectFileAnswer({
   inputId,

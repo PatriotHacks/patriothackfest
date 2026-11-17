@@ -82,19 +82,3 @@ export function projectPersonLabel(person: {
     person.full_name?.trim() || `Unnamed participant (${person.id.slice(-8)})`
   )
 }
-
-export function safeProjectUrl(value: string | null): string | null {
-  const candidate = value?.trim()
-  if (!candidate || /\s|\\/.test(candidate)) return null
-  try {
-    const url = new URL(candidate)
-    return ["http:", "https:"].includes(url.protocol) &&
-      url.host &&
-      !url.username &&
-      !url.password
-      ? candidate
-      : null
-  } catch {
-    return null
-  }
-}

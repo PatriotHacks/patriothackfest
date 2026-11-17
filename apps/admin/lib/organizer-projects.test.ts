@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import {
   parseProjectsPage,
   projectPersonLabel,
-  safeProjectUrl,
   submittedProjectDetailSchema,
   submittedProjectHref,
   submittedProjectsHref,
@@ -49,28 +48,6 @@ describe("read-only project values", () => {
     ).toBe("Unnamed participant (12345678)")
     expect(projectPersonLabel({ id: "id", full_name: " Person " })).toBe(
       "Person"
-    )
-  })
-  it.each([
-    null,
-    "",
-    "javascript:alert(1)",
-    "data:text/html,hello",
-    "//example.com",
-    "https://",
-    "https://a b.test",
-    "https://user:pass@example.com",
-    "https://example.com:invalid",
-    "https:\\example.com",
-  ])("does not link unsafe URL %s", (value) => {
-    expect(safeProjectUrl(value)).toBeNull()
-  })
-  it("allows ordinary HTTP(S) links without fetching them", () => {
-    expect(safeProjectUrl(" https://example.com/demo ")).toBe(
-      "https://example.com/demo"
-    )
-    expect(safeProjectUrl("http://localhost:3000")).toBe(
-      "http://localhost:3000"
     )
   })
   it("validates bounded list/read models rather than masking malformed data", () => {

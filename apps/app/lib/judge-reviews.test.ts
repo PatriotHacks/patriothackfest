@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import {
   judgeAssignmentSchema,
   judgeContinuation,
-  judgeProjectUrl,
   reviewContext,
   reviewSaveSchema,
 } from "./judge-reviews"
@@ -73,14 +72,6 @@ describe("judge scorecard contracts", () => {
         ],
       })
     ).toBe(`/judge/fall-2026/${id}`)
-  })
-  it.each([
-    "javascript:alert(1)",
-    "//evil.test",
-    "https://user:pass@example.test",
-    "https://example.test\\bad",
-  ])("rejects unsafe project link %s", (url) => {
-    expect(judgeProjectUrl(url)).toBeNull()
   })
 })
 

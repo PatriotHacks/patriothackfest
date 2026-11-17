@@ -198,7 +198,7 @@ describe("project form views", () => {
     expect(html).toContain("<p>Mobile</p>")
     expect(html).toContain("<li>Web</li>")
     expect(html).not.toContain("removed")
-    expect(html).toContain('href="https://slides.example.test/"')
+    expect(html).toContain('href="https://slides.example.test"')
     expect(html).toContain("View deck.pdf")
     expect(html).not.toContain(`${id}/${typed(5)}`)
   })

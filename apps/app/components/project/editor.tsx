@@ -1,9 +1,11 @@
 "use client"
 
 import { fileAnswer } from "@workspace/forms"
+import { signedUrlOrThrow } from "@workspace/supabase/storage"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import { ProjectAnswerView } from "@workspace/ui/components/project-answer"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useEffect, useId, useRef, useState, useTransition } from "react"
 
@@ -22,7 +24,6 @@ import {
 import { projectNavigationLeavesPage } from "@/lib/project-navigation"
 
 import { ProjectAnswerInput } from "./answer-input"
-import { ProjectAnswerView, signedUrlOrThrow } from "./answer-view"
 
 function filePaths(answers: ProjectAnswers) {
   return Object.values(answers)

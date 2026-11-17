@@ -12,3 +12,11 @@ export async function signedFileUrl(
     .createSignedUrl(path, SIGNED_URL_SECONDS)
   return error ? { error: error.message } : { error: null, url: data.signedUrl }
 }
+
+export async function signedUrlOrThrow(
+  request: Promise<{ error: string | null; url?: string }>
+) {
+  const result = await request
+  if (!result.url) throw new Error(result.error ?? "File not found")
+  return result.url
+}

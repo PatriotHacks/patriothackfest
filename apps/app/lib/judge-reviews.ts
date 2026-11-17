@@ -101,17 +101,3 @@ export function reviewContext(assignment: {
     ? `Sponsor track: ${assignment.track_name ?? "Unnamed track"}`
     : "General judging"
 }
-export function judgeProjectUrl(value: string | null) {
-  if (!value || /\s|\\/.test(value)) return null
-  try {
-    const url = new URL(value)
-    return ["https:", "http:"].includes(url.protocol) &&
-      url.host &&
-      !url.username &&
-      !url.password
-      ? url.href
-      : null
-  } catch {
-    return null
-  }
-}
