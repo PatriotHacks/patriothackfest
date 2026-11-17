@@ -26,6 +26,15 @@ vi.mock("@/components/submission-forms/judge-visibility", () => ({
   JudgeVisibilityToggle: ({ enabled }: { enabled: boolean }) =>
     `Judge visibility ${enabled}`,
 }))
+vi.mock("@/components/submission-forms/team-settings", () => ({
+  TeamSettings: ({
+    maxTeamSize,
+    judgesSeeTeam,
+  }: {
+    maxTeamSize: number | null
+    judgesSeeTeam: boolean
+  }) => `Team settings ${maxTeamSize} ${judgesSeeTeam}`,
+}))
 vi.mock("@/components/judging/track-form", () => ({
   CompetitionTrackForm: () => "Existing track settings",
 }))
@@ -54,7 +63,12 @@ beforeEach(() => {
   responses = {
     events: { data: [event], error: null },
     event_competition_settings: {
-      data: { judging_started_at: null, judges_see_answers: true },
+      data: {
+        judging_started_at: null,
+        judges_see_answers: true,
+        judges_see_team: false,
+        max_team_size: 4,
+      },
       error: null,
     },
     competition_tracks: {
@@ -126,6 +140,7 @@ describe("organizer submission forms page", () => {
       "Existing submission settings",
       "Questions editor (1)",
       "Judge visibility true",
+      "Team settings 4 false",
       "Existing track settings",
       "Submitted projects",
     ])
@@ -140,6 +155,7 @@ describe("organizer submission forms page", () => {
     expect(html).toContain(
       "Save event settings before choosing whether judges see answers"
     )
+    expect(html).toContain("Save event settings before configuring teams")
   })
   it("propagates question and event lookup failures", async () => {
     rpc.mockResolvedValue({ data: null, error: { message: "No questions" } })
