@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 vi.mock("@/app/(projects)/projects/actions", () => ({
   saveProject: vi.fn(),
+  projectFileUrl: vi.fn(),
   addProjectCollaborator: vi.fn(),
   removeProjectCollaborator: vi.fn(),
 }))
@@ -38,7 +39,69 @@ const detail: ProjectDetail = {
       label: "What inspired you?",
       help_text: "A paragraph is enough",
       required: true,
+      type: "long_text",
       max_length: 500,
+      options: null,
+      validation: null,
+    },
+  ],
+}
+
+const optionA = "c0000000-0000-4000-8000-000000000001"
+const optionB = "c0000000-0000-4000-8000-000000000002"
+const typed = (n: number) => `b0000000-0000-4000-8000-00000000000${n}`
+const base = {
+  help_text: null,
+  required: false,
+  max_length: null,
+  options: null,
+  validation: null,
+}
+const typedDetail: ProjectDetail = {
+  ...detail,
+  project: {
+    ...detail.project,
+    answers: {
+      [typed(2)]: optionB,
+      [typed(3)]: [optionA, "removed"],
+      [typed(4)]: "https://slides.example.test",
+      [typed(5)]: {
+        path: `${id}/${typed(5)}/${optionA}.pdf`,
+        name: "deck.pdf",
+        size: 2048,
+        type: "application/pdf",
+      },
+    },
+  },
+  questions: [
+    {
+      ...base,
+      id: typed(2),
+      label: "Primary platform",
+      type: "single_choice",
+      options: [
+        { id: optionA, label: "Web" },
+        { id: optionB, label: "Mobile" },
+      ],
+    },
+    {
+      ...base,
+      id: typed(3),
+      label: "Platforms",
+      type: "multiple_choice",
+      options: [
+        { id: optionA, label: "Web" },
+        { id: optionB, label: "Mobile" },
+      ],
+    },
+    { ...base, id: typed(4), label: "Slides link", type: "url" },
+    {
+      ...base,
+      id: typed(5),
+      label: "Pitch deck",
+      required: true,
+      type: "file",
+      validation: { max_size_mb: 5 },
     },
   ],
 }
@@ -112,5 +175,31 @@ describe("project form views", () => {
       })
     )
     expect(html).not.toContain("javascript:")
+  })
+  it("renders typed inputs for choice, URL, and file questions", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectEditor, { detail: typedDetail, editable: true })
+    )
+    expect(html).toContain("<legend")
+    expect(html).toMatch(/type="radio"[^>]*checked=""[^>]*\/>Mobile/)
+    expect(html).toMatch(/type="checkbox" checked=""\/>Web/)
+    expect(html).toContain("Clear selection")
+    expect(html).toContain('type="url"')
+    expect(html).toContain('value="https://slides.example.test"')
+    expect(html).toContain('accept="application/pdf"')
+    expect(html).toContain("PDF only, up to 5 MB")
+    expect(html).toContain("View deck.pdf")
+    expect(html).toContain("Pitch deck (required)")
+  })
+  it("shows choice labels, links, and files in the read-only view", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectReadOnly, { detail: typedDetail })
+    )
+    expect(html).toContain("<p>Mobile</p>")
+    expect(html).toContain("<li>Web</li>")
+    expect(html).not.toContain("removed")
+    expect(html).toContain('href="https://slides.example.test/"')
+    expect(html).toContain("View deck.pdf")
+    expect(html).not.toContain(`${id}/${typed(5)}`)
   })
 })

@@ -1,5 +1,6 @@
 "use server"
 
+import { PROJECT_FILES_BUCKET } from "@workspace/forms"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -112,4 +113,21 @@ export async function withdrawProject(
   if (error) return projectFailure(error)
   revalidatePath("/projects", "layout")
   return { error: null }
+}
+
+export async function projectFileUrl(
+  projectId: string,
+  path: string
+): Promise<{ error: string | null; url?: string }> {
+  const { supabase } = await getApplicant()
+  const input = z
+    .object({ projectId: z.guid(), path: z.string().min(1) })
+    .safeParse({ projectId, path })
+  if (!input.success || input.data.path.split("/")[0] !== input.data.projectId)
+    return { error: "File not found" }
+  const { data, error } = await supabase.storage
+    .from(PROJECT_FILES_BUCKET)
+    .createSignedUrl(input.data.path, 60)
+  if (error) return { error: error.message }
+  return { error: null, url: data.signedUrl }
 }

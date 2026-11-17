@@ -1,14 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-const { rpc, getApplicant, revalidatePath } = vi.hoisted(() => ({
-  rpc: vi.fn(),
-  getApplicant: vi.fn(),
-  revalidatePath: vi.fn(),
-}))
+const { rpc, createSignedUrl, getApplicant, revalidatePath } = vi.hoisted(
+  () => ({
+    rpc: vi.fn(),
+    createSignedUrl: vi.fn(),
+    getApplicant: vi.fn(),
+    revalidatePath: vi.fn(),
+  })
+)
 vi.mock("@/lib/applicant", () => ({ getApplicant }))
 vi.mock("next/cache", () => ({ revalidatePath }))
 import {
   addProjectCollaborator,
   createProject,
+  projectFileUrl,
   removeProjectCollaborator,
   saveProject,
   withdrawProject,
@@ -32,7 +36,9 @@ const input = {
 }
 beforeEach(() => {
   vi.clearAllMocks()
-  getApplicant.mockResolvedValue({ supabase: { rpc } })
+  getApplicant.mockResolvedValue({
+    supabase: { rpc, storage: { from: () => ({ createSignedUrl }) } },
+  })
   rpc.mockResolvedValue({ data: updatedAt, error: null })
 })
 
@@ -124,5 +130,38 @@ describe("project mutations", () => {
       p_email: "person@example.com",
     })
     expect(revalidatePath).not.toHaveBeenCalled()
+  })
+})
+
+describe("project file links", () => {
+  const path = `${id}/${questionId}/${questionId}.pdf`
+  it("signs short-lived links for files inside the project folder", async () => {
+    createSignedUrl.mockResolvedValue({
+      data: { signedUrl: "https://signed.test/file" },
+      error: null,
+    })
+    expect(await projectFileUrl(id, path)).toEqual({
+      error: null,
+      url: "https://signed.test/file",
+    })
+    expect(createSignedUrl).toHaveBeenCalledWith(path, 60)
+  })
+  it("refuses paths outside the project without calling storage", async () => {
+    expect(
+      await projectFileUrl(id, `${questionId}/${questionId}/x.pdf`)
+    ).toEqual({ error: "File not found" })
+    expect(await projectFileUrl("bad", path)).toEqual({
+      error: "File not found",
+    })
+    expect(createSignedUrl).not.toHaveBeenCalled()
+  })
+  it("reports storage denials", async () => {
+    createSignedUrl.mockResolvedValue({
+      data: null,
+      error: { message: "Object not found" },
+    })
+    expect(await projectFileUrl(id, path)).toEqual({
+      error: "Object not found",
+    })
   })
 })

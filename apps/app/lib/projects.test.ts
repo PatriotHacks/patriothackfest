@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest"
 import {
   canManageProject,
   completeProjectContentSchema,
+  normalizedProjectAnswers,
+  projectAnswers,
   projectContentSchema,
+  projectDetailSchema,
   projectFailure,
   projectPhase,
   projectSaveSchema,
@@ -85,6 +88,95 @@ describe("project fields", () => {
         updatedAt,
       }).updatedAt
     ).toBe(updatedAt)
+  })
+})
+
+describe("typed project answers", () => {
+  const questionId = "b0000000-0000-4000-8000-000000000001"
+  const optionId = "c0000000-0000-4000-8000-000000000001"
+  const file = {
+    path: `${id}/${questionId}/${optionId}.pdf`,
+    name: "deck.pdf",
+    size: 100,
+    type: "application/pdf",
+  }
+  const save = (answers: unknown) =>
+    projectSaveSchema.safeParse({
+      projectId: id,
+      content: {},
+      answers,
+      trackIds: [],
+      submit: false,
+      updatedAt: "2026-11-15T05:00:00Z",
+    })
+
+  it("accepts text, choice ids, files, and cleared answers", () => {
+    expect(save({ [questionId]: " text " }).data?.answers[questionId]).toBe(
+      "text"
+    )
+    for (const value of [[optionId], file, null])
+      expect(save({ [questionId]: value }).success).toBe(true)
+  })
+
+  it("rejects malformed typed answers", () => {
+    for (const value of [42, ["not-an-id"], { path: "x" }, "x".repeat(10_001)])
+      expect(save({ [questionId]: value }).success).toBe(false)
+  })
+
+  it("loads stored answers per question type", () => {
+    const detail = projectDetailSchema.parse({
+      project: {
+        id,
+        event_id: id,
+        owner_user_id: id,
+        name: "",
+        summary: "",
+        description: "",
+        technologies: "",
+        repository_url: null,
+        demo_url: null,
+        video_url: null,
+        status: "draft",
+        submitted_at: null,
+        updated_at: "2026-11-15T05:00:00Z",
+        answers: { [questionId]: ["removed", optionId], [id]: file },
+      },
+      collaborators: [],
+      selected_tracks: [],
+      available_tracks: [],
+      questions: [
+        {
+          id: questionId,
+          label: "Pick",
+          help_text: null,
+          required: true,
+          type: "multiple_choice",
+          max_length: null,
+          options: [{ id: optionId, label: "Web" }],
+          validation: null,
+        },
+        {
+          id,
+          label: "Deck",
+          help_text: null,
+          required: false,
+          type: "file",
+          max_length: null,
+          options: null,
+          validation: null,
+        },
+      ],
+    })
+    expect(projectAnswers(detail)).toEqual({
+      [questionId]: [optionId],
+      [id]: file,
+    })
+  })
+
+  it("trims only text answers after saving", () => {
+    expect(
+      normalizedProjectAnswers({ a: " x ", b: [optionId], c: null })
+    ).toEqual({ a: "x", b: [optionId], c: null })
   })
 })
 
