@@ -22,6 +22,8 @@ import {
   saveProjectQuestion,
   saveSubmissionSettings,
   setJudgesSeeAnswers,
+  setJudgesSeeTeam,
+  setMaxTeamSize,
 } from "./actions"
 
 const eventId = "e0000000-0000-4000-8000-000000000001"
@@ -82,7 +84,9 @@ describe("submission form server actions", () => {
     await archiveProjectQuestion(eventId, questionId)
     await reorderProjectQuestions(eventId, [questionId])
     await setJudgesSeeAnswers(eventId, true)
-    expect(requireAdmin).toHaveBeenCalledTimes(6)
+    await setJudgesSeeTeam(eventId, true)
+    await setMaxTeamSize(eventId, 4)
+    expect(requireAdmin).toHaveBeenCalledTimes(8)
     expect(
       requireAdmin.mock.calls.every(([level]) => level === "organizer")
     ).toBe(true)
@@ -200,6 +204,39 @@ describe("submission form server actions", () => {
       p_event_id: eventId,
       p_value: false,
     })
+  })
+
+  it("sets team visibility and the team size limit", async () => {
+    await setJudgesSeeTeam(eventId, true)
+    expect(rpc).toHaveBeenCalledWith("admin_set_judges_see_team", {
+      p_event_id: eventId,
+      p_value: true,
+    })
+    await setMaxTeamSize(eventId, 4)
+    expect(rpc).toHaveBeenCalledWith("admin_set_max_team_size", {
+      p_event_id: eventId,
+      p_value: 4,
+    })
+    await setMaxTeamSize(eventId, null)
+    expect(rpc).toHaveBeenLastCalledWith("admin_set_max_team_size", {
+      p_event_id: eventId,
+      p_value: undefined,
+    })
+  })
+
+  it("rejects invalid team size limits before the database", async () => {
+    for (const value of [0, -1, 1.5, Number.NaN])
+      expect((await setMaxTeamSize(eventId, value)).error).toBe(
+        "Enter a whole number of at least 1, or leave blank for no limit"
+      )
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it("surfaces the team size lowering error", async () => {
+    const message =
+      "A team already has 3 members. Choose a limit of at least 3."
+    rpc.mockResolvedValue({ error: { message } })
+    expect(await setMaxTeamSize(eventId, 2)).toEqual({ error: message })
   })
 
   it("surfaces the answered-question type lock", async () => {
