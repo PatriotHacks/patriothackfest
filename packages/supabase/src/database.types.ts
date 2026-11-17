@@ -439,8 +439,10 @@ export type Database = {
           event_id: string
           general_reviews_per_project: number
           judges_see_answers: boolean
+          judges_see_team: boolean
           judging_close_at: string | null
           judging_started_at: string | null
+          max_team_size: number | null
           project_submissions_close_at: string | null
           project_submissions_open_at: string | null
           updated_at: string
@@ -452,8 +454,10 @@ export type Database = {
           event_id: string
           general_reviews_per_project?: number
           judges_see_answers?: boolean
+          judges_see_team?: boolean
           judging_close_at?: string | null
           judging_started_at?: string | null
+          max_team_size?: number | null
           project_submissions_close_at?: string | null
           project_submissions_open_at?: string | null
           updated_at?: string
@@ -464,8 +468,10 @@ export type Database = {
           event_id?: string
           general_reviews_per_project?: number
           judges_see_answers?: boolean
+          judges_see_team?: boolean
           judging_close_at?: string | null
           judging_started_at?: string | null
+          max_team_size?: number | null
           project_submissions_close_at?: string | null
           project_submissions_open_at?: string | null
           updated_at?: string
@@ -1283,6 +1289,14 @@ export type Database = {
         Args: { p_event_id: string; p_value: boolean }
         Returns: undefined
       }
+      admin_set_judges_see_team: {
+        Args: { p_event_id: string; p_value: boolean }
+        Returns: undefined
+      }
+      admin_set_max_team_size: {
+        Args: { p_event_id: string; p_value?: number }
+        Returns: undefined
+      }
       admin_start_judging: { Args: { p_event_id: string }; Returns: undefined }
       admin_submitted_project_detail: {
         Args: { p_event_id: string; p_project_id: string }
@@ -1298,6 +1312,10 @@ export type Database = {
       }
       application_file_deletable: { Args: { p_name: string }; Returns: boolean }
       application_file_writable: { Args: { p_name: string }; Returns: boolean }
+      assert_one_team_per_event: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       assignment_candidates: {
         Args: { p_event_id: string; p_project_id: string; p_track_id: string }
         Returns: {
@@ -1473,6 +1491,10 @@ export type Database = {
       participant_create_project: {
         Args: { p_event_id: string }
         Returns: string
+      }
+      participant_leave_project: {
+        Args: { p_project_id: string }
+        Returns: undefined
       }
       participant_project_detail: {
         Args: { p_event_id: string; p_project_id: string }
