@@ -36,6 +36,10 @@ $$;
 create function pg_temp.file(p_path text,p_size integer default 1000,p_type text default 'application/pdf') returns jsonb language sql as $$
   select jsonb_build_object('path',p_path,'name','deck.pdf','size',p_size,'type',p_type);
 $$;
+create function pg_temp.upload(p_path text,p_size bigint default 1000,p_type text default 'application/pdf') returns void language sql as $$
+  insert into storage.objects(bucket_id,name,metadata)
+  values('project-files',p_path,jsonb_build_object('size',p_size,'mimetype',p_type));
+$$;
 create function pg_temp.signable(p_name text) returns bigint language sql as $$
   select set_config('storage.operation','storage.object.sign',true);
   select count(*) from storage.objects where bucket_id='project-files' and name=p_name;
@@ -72,7 +76,7 @@ select set_config('test.options',jsonb_build_array(
   jsonb_build_object('id',current_setting('test.a'),'label',' Web '),
   jsonb_build_object('id',current_setting('test.b'),'label','Mobile'))::text,true);
 
-select plan(79);
+select plan(81);
 
 -- Type column and question configuration.
 select is((select type::text from public.project_questions where label='Legacy'),'long_text','existing and untyped rows default to long_text');
@@ -125,8 +129,6 @@ select is(pg_temp.error_for('Many',to_jsonb(current_setting('test.a'))),'Choose 
 select is(pg_temp.error_for('Many','[1]'),'Choose from the options','choice ids must be text');
 select is(pg_temp.error_for('Deck','"deck.pdf"'),'Upload a file','file answer must be an object');
 select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000001'))||'{"extra":1}'),'Upload a file','file answer keys fixed');
-select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000001'),1000,'image/png')),'Upload a PDF file','file must be a pdf');
-select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000001'),2*1024*1024)),'Files must be 1 MB or smaller','per-question size limit');
 select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000001'))),'Upload the file again','file must exist in storage');
 select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000001',pg_temp.q('Short')))),'Upload the file again','file path must match its question');
 
@@ -136,16 +138,20 @@ select set_config('test.file2',pg_temp.path('c4500000-0000-4000-8000-00000000000
 select ok(public.project_file_writable(current_setting('test.file1')),'owner may upload to a file question');
 select ok(not public.project_file_writable(pg_temp.path('c4500000-0000-4000-8000-000000000001',pg_temp.q('Short'))),'uploads only to file questions');
 select ok(not public.project_file_writable('a4500000-0000-0000-0000-000000000001/deck.pdf'),'uploads only to the canonical layout');
-select lives_ok(format($$insert into storage.objects(bucket_id,name) values('project-files',%L)$$,current_setting('test.file1')),'owner uploads first file');
-select lives_ok(format($$insert into storage.objects(bucket_id,name) values('project-files',%L)$$,current_setting('test.file2')),'owner uploads second file');
+select lives_ok($$select pg_temp.upload(current_setting('test.file1'))$$,'owner uploads first file');
+select lives_ok($$select pg_temp.upload(current_setting('test.file2'),2000)$$,'owner uploads second file');
+select lives_ok($$select pg_temp.upload(pg_temp.path('c4500000-0000-4000-8000-000000000003'),1000,'image/png')$$,'owner uploads a mislabeled file');
+select lives_ok($$select pg_temp.upload(pg_temp.path('c4500000-0000-4000-8000-000000000004'),2*1024*1024)$$,'owner uploads an oversized file');
+select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000003'))),'Upload a PDF file','stored object type checked, not the client type');
+select is(pg_temp.error_for('Deck',pg_temp.file(pg_temp.path('c4500000-0000-4000-8000-000000000004'))),'Files must be 1 MB or smaller','stored object size checked, not the client size');
 select is(pg_temp.save_errors(jsonb_build_object(
   pg_temp.q('Short'),' hi ',pg_temp.q('Link'),'https://example.com/deck',pg_temp.q('Pick'),current_setting('test.a'),
   pg_temp.q('Many'),jsonb_build_array(current_setting('test.b'),'c4500000-0000-4000-8000-0000000000ff'),
-  pg_temp.q('Deck'),pg_temp.file(current_setting('test.file1'))),true),'{}'::jsonb,'typed answers submit');
+  pg_temp.q('Deck'),pg_temp.file(current_setting('test.file1'),5,'text/plain')),true),'{}'::jsonb,'typed answers submit');
 select is(pg_temp.detail()->'project'->'answers',jsonb_build_object(
   pg_temp.q('Short'),'hi',pg_temp.q('Link'),'https://example.com/deck',pg_temp.q('Pick'),current_setting('test.a'),
   pg_temp.q('Many'),jsonb_build_array(current_setting('test.b')),pg_temp.q('Deck'),pg_temp.file(current_setting('test.file1'))),
-  'answers stored as typed json with unknown choices dropped');
+  'answers stored as typed json with real file size and type');
 select ok(not public.project_file_deletable(current_setting('test.file1')),'saved file cannot be deleted');
 select ok(public.project_file_deletable(current_setting('test.file2')),'unreferenced file can be deleted');
 select is(pg_temp.signable(current_setting('test.file2')),1::bigint,'owner can sign any file of the project');
@@ -153,14 +159,14 @@ select is(pg_temp.downloadable(current_setting('test.file1')),0::bigint,'no dire
 reset role;
 select pg_temp.login(3);
 select ok(not public.project_file_writable(current_setting('test.file1')),'collaborator cannot upload');
-select throws_ok(format($$insert into storage.objects(bucket_id,name) values('project-files',%L)$$,pg_temp.path('c4500000-0000-4000-8000-000000000003')),
+select throws_ok(format($$insert into storage.objects(bucket_id,name) values('project-files',%L)$$,pg_temp.path('c4500000-0000-4000-8000-000000000006')),
   '42501',null,'collaborator upload denied by policy');
 select ok(not public.project_file_deletable(current_setting('test.file2')),'collaborator cannot delete');
 select is(pg_temp.signable(current_setting('test.file1')),1::bigint,'collaborator can sign project files');
 reset role;
 select pg_temp.login(4);
 select ok(not public.project_file_writable(current_setting('test.file1')),'outsider cannot upload');
-select throws_ok(format($$insert into storage.objects(bucket_id,name) values('project-files',%L)$$,pg_temp.path('c4500000-0000-4000-8000-000000000004')),
+select throws_ok(format($$insert into storage.objects(bucket_id,name) values('project-files',%L)$$,pg_temp.path('c4500000-0000-4000-8000-000000000007')),
   '42501',null,'outsider upload denied by policy');
 select is(pg_temp.signable(current_setting('test.file1')),0::bigint,'outsider cannot sign project files');
 reset role;

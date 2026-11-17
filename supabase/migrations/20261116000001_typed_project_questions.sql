@@ -133,7 +133,8 @@ end;
 $$;
 
 -- Trims text and drops choice ids that are no longer options, so a removed
--- option clears the answer instead of failing unrelated saves.
+-- option clears the answer instead of failing unrelated saves. File answers
+-- take size and type from the stored object, never from the client.
 create function public.project_answers_normalized(p_event_id uuid, p_answers jsonb)
 returns jsonb language sql stable set search_path = '' as $$
   select coalesce(jsonb_object_agg(e.key, case
@@ -144,6 +145,12 @@ returns jsonb language sql stable set search_path = '' as $$
       select jsonb_agg(v order by n) from jsonb_array_elements(e.value) with ordinality x(v, n)
       where jsonb_typeof(v) <> 'string' or exists (select 1 from jsonb_array_elements(q.options) o where o -> 'id' = v)
     ), '[]'::jsonb)
+    when q.type = 'file' and jsonb_typeof(e.value) = 'object' then e.value || coalesce((
+      select jsonb_build_object('size', o.metadata -> 'size', 'type', o.metadata -> 'mimetype')
+      from storage.objects o
+      where o.bucket_id = 'project-files' and o.name = e.value ->> 'path'
+        and jsonb_typeof(o.metadata -> 'size') = 'number' and jsonb_typeof(o.metadata -> 'mimetype') = 'string'
+    ), '{}'::jsonb)
     when jsonb_typeof(e.value) = 'string' then to_jsonb(btrim(e.value #>> '{}'))
     else e.value end), '{}'::jsonb)
   from jsonb_each(p_answers) e
@@ -161,6 +168,7 @@ declare
   v_kind text;
   v_text text;
   v_limit numeric;
+  v_object jsonb;
   v_error text;
 begin
   if p_answers is null or jsonb_typeof(p_answers) <> 'object' then
@@ -222,17 +230,18 @@ begin
             or (v_value ->> 'size')::numeric <> trunc((v_value ->> 'size')::numeric)
             or jsonb_typeof(v_value -> 'type') is distinct from 'string' then
             v_error := 'Upload a file';
-          elsif v_value ->> 'type' <> 'application/pdf' then
-            v_error := 'Upload a PDF file';
-          elsif (v_value ->> 'size')::numeric > v_limit * 1024 * 1024 then
-            v_error := format('Files must be %s MB or smaller', v_limit);
-          elsif v_value ->> 'path' !~ ('^' || p_project.id || '/' || v_question.id
-              || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.pdf$')
-            or not exists (
-              select 1 from storage.objects o
-              where o.bucket_id = 'project-files' and o.name = v_value ->> 'path'
-            ) then
-            v_error := 'Upload the file again';
+          else
+            select o.metadata into v_object from storage.objects o
+            where o.bucket_id = 'project-files' and o.name = v_value ->> 'path';
+            if v_value ->> 'path' !~ ('^' || p_project.id || '/' || v_question.id
+                || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.pdf$')
+              or jsonb_typeof(v_object -> 'size') is distinct from 'number' then
+              v_error := 'Upload the file again';
+            elsif v_object ->> 'mimetype' is distinct from 'application/pdf' then
+              v_error := 'Upload a PDF file';
+            elsif (v_object ->> 'size')::numeric > v_limit * 1024 * 1024 then
+              v_error := format('Files must be %s MB or smaller', v_limit);
+            end if;
           end if;
         else
           v_error := 'Invalid value';
