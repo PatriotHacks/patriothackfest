@@ -94,6 +94,25 @@ function optionIds(options: ChoiceOption[] | null) {
   return new Set((options ?? []).map((option) => option.id))
 }
 
+function labelKey(label: string) {
+  return label.trim().toLowerCase()
+}
+
+export function reuseOptionIds(
+  options: ChoiceOption[],
+  saved: ChoiceOption[]
+): ChoiceOption[] {
+  const present = new Set(options.map((option) => option.id))
+  return options.map((option) => {
+    if (saved.some((old) => old.id === option.id)) return option
+    const match = saved.find(
+      (old) =>
+        !present.has(old.id) && labelKey(old.label) === labelKey(option.label)
+    )
+    return match ? { ...option, id: match.id } : option
+  })
+}
+
 export function choiceLabels(
   options: ChoiceOption[] | null,
   answer: ProjectAnswer

@@ -7,6 +7,7 @@ import {
   MAX_PROJECT_ANSWER_LENGTH,
   PROJECT_QUESTION_TYPE_LABELS,
   PROJECT_QUESTION_TYPES,
+  reuseOptionIds,
   type ChoiceOption,
   type ProjectQuestionType,
 } from "@workspace/forms"
@@ -86,7 +87,7 @@ function QuestionForm({
               required,
               type,
               maxLength,
-              options,
+              options: reuseOptionIds(options, question?.options ?? []),
               maxSizeMb: size.value,
             })
             setMessage(
@@ -108,6 +109,16 @@ function QuestionForm({
       }}
     >
       <fieldset disabled={pending || locked} className="flex flex-col gap-3">
+        {typeLocked && !locked && (
+          <p
+            role="note"
+            className="rounded-md border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900"
+          >
+            Participants have already answered this question. Removing options
+            clears those answers, and lowering limits can make existing answers
+            fail on the participant&apos;s next save.
+          </p>
+        )}
         <div className="flex flex-col gap-1">
           <Label htmlFor={`${id}-label`}>
             {question ? "Question" : "New question"}

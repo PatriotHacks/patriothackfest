@@ -46,6 +46,7 @@ describe("project question editor", () => {
       "Add question",
     ])
       expect(html).toContain(text)
+    expect(html).not.toContain("Participants have already answered")
   })
   it("locks every question control after judging starts", () => {
     const html = renderToStaticMarkup(
@@ -102,6 +103,7 @@ describe("project question editor", () => {
       })
     )
     expect(html).toContain("Type locked: this question has answers")
+    expect(html).toContain("Participants have already answered this question")
   })
   it("renders the judge visibility switch with its saved value", () => {
     const html = renderToStaticMarkup(

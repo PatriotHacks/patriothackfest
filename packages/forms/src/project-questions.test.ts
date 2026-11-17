@@ -9,6 +9,7 @@ import {
   projectFileMaxSizeMb,
   projectFilePath,
   projectQuestionSchema,
+  reuseOptionIds,
 } from "./project-questions"
 
 const a = "a0000000-0000-4000-8000-000000000001"
@@ -131,5 +132,37 @@ describe("normalizedProjectAnswer", () => {
   it("trims text and leaves other answers alone", () => {
     expect(normalizedProjectAnswer("  x ")).toBe("x")
     expect(normalizedProjectAnswer([a])).toEqual([a])
+  })
+})
+
+describe("reuseOptionIds", () => {
+  const fresh = "a0000000-0000-4000-8000-000000000009"
+  it("reuses the id of a removed option re-added with the same label", () => {
+    expect(
+      reuseOptionIds(
+        [
+          { id: b, label: "Beta" },
+          { id: fresh, label: " alpha " },
+        ],
+        options
+      )
+    ).toEqual([
+      { id: b, label: "Beta" },
+      { id: a, label: " alpha " },
+    ])
+  })
+  it("keeps new ids for new labels and never duplicates a kept id", () => {
+    expect(
+      reuseOptionIds(
+        [
+          { id: a, label: "Renamed" },
+          { id: fresh, label: "Alpha" },
+        ],
+        options
+      )
+    ).toEqual([
+      { id: a, label: "Renamed" },
+      { id: fresh, label: "Alpha" },
+    ])
   })
 })
