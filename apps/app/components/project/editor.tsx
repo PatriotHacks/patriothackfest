@@ -25,12 +25,6 @@ import { projectNavigationLeavesPage } from "@/lib/project-navigation"
 
 import { ProjectAnswerInput } from "./answer-input"
 
-function filePaths(answers: ProjectAnswers) {
-  return Object.values(answers)
-    .map((value) => fileAnswer(value)?.path)
-    .filter((path) => path !== undefined)
-}
-
 const fields: {
   key: keyof ProjectContent
   label: string
@@ -138,8 +132,7 @@ export function ProjectEditor({
   const [message, setMessage] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(0)
-  const savedAnswers = useRef(projectAnswers(detail))
-  const uploaded = useRef(new Set<string>())
+  const unsavedUploads = useRef(new Set<string>())
   const [pending, startTransition] = useTransition()
   const dirty = saved !== JSON.stringify({ content, answers, trackIds })
 
@@ -194,6 +187,7 @@ export function ProjectEditor({
       try {
         const result = await saveProject({
           projectId: detail.project.id,
+          eventId: detail.project.event_id,
           content,
           answers,
           trackIds,
@@ -207,17 +201,7 @@ export function ProjectEditor({
         }
         const normalized = projectContentSchema.parse(content)
         const normalizedAnswers = normalizedProjectAnswers(answers)
-        const kept = new Set(filePaths(normalizedAnswers))
-        void removeProjectFiles(
-          [
-            ...new Set([
-              ...filePaths(savedAnswers.current),
-              ...uploaded.current,
-            ]),
-          ].filter((path) => !kept.has(path))
-        )
-        savedAnswers.current = normalizedAnswers
-        uploaded.current = new Set()
+        unsavedUploads.current.clear()
         setContent(normalized)
         setAnswers(normalizedAnswers)
         setSaved(
@@ -307,10 +291,17 @@ export function ProjectEditor({
             question={question}
             value={answers[question.id] ?? null}
             error={errors[`answers.${question.id}`]}
-            onChange={(value) =>
+            onChange={(value) => {
+              const previous = fileAnswer(answers[question.id])?.path
+              if (
+                previous &&
+                previous !== fileAnswer(value)?.path &&
+                unsavedUploads.current.delete(previous)
+              )
+                void removeProjectFiles([previous])
               setAnswers((current) => ({ ...current, [question.id]: value }))
-            }
-            onUploaded={(path) => uploaded.current.add(path)}
+            }}
+            onUploaded={(path) => unsavedUploads.current.add(path)}
             onUploadingChange={(active) =>
               setUploading((count) => count + (active ? 1 : -1))
             }

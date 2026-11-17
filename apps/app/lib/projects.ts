@@ -1,5 +1,6 @@
 import {
   editableProjectAnswer,
+  fileAnswer,
   fileAnswerSchema,
   MAX_PROJECT_ANSWER_LENGTH,
   normalizedProjectAnswer,
@@ -62,6 +63,7 @@ export const completeProjectContentSchema = projectContentSchema.superRefine(
 export const projectSaveSchema = z
   .object({
     projectId: z.guid(),
+    eventId: z.guid(),
     content: projectContentSchema,
     answers: z.record(
       z.guid(),
@@ -172,6 +174,23 @@ export function projectAnswers(detail: ProjectDetail): ProjectAnswers {
       question.id,
       editableProjectAnswer(question, detail.project.answers[question.id]),
     ])
+  )
+}
+
+function filePaths(answers: Record<string, unknown>) {
+  return Object.values(answers)
+    .map((value) => fileAnswer(value)?.path)
+    .filter((path) => path !== undefined)
+}
+
+export function replacedFilePaths(
+  projectId: string,
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+) {
+  const kept = new Set(filePaths(after))
+  return filePaths(before).filter(
+    (path) => !kept.has(path) && path.startsWith(`${projectId}/`)
   )
 }
 

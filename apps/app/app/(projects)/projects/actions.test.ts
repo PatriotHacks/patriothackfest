@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-const { rpc, getApplicant, revalidatePath } = vi.hoisted(() => ({
+const { rpc, remove, getApplicant, revalidatePath } = vi.hoisted(() => ({
   rpc: vi.fn(),
+  remove: vi.fn(),
   getApplicant: vi.fn(),
   revalidatePath: vi.fn(),
 }))
@@ -19,6 +20,7 @@ const questionId = "b0000000-0000-4000-8000-000000000001"
 const updatedAt = "2026-11-15T05:00:00.123456+00:00"
 const input = {
   projectId: id,
+  eventId: id,
   content: {
     name: "A",
     summary: "B",
@@ -32,8 +34,16 @@ const input = {
 }
 beforeEach(() => {
   vi.clearAllMocks()
-  getApplicant.mockResolvedValue({ supabase: { rpc } })
-  rpc.mockResolvedValue({ data: updatedAt, error: null })
+  getApplicant.mockResolvedValue({
+    supabase: { rpc, storage: { from: () => ({ remove }) } },
+  })
+  rpc.mockImplementation((name: string) =>
+    Promise.resolve(
+      name === "participant_project_detail"
+        ? { data: null, error: null }
+        : { data: updatedAt, error: null }
+    )
+  )
 })
 
 describe("project mutations", () => {
@@ -124,5 +134,76 @@ describe("project mutations", () => {
       p_email: "person@example.com",
     })
     expect(revalidatePath).not.toHaveBeenCalled()
+  })
+})
+
+describe("replaced project files", () => {
+  const fileQuestion = "b0000000-0000-4000-8000-000000000002"
+  const file = (n: number) => ({
+    path: `${id}/${fileQuestion}/c0000000-0000-4000-8000-00000000000${n}.pdf`,
+    name: "deck.pdf",
+    size: 1,
+    type: "application/pdf",
+  })
+  const stored = (answers: Record<string, unknown>) => ({
+    project: {
+      id,
+      event_id: id,
+      owner_user_id: id,
+      name: "",
+      summary: "",
+      description: "",
+      technologies: "",
+      repository_url: null,
+      demo_url: null,
+      video_url: null,
+      status: "draft",
+      submitted_at: null,
+      updated_at: updatedAt,
+      answers,
+    },
+    collaborators: [],
+    selected_tracks: [],
+    available_tracks: [],
+    questions: [],
+  })
+  const respond = (detail: unknown, save: unknown) =>
+    rpc.mockImplementation((name: string) =>
+      Promise.resolve(
+        name === "participant_project_detail"
+          ? { data: detail, error: null }
+          : save
+      )
+    )
+
+  it("deletes files the saved answers no longer reference", async () => {
+    respond(stored({ [fileQuestion]: file(1) }), {
+      data: updatedAt,
+      error: null,
+    })
+    await saveProject({ ...input, answers: { [fileQuestion]: file(2) } })
+    expect(rpc).toHaveBeenCalledWith("participant_project_detail", {
+      p_project_id: id,
+      p_event_id: id,
+    })
+    expect(remove).toHaveBeenCalledWith([file(1).path])
+  })
+  it("keeps files that are still referenced", async () => {
+    respond(stored({ [fileQuestion]: file(1) }), {
+      data: updatedAt,
+      error: null,
+    })
+    await saveProject({ ...input, answers: { [fileQuestion]: file(1) } })
+    expect(remove).not.toHaveBeenCalled()
+  })
+  it("deletes nothing when the save fails", async () => {
+    respond(stored({ [fileQuestion]: file(1) }), {
+      data: null,
+      error: { code: "PT409", message: "This project changed." },
+    })
+    expect((await saveProject({ ...input, answers: {} })).error).toBe(
+      "This project changed."
+    )
+    expect(remove).not.toHaveBeenCalled()
   })
 })

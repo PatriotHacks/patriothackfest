@@ -9,6 +9,7 @@ import {
   projectFailure,
   projectPhase,
   projectSaveSchema,
+  replacedFilePaths,
   type ProjectEvent,
 } from "./projects"
 
@@ -67,6 +68,7 @@ describe("project fields", () => {
     expect(
       projectSaveSchema.safeParse({
         projectId: id,
+        eventId: id,
         content: {},
         answers: {},
         trackIds: [],
@@ -81,6 +83,7 @@ describe("project fields", () => {
     expect(
       projectSaveSchema.parse({
         projectId: id,
+        eventId: id,
         content: {},
         answers: {},
         trackIds: [],
@@ -103,6 +106,7 @@ describe("typed project answers", () => {
   const save = (answers: unknown) =>
     projectSaveSchema.safeParse({
       projectId: id,
+      eventId: id,
       content: {},
       answers,
       trackIds: [],
@@ -173,6 +177,15 @@ describe("typed project answers", () => {
     })
   })
 
+  it("lists replaced files inside the project only", () => {
+    const other = { ...file, path: `${optionId}/${questionId}/${id}.pdf` }
+    expect(
+      replacedFilePaths(id, { [questionId]: file, [id]: other, x: "text" }, {})
+    ).toEqual([file.path])
+    expect(
+      replacedFilePaths(id, { [questionId]: file }, { [questionId]: file })
+    ).toEqual([])
+  })
   it("trims only text answers after saving", () => {
     expect(
       normalizedProjectAnswers({ a: " x ", b: [optionId], c: null })
