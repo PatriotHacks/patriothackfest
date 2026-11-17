@@ -4,8 +4,11 @@ insert into auth.users(id,email,email_confirmed_at) select ('da200000-0000-0000-
 insert into public.admin_allowlist(email,level) values('a2-1@example.test','organizer'),('a2-2@example.test','reviewer');
 insert into public.events(id,slug,name) values('ea200000-0000-0000-0000-000000000001','a2-read','A2'),('ea200000-0000-0000-0000-000000000002','a2-other','Other');
 insert into public.event_competition_settings(event_id) select id from public.events where slug like 'a2-%';
+-- Fixture: one owner with several projects; team rules are tested in 47.
+alter table public.projects disable trigger projects_one_team;
 insert into public.projects(id,event_id,owner_user_id,name,status,submitted_at)
 select ('aa200000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'ea200000-0000-0000-0000-000000000001','da200000-0000-0000-0000-000000000003','Project '||n,'submitted',now() from generate_series(1,52)n;
+alter table public.projects enable trigger projects_one_team;
 insert into public.project_collaborators(project_id,event_id,user_id) values('aa200000-0000-0000-0000-000000000001','ea200000-0000-0000-0000-000000000001','da200000-0000-0000-0000-000000000004');
 insert into public.event_judges(id,event_id,email,user_id) values
  ('ba200000-0000-0000-0000-000000000001','ea200000-0000-0000-0000-000000000001','A2-3@example.test',null),

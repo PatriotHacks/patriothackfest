@@ -7,9 +7,12 @@ insert into public.events(id,slug,name) values
  ('ec200000-0000-0000-0000-000000000002','c2-other','C2 other');
 insert into public.event_competition_settings(event_id,enabled,project_submissions_open_at,project_submissions_close_at,judging_close_at)
 select id,true,now()-interval '3 days',now()-interval '2 days',now()+interval '1 day' from public.events where slug like 'c2-%';
+-- Fixture: one owner with several projects; team rules are tested in 47.
+alter table public.projects disable trigger projects_one_team;
 insert into public.projects(id,event_id,owner_user_id,name,summary,status,submitted_at)
 select ('ac200000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'ec200000-0000-0000-0000-000000000001',
  'dc200000-0000-0000-0000-000000000001','Project '||n,'Summary',case when n=3 then 'draft' when n=4 then 'withdrawn' else 'submitted' end,now() from generate_series(1,4)n;
+alter table public.projects enable trigger projects_one_team;
 insert into public.competition_tracks(id,event_id,name) values
  ('cc200000-0000-0000-0000-000000000001','ec200000-0000-0000-0000-000000000001','Track one'),
  ('cc200000-0000-0000-0000-000000000002','ec200000-0000-0000-0000-000000000001','Track two');

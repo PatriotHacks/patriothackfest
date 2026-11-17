@@ -20,12 +20,15 @@ insert into public.events(id,slug,name) values
  ('ee100000-0000-0000-0000-000000000001','visibility-one','Visibility one'),
  ('ee100000-0000-0000-0000-000000000002','visibility-two','Visibility two');
 insert into public.event_competition_settings(event_id) select id from public.events where slug like 'visibility-%';
+-- Fixture: one owner with several projects; team rules are tested in 47.
+alter table public.projects disable trigger projects_one_team;
 insert into public.projects(id,event_id,owner_user_id,name,summary,description,demo_url,status,submitted_at)
 select ('ae100000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'ee100000-0000-0000-0000-000000000001',
  'de100000-0000-0000-0000-000000000004','Project '||n,'Summary','Description','https://example.com',
  case when n=54 then 'draft' when n=55 then 'withdrawn' else 'submitted' end,
  case when n=54 then null else now()-interval '1 hour' end
 from generate_series(1,55)n;
+alter table public.projects enable trigger projects_one_team;
 insert into public.projects(id,event_id,owner_user_id,name,status,submitted_at) values
  ('ae200000-0000-0000-0000-000000000001','ee100000-0000-0000-0000-000000000002','de100000-0000-0000-0000-000000000004','Other event','submitted',now());
 insert into public.project_collaborators(project_id,event_id,user_id) values

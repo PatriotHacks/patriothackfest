@@ -34,7 +34,7 @@ insert into public.events (id, slug, name) values
   ('ec000000-0000-0000-0000-000000000001', 'competition-test-1', 'Competition test one'),
   ('ec000000-0000-0000-0000-000000000002', 'competition-test-2', 'Competition test two');
 
-select plan(64);
+select plan(65);
 
 select is((select count(*) from pg_class where relname in (
   'event_competition_settings', 'competition_tracks', 'projects', 'project_collaborators',
@@ -97,10 +97,11 @@ select throws_ok($$select public.admin_start_judging('ec000000-0000-0000-0000-00
 reset role;
 
 -- Privileged fixture setup only: client project/judge workflows belong to B/C.
-insert into public.projects (id, event_id, owner_user_id) values
-  ('ac000000-0000-0000-0000-000000000001', 'ec000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000004'),
-  ('ac000000-0000-0000-0000-000000000002', 'ec000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000004');
-select is((select count(*) from public.projects where owner_user_id = 'dc000000-0000-0000-0000-000000000004'), 2::bigint, 'one person may own multiple projects');
+insert into public.projects (id, event_id, owner_user_id, status) values
+  ('ac000000-0000-0000-0000-000000000001', 'ec000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000004', 'draft'),
+  ('ac000000-0000-0000-0000-000000000002', 'ec000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000004', 'withdrawn');
+select is((select count(*) from public.projects where owner_user_id = 'dc000000-0000-0000-0000-000000000004'), 2::bigint, 'withdrawn projects do not count as a team');
+select throws_ok($$insert into public.projects (event_id, owner_user_id) values ('ec000000-0000-0000-0000-000000000001', 'dc000000-0000-0000-0000-000000000004')$$, 'P0001', 'You are already on a team for this event', 'even privileged writes keep one team per event');
 select throws_ok($$insert into public.project_tracks values ('ac000000-0000-0000-0000-000000000001', current_setting('test.other_track')::uuid, 'ec000000-0000-0000-0000-000000000001')$$, '23503', null, 'project cannot select another event track');
 insert into public.project_tracks values ('ac000000-0000-0000-0000-000000000001', current_setting('test.competition_track')::uuid, 'ec000000-0000-0000-0000-000000000001');
 insert into public.event_judges (id, event_id, email) values

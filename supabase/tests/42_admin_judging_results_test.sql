@@ -25,11 +25,14 @@ insert into public.events(id,slug,name) values
   ('e4300000-0000-0000-0000-000000000003','a3-unconfigured','A3 unconfigured');
 insert into public.event_competition_settings(event_id)
 select id from public.events where slug in ('a3-results','a3-other');
+-- Fixture: one owner with several projects; team rules are tested in 47.
+alter table public.projects disable trigger projects_one_team;
 insert into public.projects(id,event_id,owner_user_id,name,status,submitted_at)
 select ('a4300000-0000-0000-0000-' || lpad(n::text,12,'0'))::uuid,
   'e4300000-0000-0000-0000-000000000001','d4300000-0000-0000-0000-000000000004',
   'Project ' || lpad(n::text,3,'0'),case when n=5 then 'draft' when n=6 then 'withdrawn' else 'submitted' end,
   case when n<>5 then now() end from generate_series(1,57)n;
+alter table public.projects enable trigger projects_one_team;
 insert into public.projects(event_id,owner_user_id,name,status,submitted_at) values
   ('e4300000-0000-0000-0000-000000000002','d4300000-0000-0000-0000-000000000004','Other event','submitted',now());
 insert into public.competition_tracks(id,event_id,name,reviews_per_project,active)
