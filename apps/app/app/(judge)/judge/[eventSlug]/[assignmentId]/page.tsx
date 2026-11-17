@@ -43,7 +43,7 @@ export default async function JudgeAssignmentPage({
             {detail.project.name}
           </h1>
           <JudgeDeadline closeAt={event.judging_close_at} />
-          <JudgeProjectDetails detail={detail} />
+          <JudgeProjectDetails eventSlug={eventSlug} detail={detail} />
           <JudgeScorecardForm
             key={detail.assignment.id}
             assignment={detail.assignment}

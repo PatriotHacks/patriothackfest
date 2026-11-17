@@ -6,9 +6,16 @@ import {
   reviewContext,
   type JudgeAssignment,
 } from "@/lib/judge-reviews"
+import { JudgeAnswers } from "./answers"
 import { OrganizerContact } from "./queue"
 
-export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
+export function JudgeProjectDetails({
+  eventSlug,
+  detail,
+}: {
+  eventSlug: string
+  detail: JudgeAssignment
+}) {
   const project = detail.project
   const links = [
     {
@@ -32,14 +39,11 @@ export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
       <p className="break-words">
         <strong>Technologies:</strong> {project.technologies || "Not provided"}
       </p>
-      {detail.answers.map((item, index) => (
-        <section key={index} className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">{item.label}</h2>
-          <p className="break-words whitespace-pre-wrap">
-            {item.answer || "No answer"}
-          </p>
-        </section>
-      ))}
+      <JudgeAnswers
+        eventSlug={eventSlug}
+        assignmentId={detail.assignment.id}
+        answers={detail.answers}
+      />
       <ul className="flex flex-wrap gap-4" aria-label="Project links">
         {links.map(
           (link) =>
