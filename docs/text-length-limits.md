@@ -7,8 +7,10 @@ turns red when over.
 
 ## Counting
 
-- Characters: trimmed code points for application answers; project answers keep
-  their existing count (`length` of the trimmed answer in SQL).
+- Characters: code points of the trimmed answer (`textLength` in
+  `@workspace/forms`, `char_length`/`length` in SQL). Project text inputs still
+  stop typing at the limit via `maxLength`, which counts UTF-16 units, so an
+  answer with astral characters such as emoji stops slightly early.
 - Words: runs of non-whitespace. Whitespace-only or empty text is 0 words.
   Whitespace is exactly the JavaScript `\s` set (ASCII tab, newline, vertical
   tab, form feed, carriage return, space, plus U+00A0, U+1680, U+2000-U+200A,
@@ -20,6 +22,10 @@ turns red when over.
 
 - Word limits are at most 1,500 (`MAX_WORD_LIMIT`), enforced by zod and by table
   checks, so a full-length word answer fits under the 10,000-character cap.
+  Switching a limit to words in either builder clamps it to 1,500
+  (`limitForUnit`); switching back to characters never needs clamping.
+- Labels use the singular for one ("1 word", "1 character") in counters and
+  errors (`formatLength` in TS, `public.format_length` in SQL).
 - Project answers are always capped at 10,000 characters, whatever the unit.
 
 ## Application forms
@@ -31,7 +37,8 @@ turns red when over.
 - A missing unit means characters. `textValidationSchema` defaults it, and
   `application_answer_errors` reads it the same way, so snapshots published
   before units existed validate exactly as before.
-- Errors read "Enter at least N words" / "Enter at most N words".
+- Errors read "Enter at least N words" / "Enter at most N words". Saving a
+  field over the word cap reports the cap rather than a generic error.
 
 ## Project questions
 
