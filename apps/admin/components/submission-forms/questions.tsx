@@ -29,8 +29,8 @@ import {
   saveProjectQuestion,
 } from "@/app/(admin)/submission-forms/actions"
 import { ChoiceOptionsEditor } from "@/components/builder/options-editor"
-import { FileSizeSetting } from "@/components/builder/validation-editor"
-import type { AdminProjectQuestion } from "@/lib/judging"
+import { FileSizeInput } from "@/components/builder/validation-editor"
+import { parseMaxSizeMb, type AdminProjectQuestion } from "@/lib/judging"
 
 function QuestionForm({
   eventId,
@@ -54,8 +54,10 @@ function QuestionForm({
   const [options, setOptions] = useState<ChoiceOption[]>(
     question?.options ?? []
   )
-  const [maxSizeMb, setMaxSizeMb] = useState(question?.validation?.max_size_mb)
-  const [resets, setResets] = useState(0)
+  const [maxSize, setMaxSize] = useState(
+    question?.validation?.max_size_mb?.toString() ?? ""
+  )
+  const [maxSizeError, setMaxSizeError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const typeLocked = question?.answered ?? false
@@ -66,6 +68,14 @@ function QuestionForm({
       onSubmit={(event) => {
         event.preventDefault()
         setMessage(null)
+        const size =
+          type === "file"
+            ? parseMaxSizeMb(maxSize)
+            : { value: undefined, error: null }
+        if (size.error) {
+          setMaxSizeError(size.error)
+          return
+        }
         startTransition(async () => {
           try {
             const result = await saveProjectQuestion({
@@ -77,7 +87,7 @@ function QuestionForm({
               type,
               maxLength,
               options,
-              maxSizeMb,
+              maxSizeMb: size.value,
             })
             setMessage(
               result.error ?? (question ? "Question saved" : "Question added")
@@ -89,8 +99,7 @@ function QuestionForm({
               setType("long_text")
               setMaxLength(DEFAULT_PROJECT_ANSWER_LENGTH)
               setOptions([])
-              setMaxSizeMb(undefined)
-              setResets(resets + 1)
+              setMaxSize("")
             }
           } catch {
             setMessage("Could not save question. Try again.")
@@ -156,10 +165,13 @@ function QuestionForm({
               <span className="text-sm font-medium">Accepted file type</span>
               <span className="text-sm text-muted-foreground">PDF only</span>
             </div>
-            <FileSizeSetting
-              key={resets}
-              value={maxSizeMb}
-              onChange={setMaxSizeMb}
+            <FileSizeInput
+              value={maxSize}
+              error={maxSizeError}
+              onChange={(value) => {
+                setMaxSize(value)
+                setMaxSizeError(null)
+              }}
             />
           </div>
         )}

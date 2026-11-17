@@ -7,6 +7,7 @@ import {
   competitionTrackInput,
   adminProjectQuestionsSchema,
   judgingEndInputValue,
+  parseMaxSizeMb,
   projectQuestionInput,
   projectQuestionRpcArgs,
   type CompetitionSettingsInput,
@@ -269,6 +270,14 @@ describe("project question input", () => {
     expect(
       projectQuestionInput.safeParse({ ...hidden, type: "long_text" }).success
     ).toBe(false)
+  })
+  it("parses the file size field exactly as typed", () => {
+    expect(parseMaxSizeMb("")).toEqual({ value: undefined, error: null })
+    expect(parseMaxSizeMb("2.5")).toEqual({ value: 2.5, error: null })
+    for (const draft of ["0", "-1", "11", "abc"])
+      expect(parseMaxSizeMb(draft).error).toBe(
+        "Enter a size greater than 0 and at most 10 MB"
+      )
   })
   it("bounds file size limits", () => {
     expect(

@@ -146,6 +146,17 @@ export const maxSizeMbSchema = z
     `Maximum file size must be at most ${MAX_FILE_SIZE_MB} MB`
   )
 
+export function parseMaxSizeMb(draft: string) {
+  if (draft.trim() === "") return { value: undefined, error: null }
+  const parsed = maxSizeMbSchema.safeParse(Number(draft))
+  return parsed.success
+    ? { value: parsed.data, error: null }
+    : {
+        value: undefined,
+        error: `Enter a size greater than 0 and at most ${MAX_FILE_SIZE_MB} MB`,
+      }
+}
+
 export const projectQuestionInput = z.discriminatedUnion("type", [
   z.object({ ...questionBase, type: z.literal("short_text"), maxLength }),
   z.object({ ...questionBase, type: z.literal("long_text"), maxLength }),
