@@ -76,7 +76,7 @@ select set_config('test.options',jsonb_build_array(
   jsonb_build_object('id',current_setting('test.a'),'label',' Web '),
   jsonb_build_object('id',current_setting('test.b'),'label','Mobile'))::text,true);
 
-select plan(81);
+select plan(88);
 
 -- Type column and question configuration.
 select is((select type::text from public.project_questions where label='Legacy'),'long_text','existing and untyped rows default to long_text');
@@ -190,6 +190,29 @@ select pg_temp.login(2);
 select is(pg_temp.save_errors(null)->>('answers.'||pg_temp.q('Pick')),'This question is required','removed option requires re-answering');
 select is(pg_temp.save_errors(jsonb_build_object(
   pg_temp.q('Short'),'hi',pg_temp.q('Pick'),current_setting('test.b'),pg_temp.q('Deck'),pg_temp.file(current_setting('test.file1')))),'{}'::jsonb,'re-answered project saves');
+reset role;
+select pg_temp.login(1,'oauth');
+select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
+  pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Web'))),'organizer removes an option');
+select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
+  pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Web'),
+    jsonb_build_object('id','c4500000-0000-4000-8000-0000000000c1','label',' mobile '))),'organizer re-adds the option by label');
+select is((select options->1->>'id' from public.project_questions where id=pg_temp.q('Many')::uuid),current_setting('test.b'),
+  're-added label reuses the previous option id');
+select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Many','',false,null,%L,'multiple_choice',%L)$$,
+  pg_temp.q('Many'),jsonb_build_array(jsonb_build_object('id',current_setting('test.a'),'label','Mobile'),
+    jsonb_build_object('id','c4500000-0000-4000-8000-0000000000c2','label','Web'))),'organizer swaps labels');
+select is((select array_agg(o->>'id' order by n) from public.project_questions q, jsonb_array_elements(q.options) with ordinality x(o,n)
+  where q.id=pg_temp.q('Many')::uuid),array[current_setting('test.a'),'c4500000-0000-4000-8000-0000000000c2'],
+  'kept options never take another option''s id');
+reset role;
+update storage.objects set metadata=jsonb_build_object('size',3*1024*1024,'mimetype','application/pdf')
+where bucket_id='project-files' and name=current_setting('test.file1');
+select pg_temp.login(1,'oauth');
+select throws_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Deck','',true,null,%L,'file',null,'{"max_size_mb":2}')$$,pg_temp.q('Deck')),
+  '22023','Saved answers include files larger than 2 MB. Keep a higher limit.','limit cannot drop below saved files');
+select lives_ok(format($$select public.admin_save_project_question('e4500000-0000-0000-0000-000000000001','Deck','',true,null,%L,'file',null,'{"max_size_mb":5}')$$,pg_temp.q('Deck')),
+  'limit may stay above saved files');
 reset role;
 
 -- Start judging locks uploads; judges see files only through the switch.

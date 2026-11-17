@@ -107,14 +107,36 @@ create function public.admin_save_project_question(
   p_type public.field_type default 'long_text', p_options jsonb default null, p_validation jsonb default null
 )
 returns uuid language plpgsql security definer set search_path = '' as $$
-declare v_id uuid; v_error text; v_options jsonb; v_validation jsonb := nullif(p_validation, '{}'::jsonb);
+declare
+  v_id uuid;
+  v_error text;
+  v_options jsonb;
+  v_validation jsonb := nullif(p_validation, '{}'::jsonb);
+  v_limit numeric := coalesce((nullif(p_validation, '{}'::jsonb) ->> 'max_size_mb')::numeric, 10);
 begin
   perform public.lock_project_questions(p_event_id);
   v_error := public.project_question_config_error(p_type, p_max_length, p_options, v_validation);
   if v_error is not null then raise exception '%', v_error using errcode = '22023'; end if;
+  -- A re-added label keeps its old id so answers that still hold it stay valid.
   if p_options is not null then
-    select jsonb_agg(jsonb_build_object('id', o ->> 'id', 'label', btrim(o ->> 'label')) order by n)
-    into v_options from jsonb_array_elements(p_options) with ordinality x(o, n);
+    select jsonb_agg(jsonb_build_object('id', coalesce(reused.id, o ->> 'id'), 'label', btrim(o ->> 'label')) order by n)
+    into v_options
+    from jsonb_array_elements(p_options) with ordinality x(o, n)
+    left join lateral (
+      select old_option ->> 'id' as id
+      from public.project_questions q, jsonb_array_elements(q.options) old_option
+      where q.id = p_question_id and q.event_id = p_event_id
+        and lower(btrim(old_option ->> 'label')) = lower(btrim(o ->> 'label'))
+        and not exists (select 1 from jsonb_array_elements(p_options) kept where kept ->> 'id' = old_option ->> 'id')
+        and not exists (select 1 from jsonb_array_elements(q.options) same where same ->> 'id' = o ->> 'id')
+    ) reused on true;
+  end if;
+  if p_question_id is not null and p_type = 'file' and exists (
+    select 1 from public.projects p
+    join storage.objects o on o.bucket_id = 'project-files' and o.name = p.answers -> p_question_id::text ->> 'path'
+    where p.event_id = p_event_id and (o.metadata ->> 'size')::numeric > v_limit * 1024 * 1024
+  ) then
+    raise exception 'Saved answers include files larger than % MB. Keep a higher limit.', v_limit using errcode = '22023';
   end if;
   if p_question_id is null then
     insert into public.project_questions (event_id, position, label, help_text, required, max_length, type, options, validation)
