@@ -158,7 +158,7 @@ begin
             v_error := 'Enter text';
           elsif length(v_text) > 10000 then
             v_error := 'Use 10000 characters or fewer';
-          elsif case v_question.length_unit when 'words' then public.word_count(v_text) else length(v_text) end
+          elsif (case v_question.length_unit when 'words' then public.word_count(v_text) else length(v_text) end)
               > v_question.max_length then
             v_error := format('Use %s or fewer', public.format_length(v_question.max_length, v_question.length_unit::text));
           end if;

@@ -97,7 +97,7 @@ reset role;
 
 -- Project answer validation.
 select is(pg_temp.project_error('Brief','"one two three"'),null,'answer at the word limit');
-select is(pg_temp.project_error('Brief',to_jsonb(E'  one  two\nthree  ')),null,'whitespace runs count once');
+select is(pg_temp.project_error('Brief',to_jsonb(E'  one  two\nthree  '::text)),null,'whitespace runs count once');
 select is(pg_temp.project_error('Brief','"one two three four"'),'Use 3 words or fewer','answer over the word limit');
 select is(pg_temp.project_error('Brief',to_jsonb(repeat('x',50))),null,'word limits ignore characters per word');
 select is(pg_temp.project_error('One','"one two"'),'Use 1 word or fewer','singular word limit');
