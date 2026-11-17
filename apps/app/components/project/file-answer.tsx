@@ -12,7 +12,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Progress } from "@workspace/ui/components/progress"
 import { useRef, useState } from "react"
 
-import { projectFileUrl } from "@/app/(projects)/projects/actions"
+import { projectFileUrl } from "@/lib/project-file-actions"
 import { FileLink } from "@/components/application/file-link"
 import { uploadProjectPdf } from "@/lib/project-files"
 
@@ -78,7 +78,7 @@ export function ProjectFileAnswer({
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <FileLink
             name={value.name}
-            sign={() => signedUrlOrThrow(projectFileUrl(projectId, value.path))}
+            sign={() => signedUrlOrThrow(projectFileUrl(value.path))}
           />
           <Button
             type="button"

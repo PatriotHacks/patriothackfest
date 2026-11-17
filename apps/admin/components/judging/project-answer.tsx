@@ -7,13 +7,7 @@ import {
 import { ProjectFileLink } from "@/components/file-link"
 import { safeProjectUrl } from "@/lib/organizer-projects"
 
-export function ProjectAnswer({
-  projectId,
-  item,
-}: {
-  projectId: string
-  item: ProjectQuestionAnswer
-}) {
+export function ProjectAnswer({ item }: { item: ProjectQuestionAnswer }) {
   const empty = <p className="text-muted-foreground">No answer</p>
   switch (item.type) {
     case "short_text":
@@ -57,11 +51,7 @@ export function ProjectAnswer({
     case "file": {
       const file = fileAnswer(item.answer)
       return file ? (
-        <ProjectFileLink
-          projectId={projectId}
-          path={file.path}
-          name={file.name}
-        />
+        <ProjectFileLink path={file.path} name={file.name} />
       ) : (
         empty
       )

@@ -234,17 +234,20 @@ describe("organizer project file links", () => {
       data: { signedUrl: "https://signed.test/deck" },
       error: null,
     })
-    expect(await projectFileUrl(projectId, path)).toEqual({
+    expect(await projectFileUrl(path)).toEqual({
       error: null,
       url: "https://signed.test/deck",
     })
     expect(requireAdmin).toHaveBeenCalledWith("organizer")
     expect(createSignedUrl).toHaveBeenCalledWith(path, 60)
   })
-  it("refuses paths outside the project", async () => {
-    expect(
-      await projectFileUrl(projectId, `${questionId}/${questionId}/x.pdf`)
-    ).toEqual({ error: "File not found" })
+  it("rejects empty paths and reports storage denials", async () => {
+    expect(await projectFileUrl("")).toEqual({ error: "File not found" })
     expect(createSignedUrl).not.toHaveBeenCalled()
+    createSignedUrl.mockResolvedValue({
+      data: null,
+      error: { message: "Object not found" },
+    })
+    expect(await projectFileUrl(path)).toEqual({ error: "Object not found" })
   })
 })

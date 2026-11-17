@@ -68,7 +68,7 @@ export function SubmittedProjectDetails({
             {detail.answers.map((item) => (
               <div key={item.question_id} className="flex flex-col gap-1">
                 <h2 className="text-xl font-semibold">{item.label}</h2>
-                <ProjectAnswer projectId={project.id} item={item} />
+                <ProjectAnswer item={item} />
               </div>
             ))}
           </section>

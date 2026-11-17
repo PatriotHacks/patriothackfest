@@ -72,15 +72,11 @@ export function FileLink({
 }
 
 export function ProjectFileLink({
-  projectId,
   path,
   name,
 }: {
-  projectId: string
   path: string
   name: string
 }) {
-  return (
-    <SignedFileLink name={name} sign={() => projectFileUrl(projectId, path)} />
-  )
+  return <SignedFileLink name={name} sign={() => projectFileUrl(path)} />
 }

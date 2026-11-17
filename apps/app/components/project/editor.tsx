@@ -7,7 +7,8 @@ import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useEffect, useId, useRef, useState, useTransition } from "react"
 
-import { projectFileUrl, saveProject } from "@/app/(projects)/projects/actions"
+import { saveProject } from "@/app/(projects)/projects/actions"
+import { projectFileUrl } from "@/lib/project-file-actions"
 import { removeProjectFiles } from "@/lib/project-files"
 import {
   normalizedProjectAnswers,
@@ -98,9 +99,7 @@ export function ProjectReadOnly({ detail }: { detail: ProjectDetail }) {
               options: question.options,
               answer: answers[question.id] ?? null,
             }}
-            sign={(file) =>
-              signedUrlOrThrow(projectFileUrl(detail.project.id, file.path))
-            }
+            sign={(file) => signedUrlOrThrow(projectFileUrl(file.path))}
           />
         </div>
       ))}

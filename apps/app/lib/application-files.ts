@@ -1,5 +1,7 @@
 import { APPLICATION_FILES_BUCKET } from "@workspace/forms"
 
+import { signedFileUrl as signed } from "@workspace/supabase/storage"
+
 import * as files from "./storage-files"
 
 export function uploadPdf(
@@ -17,12 +19,13 @@ export function uploadPdf(
 }
 
 export async function signedFileUrl(path: string) {
-  const { data, error } = await files
-    .browserClient()
-    .storage.from(APPLICATION_FILES_BUCKET)
-    .createSignedUrl(path, 60)
-  if (error) throw error
-  return data.signedUrl
+  const result = await signed(
+    files.browserClient(),
+    APPLICATION_FILES_BUCKET,
+    path
+  )
+  if (!result.url) throw new Error(result.error ?? "File not found")
+  return result.url
 }
 
 export function removeFiles(paths: string[]) {

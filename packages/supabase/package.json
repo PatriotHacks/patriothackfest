@@ -13,6 +13,7 @@
     "./proxy": "./src/proxy.ts",
     "./roles": "./src/roles.ts",
     "./server": "./src/server.ts",
+    "./storage": "./src/storage.ts",
     "./types": "./src/database.types.ts"
   },
   "dependencies": {

@@ -1,6 +1,7 @@
 "use server"
 
 import { fileAnswer, PROJECT_FILES_BUCKET } from "@workspace/forms"
+import { signedFileUrl } from "@workspace/supabase/storage"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -117,9 +118,5 @@ export async function judgeProjectFileUrl(
     )?.answer
   )
   if (!file) return { error: "File not found" }
-  const { data, error } = await supabase.storage
-    .from(PROJECT_FILES_BUCKET)
-    .createSignedUrl(file.path, 60)
-  if (error) return { error: error.message }
-  return { error: null, url: data.signedUrl }
+  return signedFileUrl(supabase, PROJECT_FILES_BUCKET, file.path)
 }

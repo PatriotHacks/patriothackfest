@@ -3,10 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 vi.mock("@/app/(projects)/projects/actions", () => ({
   saveProject: vi.fn(),
-  projectFileUrl: vi.fn(),
   addProjectCollaborator: vi.fn(),
   removeProjectCollaborator: vi.fn(),
 }))
+vi.mock("@/lib/project-file-actions", () => ({ projectFileUrl: vi.fn() }))
 import { ProjectEditor, ProjectReadOnly } from "./editor"
 import { ProjectCollaborators } from "./collaborators"
 import type { ProjectDetail } from "@/lib/projects"
