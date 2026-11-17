@@ -9,6 +9,9 @@ const { getAdmin, getSubmittedProject, redirect } = vi.hoisted(() => ({
 vi.mock("@/lib/admin", () => ({ getAdmin }))
 vi.mock("@/lib/organizer-project-data", () => ({ getSubmittedProject }))
 vi.mock("next/navigation", () => ({ redirect }))
+vi.mock("@/components/judging/project-details", () => ({
+  SubmittedProjectDetails: () => null,
+}))
 import SubmittedProjectPage from "./page"
 
 const id = "a0000000-0000-4000-8000-000000000001"

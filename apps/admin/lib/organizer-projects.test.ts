@@ -86,4 +86,26 @@ describe("read-only project values", () => {
         .success
     ).toBe(false)
   })
+  it("parses typed question answers", () => {
+    const answer = {
+      question_id: "a0000000-0000-4000-8000-000000000001",
+      label: "Deck",
+      type: "file",
+      options: null,
+      answer: {
+        path: "p/q/f.pdf",
+        name: "deck.pdf",
+        size: 1,
+        type: "application/pdf",
+      },
+    }
+    expect(
+      submittedProjectDetailSchema.shape.answers.safeParse([answer]).success
+    ).toBe(true)
+    expect(
+      submittedProjectDetailSchema.shape.answers.safeParse([
+        { ...answer, answer: 42 },
+      ]).success
+    ).toBe(false)
+  })
 })

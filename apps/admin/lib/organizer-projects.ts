@@ -1,3 +1,4 @@
+import { projectQuestionAnswerSchema } from "@workspace/forms"
 import * as z from "zod"
 
 export const PROJECT_PAGE_SIZE = 50
@@ -47,9 +48,7 @@ export const submittedProjectDetailSchema = z.object({
   owner: personSchema,
   collaborators: z.array(personSchema),
   tracks: z.array(trackSchema),
-  answers: z.array(
-    z.object({ question_id: z.guid(), label: z.string(), answer: z.string() })
-  ),
+  answers: z.array(projectQuestionAnswerSchema),
 })
 
 export type SubmittedProjects = z.infer<typeof submittedProjectsSchema>

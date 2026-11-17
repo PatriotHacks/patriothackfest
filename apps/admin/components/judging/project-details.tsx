@@ -3,6 +3,7 @@ import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 
+import { ProjectAnswer } from "@/components/judging/project-answer"
 import { ProjectTrackLabels } from "@/components/judging/projects"
 import {
   projectPersonLabel,
@@ -67,9 +68,7 @@ export function SubmittedProjectDetails({
             {detail.answers.map((item) => (
               <div key={item.question_id} className="flex flex-col gap-1">
                 <h2 className="text-xl font-semibold">{item.label}</h2>
-                <p className="break-words whitespace-pre-wrap">
-                  {item.answer || "No answer"}
-                </p>
+                <ProjectAnswer projectId={project.id} item={item} />
               </div>
             ))}
           </section>
