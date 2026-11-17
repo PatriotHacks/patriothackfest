@@ -5,13 +5,15 @@ vi.mock("@/app/(projects)/projects/actions", () => ({
   saveProject: vi.fn(),
   addProjectCollaborator: vi.fn(),
   removeProjectCollaborator: vi.fn(),
+  leaveProject: vi.fn(),
 }))
 vi.mock("@/lib/project-file-actions", () => ({ projectFileUrl: vi.fn() }))
 import { ProjectEditor, ProjectReadOnly } from "./editor"
-import { ProjectCollaborators } from "./collaborators"
+import { ProjectTeam } from "./team"
 import type { ProjectDetail } from "@/lib/projects"
 
 const id = "a0000000-0000-4000-8000-000000000001"
+const other = "a0000000-0000-4000-8000-000000000002"
 const questionId = "b0000000-0000-4000-8000-000000000001"
 const detail: ProjectDetail = {
   project: {
@@ -31,7 +33,7 @@ const detail: ProjectDetail = {
     answers: { [questionId]: "Our <b>story</b>" },
   },
   owner: { user_id: id, full_name: "Participant One" },
-  collaborators: [{ user_id: id, full_name: "Participant Two" }],
+  collaborators: [{ user_id: other, full_name: "Participant Two" }],
   max_team_size: null,
   selected_tracks: [],
   available_tracks: [],
@@ -139,12 +141,6 @@ describe("project form views", () => {
     expect(html).toContain("Summary")
     expect(html).not.toContain("<input")
     expect(html).not.toContain("Submit project")
-    const roster = renderToStaticMarkup(
-      createElement(ProjectCollaborators, { detail, editable: false })
-    )
-    expect(roster).toContain("Participant Two")
-    expect(roster).not.toContain("Add collaborator")
-    expect(roster).not.toContain("Remove")
   })
   it("renders a limited textarea per question with label, help, and required marker", () => {
     const html = renderToStaticMarkup(
@@ -241,5 +237,54 @@ describe("project form views", () => {
     expect(html).toContain('href="https://slides.example.test"')
     expect(html).toContain("View deck.pdf")
     expect(html).not.toContain(`${id}/${typed(5)}`)
+  })
+})
+
+describe("project team", () => {
+  const team = (
+    userId: string,
+    editable = true,
+    value: ProjectDetail = detail
+  ) =>
+    renderToStaticMarkup(
+      createElement(ProjectTeam, {
+        detail: value,
+        userId,
+        editable,
+        eventHref: "/projects/fall-2026",
+      })
+    )
+  it("lets the owner add and remove but not leave", () => {
+    const html = team(id)
+    expect(html).toContain("Participant One")
+    expect(html).toContain("Owner")
+    expect(html).toContain("Add teammate")
+    expect(html).toContain("Remove Participant Two")
+    expect(html).not.toContain("Remove Participant One")
+    expect(html).not.toContain("Leave team")
+  })
+  it("lets a teammate add and leave but not remove", () => {
+    const html = team(other)
+    expect(html).toContain("Add teammate")
+    expect(html).toContain("Leave team")
+    expect(html).not.toContain("Remove")
+  })
+  it("labels blank names and shows the size limit", () => {
+    const html = team(id, true, {
+      ...detail,
+      collaborators: [{ user_id: other, full_name: " " }],
+      max_team_size: 2,
+    })
+    expect(html).toContain("Unnamed participant")
+    expect(html).toContain("2 / 2 members")
+    expect(html).toContain("This team is full.")
+    expect(html).not.toContain("Add teammate")
+  })
+  it("renders a read-only roster when the project is locked", () => {
+    const html = team(other, false)
+    expect(html).toContain("Participant Two")
+    expect(html).not.toContain("Add teammate")
+    expect(html).not.toContain("Leave team")
+    expect(html).not.toContain("Remove")
   })
 })
