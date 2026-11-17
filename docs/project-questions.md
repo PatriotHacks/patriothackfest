@@ -45,9 +45,13 @@ the two pages do not clobber each other's saved values.
   editor does the same when loading), so an optional question just loses that
   choice and a required one asks to be answered again. This never blocks a draft
   save for an unrelated edit; it only fails a complete save when the question is
-  required and now empty, with the error on that question. Re-adding a removed
-  label (trimmed, case-insensitive) reuses the old id, both in the editor and in
-  `admin_save_project_question`, so answers that still hold it become valid again.
+  required and now empty, with the error on that question. Removed options move to
+  `project_questions.archived_options`, which only the organizer RPCs read.
+  Re-adding a label (trimmed, case-insensitive) that matches an active or archived
+  option restores that option's id and unarchives it, in the same save or any
+  later one; the editor and `admin_save_project_question` both apply this.
+  Archived ids are not valid answers and are not rendered for judges or
+  organizers, consistent with the participant's next save dropping them.
 - Once any project has an answer for a question, its type cannot change (trigger
   on `project_questions`). The admin editor disables the type selector for
   answered questions and warns that removing options or lowering limits can
