@@ -9,7 +9,7 @@ import {
   type Field,
   type Question,
 } from "./schema"
-import { textLength } from "./text-length"
+import { formatLength, textLength } from "./text-length"
 import { isFieldVisible } from "./visibility"
 
 export type ValidationMode = "draft" | "submit"
@@ -36,9 +36,9 @@ function validateValue(field: Question, value: unknown): string | null {
       const { min_length, max_length, length_unit } = field.validation
       const length = textLength(value, length_unit)
       if (min_length !== undefined && length < min_length)
-        return `Enter at least ${min_length} ${length_unit}`
+        return `Enter at least ${formatLength(min_length, length_unit)}`
       if (max_length !== undefined && length > max_length)
-        return `Enter at most ${max_length} ${length_unit}`
+        return `Enter at most ${formatLength(max_length, length_unit)}`
       return null
     }
     case "email":

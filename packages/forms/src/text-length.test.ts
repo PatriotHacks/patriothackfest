@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { countWords, textLength } from "./text-length"
+import {
+  countWords,
+  formatLength,
+  limitForUnit,
+  textLength,
+} from "./text-length"
 
 describe("countWords", () => {
   it("counts whitespace-separated runs", () => {
@@ -28,5 +33,22 @@ describe("textLength", () => {
 
   it("counts words for words", () => {
     expect(textLength("  hello world  ", "words")).toBe(2)
+  })
+})
+
+describe("formatLength", () => {
+  it("uses the singular for one", () => {
+    expect(formatLength(1, "words")).toBe("1 word")
+    expect(formatLength(1, "characters")).toBe("1 character")
+    expect(formatLength(0, "words")).toBe("0 words")
+    expect(formatLength(300, "characters")).toBe("300 characters")
+  })
+})
+
+describe("limitForUnit", () => {
+  it("clamps limits to the word cap only for words", () => {
+    expect(limitForUnit(5000, "words")).toBe(1500)
+    expect(limitForUnit(300, "words")).toBe(300)
+    expect(limitForUnit(5000, "characters")).toBe(5000)
   })
 })

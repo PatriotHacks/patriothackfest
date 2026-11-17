@@ -1,6 +1,10 @@
 import * as z from "zod"
 
-import { lengthUnitSchema, MAX_WORD_LIMIT } from "./text-length"
+import {
+  lengthUnitSchema,
+  MAX_WORD_LIMIT,
+  WORD_LIMIT_MESSAGE,
+} from "./text-length"
 
 export const FIELD_TYPES = [
   "short_text",
@@ -68,7 +72,7 @@ export const textValidationSchema = z
       v.length_unit === "characters" ||
       Math.max(v.min_length ?? 0, v.max_length ?? 0) <= MAX_WORD_LIMIT,
     {
-      message: `Word limits must be at most ${MAX_WORD_LIMIT} words`,
+      message: WORD_LIMIT_MESSAGE,
       path: ["max_length"],
     }
   )

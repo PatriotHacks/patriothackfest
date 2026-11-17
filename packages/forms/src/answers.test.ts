@@ -96,6 +96,17 @@ describe("validateAnswers", () => {
     expect(errorFor(bio, "x".repeat(50))).toBe("Enter at least 2 words")
   })
 
+  it("uses the singular for a limit of one", () => {
+    const one = field("short_text", {
+      validation: { max_length: 1, length_unit: "words" },
+    })
+    expect(errorFor(one, "one two")).toBe("Enter at most 1 word")
+    const char = field("short_text", {
+      validation: { min_length: 2, max_length: 1, length_unit: "characters" },
+    })
+    expect(errorFor(char, "ab")).toBe("Enter at most 1 character")
+  })
+
   it("ignores text length when there is no validation", () => {
     expect(errorFor(field("short_text"), "x".repeat(500))).toBeUndefined()
   })
