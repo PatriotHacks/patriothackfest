@@ -47,7 +47,7 @@ function isValidFileSize(size: number) {
   return size > 0 && size <= MAX_FILE_SIZE_MB
 }
 
-function FileSizeSetting({
+export function FileSizeSetting({
   value,
   onChange,
 }: {
