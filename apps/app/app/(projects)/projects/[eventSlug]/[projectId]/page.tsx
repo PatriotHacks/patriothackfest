@@ -5,7 +5,6 @@ import Link from "next/link"
 import { ProjectAvailability } from "@/components/project/availability"
 import { ProjectEditor } from "@/components/project/editor"
 import { ProjectTeam } from "@/components/project/team"
-import { WithdrawProjectButton } from "@/components/project/withdraw-button"
 import { getApplicant } from "@/lib/applicant"
 import { getProjectDetail, getProjectEvent } from "@/lib/project-data"
 import { canManageProject, projectPhase } from "@/lib/projects"
@@ -46,7 +45,6 @@ export default async function ProjectPage({
             editable={editable && projectPhase(event) === "open"}
           />
         )}
-        {editable && isOwner && <WithdrawProjectButton projectId={projectId} />}
       </article>
     </div>
   )
