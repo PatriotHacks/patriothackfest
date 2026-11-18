@@ -39,7 +39,7 @@ The detail URL includes both project and event context:
 /submission-forms/projects/PROJECT_UUID?event=YOUR_SANDBOX_SLUG&projectsPage=1
 ```
 
-It shows current project content, owner/collaborator names, selected tracks, safe repository/demo/video links, submission time, and last-updated time. Back to submitted projects returns to the selected event/page.
+It shows the project name, question answers, owner/collaborator names, selected tracks, submission time, and last-updated time. Back to submitted projects returns to the selected event/page.
 
 ## 3. Inclusion and permissions
 
@@ -51,14 +51,14 @@ It shows current project content, owner/collaborator names, selected tracks, saf
 - Detail event identity must match exactly. Missing/unknown event, malformed project ID, draft/withdrawn/missing project, or wrong event/project pair is not found; detail lookup never falls back to another event.
 - Admissions reviewers, judges, participants, and anonymous callers cannot use the organizer RPCs. Existing participant/member and judge access remains separate.
 - No profile contact details, application answers, resumes, or scores are included. Viewing never changes project content/status/timestamps or locks submissions.
-- Project descriptions render as text. Only HTTP(S) external links are clickable; no server-side fetching, previews, embeds, or raw HTML rendering.
+- Project names and answers render as text. Only HTTP(S) URL answers are clickable; no server-side fetching, previews, embeds, or raw HTML rendering.
 
 ## 4. Manual verification with your existing B3 data
 
 1. Sign into admin as organizer/owner and select the sandbox used for submission testing.
 2. Verify every submitted project is listed. A saved-only draft and withdrawn spare project must not appear.
 3. Open View project. Compare content, owner/collaborator names, tracks, and timestamps with the participant's saved submission. Confirm there are no Edit/Save/Withdraw/assignment/score controls.
-4. Open the demo/repository link: it should open a new tab. Viewing must not change the participant's project state or timestamps.
+4. Open a URL answer: it should open a new tab. Viewing must not change the participant's project state or timestamps.
 5. Use Back to submitted projects; event and page should be preserved. Switch events and verify only that event's projects appear.
 6. Copy a project-detail URL and change its event slug to another/unknown event: not found. A copied draft/withdrawn project ID must also be not found.
 7. Open an event with no submissions and verify the empty state. The automated fixtures cover 53 submissions, page boundaries, and tied timestamps if your real sandbox is small.
@@ -80,7 +80,7 @@ pnpm db:test
 
 The new pgTAP file `34_admin_submitted_projects_test.sql` covers roles/auth methods, submitted-only filtering, event isolation, inactive tracks, bounded stable pagination, invalid pages/overflow, minimal person payloads, unchanged direct-table permissions, and unchanged stored project data.
 
-Admin Vitest tests cover typed/scoped reads, exact event resolution, invalid identity, database failure versus not found, pagination, safe links, escaped/read-only rendering, and detail-page authorization/navigation.
+Admin Vitest tests cover typed/scoped reads, exact event resolution, invalid identity, database failure versus not found, pagination, escaped/read-only rendering, and detail-page authorization/navigation.
 
 Automated database verification uses an isolated local PostgreSQL/pgTAP instance with Supabase SQL fixtures. It does not replace the authenticated click-through above against real development Supabase/PostgREST. No hosted data or Auth settings are changed automatically.
 
