@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { upcomingEvent } from "./events"
+import { currentEvent, upcomingEvent } from "./events"
 
 const past = {
   slug: "past",
@@ -51,5 +51,36 @@ describe("upcomingEvent", () => {
     expect(
       upcomingEvent([undated, later], Date.parse("2026-05-01T00:00:00Z"))
     ).toBe(later)
+  })
+})
+
+describe("currentEvent", () => {
+  it("returns the earliest event that has not ended", () => {
+    expect(currentEvent(events, Date.parse("2026-02-01T00:00:00Z"))).toBe(past)
+  })
+
+  it("skips ended events and picks the next of several upcoming", () => {
+    expect(currentEvent(events, Date.parse("2026-05-01T00:00:00Z"))).toBe(
+      oneDay
+    )
+  })
+
+  it("moves on at the end of the last day in New York", () => {
+    expect(currentEvent(events, Date.parse("2026-03-03T04:59:59Z"))).toBe(past)
+    expect(currentEvent(events, Date.parse("2026-03-03T05:00:00Z"))).toBe(
+      oneDay
+    )
+  })
+
+  it("returns null once every event has ended", () => {
+    expect(currentEvent(events, Date.parse("2028-01-01T00:00:00Z"))).toBeNull()
+    expect(currentEvent([], Date.now())).toBeNull()
+  })
+
+  it("never selects an undated event", () => {
+    const undated = { slug: "tbd", starts_at: null, ends_at: null }
+    expect(
+      currentEvent([undated], Date.parse("2026-05-01T00:00:00Z"))
+    ).toBeNull()
   })
 })
