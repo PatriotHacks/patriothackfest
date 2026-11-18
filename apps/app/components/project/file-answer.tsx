@@ -97,6 +97,7 @@ export function ProjectFileAnswer({
         accept={PDF_TYPE}
         disabled={uploading}
         aria-invalid={invalid || error !== null}
+        aria-required={question.required}
         aria-describedby={describedBy}
         className="text-sm"
         onChange={(e) => {

@@ -61,6 +61,7 @@ export function SchoolCombobox({
             role="combobox"
             aria-expanded={open}
             aria-invalid={!other && invalid}
+            aria-required
             aria-describedby={other ? undefined : describedBy}
             disabled={disabled}
             className={cn(
@@ -125,6 +126,7 @@ export function SchoolCombobox({
           onBlur={onBlur}
           disabled={disabled}
           aria-invalid={invalid}
+          aria-required
           aria-describedby={describedBy}
         />
       )}

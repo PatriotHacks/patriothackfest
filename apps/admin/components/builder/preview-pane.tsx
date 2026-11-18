@@ -17,6 +17,7 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group"
+import { RequiredMark } from "@workspace/ui/components/required-mark"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
@@ -200,7 +201,7 @@ export function PreviewPane({
         <div key={label} className="flex flex-col gap-1.5">
           <Label htmlFor={`preview-basic-${i}`} className={PREVIEW_LABEL}>
             {label}
-            {required && <span className="text-destructive">*</span>}
+            {required && <RequiredMark />}
           </Label>
           <Input
             id={`preview-basic-${i}`}
@@ -226,7 +227,7 @@ export function PreviewPane({
           <div key={field.id} className="flex flex-col gap-1.5">
             <Label htmlFor={field.id} className={PREVIEW_LABEL}>
               {field.label || "Untitled question"}
-              {field.required && <span className="text-destructive">*</span>}
+              {field.required && <RequiredMark />}
             </Label>
             {field.help_text && (
               <p className="text-sm text-muted-foreground">{field.help_text}</p>

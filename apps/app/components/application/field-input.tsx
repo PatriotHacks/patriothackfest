@@ -34,6 +34,7 @@ export function FieldInput({
   const inputId = fieldInputId(field.id)
   const a11y = {
     "aria-invalid": invalid,
+    "aria-required": field.required,
     "aria-describedby":
       [
         textLimit(field) && fieldCountId(field.id),
@@ -122,6 +123,7 @@ export function FieldInput({
           aria-labelledby={fieldLabelId(field.id)}
           className="flex flex-col gap-2"
           {...a11y}
+          aria-required={undefined}
         >
           {field.options.map((option, i) => (
             <label key={option} htmlFor={`${inputId}-${i}`} className={TILE}>

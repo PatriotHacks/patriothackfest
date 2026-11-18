@@ -1,5 +1,6 @@
 import { formatLength, textLength, type LengthUnit } from "@workspace/forms"
 import { Label } from "@workspace/ui/components/label"
+import { RequiredMark } from "@workspace/ui/components/required-mark"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
@@ -52,15 +53,7 @@ export function QuestionLabel({
       {...props}
     >
       {children}
-      {required && (
-        <>
-          <span className="text-destructive" aria-hidden>
-            {" "}
-            *
-          </span>
-          <span className="sr-only">(required)</span>
-        </>
-      )}
+      {required && <RequiredMark />}
     </Label>
   )
 }
