@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@/app/(admin)/applications/actions", () => ({
   applicationFileUrl: vi.fn(),
 }))
-vi.mock("@/app/(admin)/submission-forms/actions", () => ({
+vi.mock("@/app/(admin)/project-submissions/actions", () => ({
   projectFileUrl: vi.fn(),
 }))
 

@@ -1,7 +1,5 @@
 "use server"
 
-import { PROJECT_FILES_BUCKET } from "@workspace/forms"
-import { signedFileUrl } from "@workspace/supabase/storage"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -172,13 +170,4 @@ export async function setMaxTeamSize(
   if (error) return failure(error)
   revalidatePath("/submission-forms")
   return ok
-}
-
-export async function projectFileUrl(
-  path: string
-): Promise<ActionResult & { url?: string }> {
-  const { supabase } = await requireAdmin("organizer")
-  const input = z.string().min(1).safeParse(path)
-  if (!input.success) return { error: "File not found" }
-  return signedFileUrl(supabase, PROJECT_FILES_BUCKET, input.data)
 }
