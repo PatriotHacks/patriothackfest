@@ -3,6 +3,7 @@ import Image from "next/image"
 
 export const VIEW_LABELS = {
   participant: "Participant",
+  mentor: "Mentor",
   judging: "Judging",
 } as const
 

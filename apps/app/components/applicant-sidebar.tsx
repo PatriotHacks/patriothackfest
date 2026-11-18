@@ -43,9 +43,11 @@ import { signOut } from "@/lib/auth-actions"
 export function ApplicantSidebar({
   applicationId,
   email,
+  view,
 }: {
   applicationId?: string
   email: string
+  view: "participant" | "mentor"
 }) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
@@ -69,7 +71,7 @@ export function ApplicantSidebar({
     <Sidebar>
       <SidebarHeader className="px-4 pt-5 pb-3">
         <Link href="/" onClick={() => setOpenMobile(false)} className="w-fit">
-          <LogoLockup view="participant" imageClassName="h-[42px]" preload />
+          <LogoLockup view={view} imageClassName="h-[42px]" preload />
         </Link>
       </SidebarHeader>
       <SidebarContent>
