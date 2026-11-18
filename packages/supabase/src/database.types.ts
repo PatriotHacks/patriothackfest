@@ -977,55 +977,37 @@ export type Database = {
         Row: {
           answers: NonNullable<Json>
           created_at: string
-          demo_url: string | null
-          description: string
           event_id: string
           id: string
           name: string
           owner_user_id: string
-          repository_url: string | null
           status: string
           submitted_at: string | null
-          summary: string
-          technologies: string
           updated_at: string
-          video_url: string | null
           project_question_answers: Json | null
         }
         ComputedFields: "project_question_answers"
         Insert: {
           answers?: NonNullable<Json>
           created_at?: string
-          demo_url?: string | null
-          description?: string
           event_id: string
           id?: string
           name?: string
           owner_user_id: string
-          repository_url?: string | null
           status?: string
           submitted_at?: string | null
-          summary?: string
-          technologies?: string
           updated_at?: string
-          video_url?: string | null
         }
         Update: {
           answers?: NonNullable<Json>
           created_at?: string
-          demo_url?: string | null
-          description?: string
           event_id?: string
           id?: string
           name?: string
           owner_user_id?: string
-          repository_url?: string | null
           status?: string
           submitted_at?: string | null
-          summary?: string
-          technologies?: string
           updated_at?: string
-          video_url?: string | null
         }
         Relationships: [
           {
@@ -1455,19 +1437,13 @@ export type Database = {
         Returns: {
           answers: NonNullable<Json>
           created_at: string
-          demo_url: string | null
-          description: string
           event_id: string
           id: string
           name: string
           owner_user_id: string
-          repository_url: string | null
           status: string
           submitted_at: string | null
-          summary: string
-          technologies: string
           updated_at: string
-          video_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -1518,19 +1494,13 @@ export type Database = {
         Returns: {
           answers: NonNullable<Json>
           created_at: string
-          demo_url: string | null
-          description: string
           event_id: string
           id: string
           name: string
           owner_user_id: string
-          repository_url: string | null
           status: string
           submitted_at: string | null
-          summary: string
-          technologies: string
           updated_at: string
-          video_url: string | null
         }[]
         SetofOptions: {
           from: "*"

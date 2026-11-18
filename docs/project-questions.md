@@ -1,8 +1,12 @@
 # Project questions
 
 Organizers can add per-event typed questions to the project submission form.
-Participants answer them alongside the fixed project fields; organizers always see
-the answers, and judges see them only when the per-event switch is on.
+The only built-in parts of the form are the project name and the Team section;
+every other field, including any summary, description, or repository/demo/video
+link, is a question. Submitting requires a name and an answer to every required
+active question. Organizers always see the answers, and judges see them only when
+the per-event switch is on; with it off, judges see only the project name (and
+team names when that switch is on).
 
 ## Admin layout
 
@@ -126,7 +130,7 @@ admin_save_project_question(p_event_id, p_label, p_help_text, p_required, p_max_
 admin_archive_project_question(p_event_id, p_question_id)
 admin_reorder_project_questions(p_event_id, p_question_ids)   every active id once
 admin_set_judges_see_answers(p_event_id, p_value)
-participant_save_project(p_project_id, p_content, p_answers, p_track_ids, p_submit, p_expected_updated_at)
+participant_save_project(p_project_id, p_content, p_answers, p_track_ids, p_submit, p_expected_updated_at)   p_content is {name}
 project_file_writable(name) / project_file_deletable(name) / project_file_readable(name)
 ```
 

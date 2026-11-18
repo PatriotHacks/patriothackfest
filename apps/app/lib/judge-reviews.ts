@@ -63,15 +63,7 @@ export const judgeQueueSchema = z.object({
 })
 export const judgeAssignmentSchema = z.object({
   assignment: judgeScorecardSchema,
-  project: z.object({
-    name: z.string(),
-    summary: z.string(),
-    description: z.string(),
-    technologies: z.string(),
-    repository_url: z.string().nullable(),
-    demo_url: z.string().nullable(),
-    video_url: z.string().nullable(),
-  }),
+  project: z.object({ name: z.string() }),
   answers: z.array(projectQuestionAnswerSchema),
   team: z.array(z.string().nullable()),
 })

@@ -48,7 +48,7 @@ hosted OTP/PostgREST. No hosted migrations or accounts were changed.
   original submitted state without applying the retry payload, even after expiry.
   Deactivated judges cannot use this retry to regain access. A queue-load failure
   after submission leaves the scorecard read-only and offers Continue again.
-- Project links are HTTP(S) only, opened safely in a separate tab, never fetched
+- URL answers are HTTP(S) only, opened safely in a separate tab, never fetched
   automatically. Conflicts/inaccessible demos go to the visible organizer contact,
   `hello@patriothackfest.com`; there is no ticket system.
 

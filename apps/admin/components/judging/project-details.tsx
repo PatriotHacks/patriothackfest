@@ -1,4 +1,4 @@
-import { formatInZone, safeHttpUrl } from "@workspace/forms"
+import { formatInZone } from "@workspace/forms"
 import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
@@ -21,12 +21,6 @@ export function SubmittedProjectDetails({
   page: number
 }) {
   const project = detail.project
-  const links = [
-    { label: "Repository/source", url: safeHttpUrl(project.repository_url) },
-    { label: "Demo", url: safeHttpUrl(project.demo_url) },
-    { label: "Video", url: safeHttpUrl(project.video_url) },
-  ].filter((link) => link.url !== null)
-
   return (
     <div className="flex max-w-4xl flex-col gap-5 text-[#3A4A2B]">
       <Link
@@ -47,18 +41,6 @@ export function SubmittedProjectDetails({
         change or lock the project.
       </p>
       <article className={cn(PAPER, "flex flex-col gap-5 p-6")}>
-        <section aria-label="Project content" className="flex flex-col gap-3">
-          <h2 className="text-xl font-semibold">Summary</h2>
-          <p className="break-words whitespace-pre-wrap">{project.summary}</p>
-          <h2 className="text-xl font-semibold">Description</h2>
-          <p className="break-words whitespace-pre-wrap">
-            {project.description}
-          </p>
-          <h2 className="text-xl font-semibold">Technologies</h2>
-          <p className="break-words whitespace-pre-wrap">
-            {project.technologies || "Not provided"}
-          </p>
-        </section>
         {detail.answers.length > 0 && (
           <section
             aria-label="Question answers"
@@ -93,27 +75,6 @@ export function SubmittedProjectDetails({
           <p className="text-sm">
             All submitted projects enter general judging.
           </p>
-        </section>
-        <section className="flex flex-col gap-2" aria-label="Project links">
-          <h2 className="text-xl font-semibold">Project links</h2>
-          {links.length === 0 ? (
-            <p>No usable HTTP(S) project links.</p>
-          ) : (
-            <ul className="flex flex-wrap gap-4">
-              {links.map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.url!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
         </section>
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div>

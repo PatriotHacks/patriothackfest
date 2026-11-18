@@ -6,7 +6,6 @@ import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { ProjectAnswerView } from "@workspace/ui/components/project-answer"
-import { Textarea } from "@workspace/ui/components/textarea"
 import { useEffect, useId, useRef, useState, useTransition } from "react"
 
 import { saveProject } from "@/app/(projects)/projects/actions"
@@ -18,73 +17,17 @@ import {
   projectContent,
   projectContentSchema,
   type ProjectAnswers,
-  type ProjectContent,
   type ProjectDetail,
 } from "@/lib/projects"
 import { projectNavigationLeavesPage } from "@/lib/project-navigation"
 
 import { ProjectAnswerInput } from "./answer-input"
 
-const fields: {
-  key: keyof ProjectContent
-  label: string
-  max: number
-  multiline?: boolean
-}[] = [
-  { key: "name", label: "Project name", max: 120 },
-  { key: "summary", label: "Short summary", max: 300 },
-  {
-    key: "description",
-    label: "Description — what does it do and how does it work?",
-    max: 10_000,
-    multiline: true,
-  },
-  { key: "technologies", label: "Technologies (optional)", max: 1000 },
-  { key: "repository_url", label: "Repository/source URL", max: 2048 },
-  { key: "demo_url", label: "Demo URL", max: 2048 },
-  { key: "video_url", label: "Video URL", max: 2048 },
-]
-
-function validLink(value: string) {
-  const parsed = projectContentSchema.safeParse({ demo_url: value })
-  return parsed.success && Boolean(parsed.data.demo_url)
-}
-
 export function ProjectReadOnly({ detail }: { detail: ProjectDetail }) {
   const answers = projectAnswers(detail)
   return (
     <section className="flex flex-col gap-3" aria-label="Project details">
       <h2 className="text-xl font-semibold">Project details</h2>
-      <p>{detail.project.summary || "No project content saved yet."}</p>
-      <p className="break-words whitespace-pre-wrap">
-        {detail.project.description}
-      </p>
-      {detail.project.technologies && (
-        <p>
-          <strong>Technologies:</strong> {detail.project.technologies}
-        </p>
-      )}
-      <ul className="flex flex-wrap gap-4">
-        {(["repository_url", "demo_url", "video_url"] as const).map((key) => {
-          const url = detail.project[key]
-          return url && validLink(url) ? (
-            <li key={key}>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                {key === "repository_url"
-                  ? "Repository"
-                  : key === "demo_url"
-                    ? "Demo"
-                    : "Video"}
-              </a>
-            </li>
-          ) : null
-        })}
-      </ul>
       {detail.questions.map((question) => (
         <div key={question.id} className="flex flex-col gap-1">
           <h3 className="font-semibold">{question.label}</h3>
@@ -243,49 +186,26 @@ export function ProjectEditor({
         {status === "submitted" ? "Edit submitted project" : "Project details"}
       </h2>
       <p className="text-sm text-[#6E6E68]">
-        Submit a name, summary, description, and at least one repository, demo,
-        or video URL. Make links accessible to judges. No deployed app required.
+        Submit a project name and answer every required question. Make any links
+        accessible to judges.
       </p>
       <fieldset disabled={pending} className="flex flex-col gap-4">
-        {fields.map(({ key, label, max, multiline }) => (
-          <div key={key} className="flex flex-col gap-1">
-            <Label htmlFor={`${id}-${key}`}>{label}</Label>
-            {multiline ? (
-              <Textarea
-                id={`${id}-${key}`}
-                rows={6}
-                maxLength={max}
-                value={content[key]}
-                onChange={(event) =>
-                  setContent({ ...content, [key]: event.target.value })
-                }
-                aria-invalid={Boolean(errors[key])}
-                aria-describedby={
-                  errors[key] ? `${id}-${key}-error` : undefined
-                }
-              />
-            ) : (
-              <Input
-                id={`${id}-${key}`}
-                maxLength={max}
-                type={key.endsWith("_url") ? "url" : "text"}
-                value={content[key]}
-                onChange={(event) =>
-                  setContent({ ...content, [key]: event.target.value })
-                }
-                aria-invalid={Boolean(errors[key])}
-                aria-describedby={
-                  errors[key] ? `${id}-${key}-error` : undefined
-                }
-              />
-            )}
-            {errors[key] && (
-              <p id={`${id}-${key}-error`} className="text-sm text-red-700">
-                {errors[key]}
-              </p>
-            )}
-          </div>
-        ))}
+        <div className="flex flex-col gap-1">
+          <Label htmlFor={`${id}-name`}>Project name</Label>
+          <Input
+            id={`${id}-name`}
+            maxLength={120}
+            value={content.name}
+            onChange={(event) => setContent({ name: event.target.value })}
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? `${id}-name-error` : undefined}
+          />
+          {errors.name && (
+            <p id={`${id}-name-error`} className="text-sm text-red-700">
+              {errors.name}
+            </p>
+          )}
+        </div>
         {detail.questions.map((question) => (
           <ProjectAnswerInput
             key={question.id}

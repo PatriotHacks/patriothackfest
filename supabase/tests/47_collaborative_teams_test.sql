@@ -15,7 +15,7 @@ create function pg_temp.detail() returns jsonb language sql as $$
 $$;
 create function pg_temp.save(p_submit boolean default false) returns timestamptz language sql as $$
   select public.participant_save_project(pg_temp.p1(),
-    '{"name":"Team project","summary":"Summary","description":"Description","demo_url":"https://example.com"}'::jsonb,
+    '{"name":"Team project"}'::jsonb,
     null,'{}',p_submit,(pg_temp.detail()->'project'->>'updated_at')::timestamptz);
 $$;
 create function pg_temp.add(p_project uuid,n integer) returns void language sql as $$

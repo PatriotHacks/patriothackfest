@@ -10,7 +10,7 @@ create function pg_temp.detail() returns jsonb language sql as $$
 $$;
 create function pg_temp.save(p_answers jsonb,p_submit boolean default false) returns timestamptz language sql as $$
   select public.participant_save_project('a4300000-0000-0000-0000-000000000001',
-    '{"name":"Demo","summary":"Summary","description":"Description","demo_url":"https://example.com"}'::jsonb,
+    '{"name":"Demo"}'::jsonb,
     p_answers,'{}',p_submit,(pg_temp.detail()->'project'->>'updated_at')::timestamptz);
 $$;
 create function pg_temp.save_errors(p_answers jsonb,p_submit boolean default false) returns jsonb language plpgsql as $$
@@ -100,13 +100,13 @@ select is(pg_temp.save_errors('{"a4300000-0000-0000-0000-00000000ffff":"x"}')->>
 select is(pg_temp.save_errors('[]')->>'form','Invalid question answers','answers must be an object');
 select is(pg_temp.save_errors(jsonb_build_object(pg_temp.question(2),repeat('x',11)))->>('answers.'||pg_temp.question(2)),'Use 10 characters or fewer','answer length limited per question');
 select is(pg_temp.save_errors(jsonb_build_object(pg_temp.question(1),42))->>('answers.'||pg_temp.question(1)),'Enter text','answers must be text');
-select is(pg_temp.save_errors('{}',true)->>('answers.'||pg_temp.question(2)),'This question is required','required question enforced on submit');
+select is(pg_temp.save_errors('{}',true),jsonb_build_object('answers.'||pg_temp.question(2),'This question is required'),'only the missing required question blocks a named submission');
 select is(pg_temp.save_errors(jsonb_build_object(pg_temp.question(2),'   '),true)->>('answers.'||pg_temp.question(2)),'This question is required','blank answer does not satisfy required');
 select is(pg_temp.save_errors('{}'),'{}'::jsonb,'draft may leave required question blank');
 select is(pg_temp.save_errors(jsonb_build_object(pg_temp.question(2),' Short ',pg_temp.question(1),' Long answer ',pg_temp.question(3),' '),true),'{}'::jsonb,'complete answers submit');
 select is(pg_temp.detail()->'project'->'answers',jsonb_build_object(pg_temp.question(2),'Short',pg_temp.question(1),'Long answer'),'answers trimmed and blanks omitted');
 select lives_ok($$select public.participant_save_project(p_project_id=>'a4300000-0000-0000-0000-000000000001'::uuid,
-  p_content=>'{"name":"Demo","summary":"Summary","description":"Description","demo_url":"https://example.com"}'::jsonb,
+  p_content=>'{"name":"Demo"}'::jsonb,
   p_expected_updated_at=>(pg_temp.detail()->'project'->>'updated_at')::timestamptz)$$,'save without answers argument still works');
 select is(pg_temp.detail()->'project'->'answers',jsonb_build_object(pg_temp.question(2),'Short',pg_temp.question(1),'Long answer'),'omitted answers keep stored answers');
 select is(pg_temp.detail()->'project'->>'status','submitted','project submitted');

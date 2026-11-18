@@ -83,9 +83,9 @@ pnpm --filter admin dev
 
 1. As organizer, move project opening into the past; keep closing unset. Refresh A's project page.
 2. Save an incomplete draft. Reload; it persists, without being marked submitted.
-3. Fill in name, short summary, description, and just one HTTP(S) repository/demo/video link. No upload, hosted deployment, long essay, or all-three-links requirement.
+3. Fill in the project name and answer every required project question. Nothing else is built in.
 4. Select tracks A and B and submit **without saving those latest edits first**. Submission atomically saves the latest form/track values.
-5. Verify Submitted status after reload, both selected tracks, and a working external link. B can edit and save the same project.
+5. Verify Submitted status after reload, both selected tracks, and the saved answers. B can edit and save the same project.
 6. Make and save a complete change before closing. The project stays submitted. Clearing required fields and saving should fail with field errors; the previous valid submission remains intact.
 7. A and B no longer see Create project for this event, and the database rejects a second project. A solo project and zero sponsor tracks are also valid.
 
