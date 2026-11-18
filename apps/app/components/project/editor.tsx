@@ -6,6 +6,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { ProjectAnswerView } from "@workspace/ui/components/project-answer"
+import { RequiredMark } from "@workspace/ui/components/required-mark"
 import { useEffect, useId, useRef, useState, useTransition } from "react"
 
 import { saveProject } from "@/app/(projects)/projects/actions"
@@ -191,13 +192,17 @@ export function ProjectEditor({
       </p>
       <fieldset disabled={pending} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <Label htmlFor={`${id}-name`}>Project name</Label>
+          <Label htmlFor={`${id}-name`}>
+            Project name
+            <RequiredMark />
+          </Label>
           <Input
             id={`${id}-name`}
             maxLength={120}
             value={content.name}
             onChange={(event) => setContent({ name: event.target.value })}
             aria-invalid={Boolean(errors.name)}
+            aria-required
             aria-describedby={errors.name ? `${id}-name-error` : undefined}
           />
           {errors.name && (

@@ -114,6 +114,10 @@ describe("project form views", () => {
     expect(html).toContain("Save draft")
     expect(html).toContain("Submit project")
     expect(html).toContain("Sponsor tracks (optional)")
+    expect(html).toMatch(
+      /Project name<span class="text-destructive" aria-hidden="true"> \*<\/span>/
+    )
+    expect(html).toContain('aria-required="true"')
   })
   it("offers save changes rather than another submit action for submitted projects", () => {
     const html = renderToStaticMarkup(
@@ -140,7 +144,9 @@ describe("project form views", () => {
     const html = renderToStaticMarkup(
       createElement(ProjectEditor, { detail, editable: true })
     )
-    expect(html).toContain("What inspired you? (required)")
+    expect(html).toMatch(
+      /What inspired you\?<span class="text-destructive" aria-hidden="true"> \*<\/span><span class="sr-only"> \(required\)<\/span>/
+    )
     expect(html).toContain("A paragraph is enough")
     expect(html).toContain('maxLength="500"')
     expect(html).toContain("16/500 characters")
@@ -217,7 +223,9 @@ describe("project form views", () => {
     expect(html).toContain('accept="application/pdf"')
     expect(html).toContain("PDF only, up to 5 MB")
     expect(html).toContain("View deck.pdf")
-    expect(html).toContain("Pitch deck (required)")
+    expect(html).toMatch(
+      /Pitch deck<span class="text-destructive" aria-hidden="true"> \*<\/span><span class="sr-only"> \(required\)<\/span>/
+    )
   })
   it("shows choice labels, links, and files in the read-only view", () => {
     const html = renderToStaticMarkup(

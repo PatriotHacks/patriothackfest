@@ -12,6 +12,7 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import { RequiredMark } from "@workspace/ui/components/required-mark"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -52,7 +53,12 @@ export function ProjectAnswerInput({
   const choice = question.type === "single_choice" ? text : null
   const grouped =
     question.type === "single_choice" || question.type === "multiple_choice"
-  const title = `${question.label}${question.required ? " (required)" : " (optional)"}`
+  const title = (
+    <>
+      {question.label}
+      {question.required ? <RequiredMark /> : " (optional)"}
+    </>
+  )
 
   function control() {
     switch (question.type) {
@@ -66,6 +72,7 @@ export function ProjectAnswerInput({
             value={text}
             onChange={(event) => onChange(event.target.value)}
             aria-invalid={Boolean(error)}
+            aria-required={question.required}
             aria-describedby={describedBy}
           />
         )
@@ -78,6 +85,7 @@ export function ProjectAnswerInput({
             value={text}
             onChange={(event) => onChange(event.target.value)}
             aria-invalid={Boolean(error)}
+            aria-required={question.required}
             aria-describedby={describedBy}
           />
         )
@@ -89,6 +97,7 @@ export function ProjectAnswerInput({
                 <input
                   type="radio"
                   name={inputId}
+                  required={question.required}
                   checked={choice === option.id}
                   onChange={() => onChange(option.id)}
                 />
