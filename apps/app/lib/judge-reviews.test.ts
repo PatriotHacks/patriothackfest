@@ -89,15 +89,7 @@ describe("judge assignment payload", () => {
       submitted_at: null,
       notes: "",
     },
-    project: {
-      name: "Project",
-      summary: "",
-      description: "",
-      technologies: "",
-      repository_url: null,
-      demo_url: null,
-      video_url: null,
-    },
+    project: { name: "Project" },
     answers: [
       {
         question_id: "b0000000-0000-4000-8000-000000000001",

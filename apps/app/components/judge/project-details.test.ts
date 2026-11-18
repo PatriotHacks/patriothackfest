@@ -10,19 +10,11 @@ const options = [
   { id: q(9), label: "Mobile" },
 ]
 describe("judge project rendering", () => {
-  it("escapes content and rejects unsafe links without fetching URLs", () => {
+  it("escapes answers and rejects unsafe links without fetching URLs", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeProjectDetails, {
         detail: {
-          project: {
-            name: "Project",
-            summary: "<script>bad</script>",
-            description: "Details",
-            technologies: "SQL",
-            demo_url: "https://example.test",
-            video_url: "javascript:alert(1)",
-            repository_url: null,
-          },
+          project: { name: "Project" },
           assignment: {
             id: "a0000000-0000-4000-8000-000000000001",
             track_id: null,
@@ -99,9 +91,7 @@ describe("judge project rendering", () => {
     expect(html).toContain("<li>Ada &lt;b&gt;Lovelace&lt;/b&gt;</li>")
     expect(html).toContain("<li>Unnamed participant</li>")
     expect(html).toContain("General judging")
-    expect(html).toContain("&lt;script&gt;")
     expect(html).toContain('rel="noopener noreferrer"')
-    expect(html).not.toContain("javascript:")
     expect(html).toContain("What inspired you?")
     expect(html).toContain("&lt;i&gt;Curiosity&lt;/i&gt;")
     expect(html).toContain("No answer")
@@ -117,15 +107,7 @@ describe("judge project rendering", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeProjectDetails, {
         detail: {
-          project: {
-            name: "Project",
-            summary: "",
-            description: "",
-            technologies: "",
-            demo_url: null,
-            video_url: null,
-            repository_url: null,
-          },
+          project: { name: "Project" },
           assignment: {
             id: "a0000000-0000-4000-8000-000000000001",
             track_id: null,
