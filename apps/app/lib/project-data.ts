@@ -1,5 +1,6 @@
 import "server-only"
 
+import { currentEvent } from "@workspace/forms"
 import { notFound } from "next/navigation"
 import { cache } from "react"
 import * as z from "zod"
@@ -13,6 +14,23 @@ export const getProjectEvents = cache(async (): Promise<ProjectEvent[]> => {
   if (error) throw new Error(error.message)
   return data
 })
+
+export async function getCurrentProjectEvent() {
+  const events = await getProjectEvents()
+  if (events.length === 0) return null
+  const { supabase } = await getApplicant()
+  const { data, error } = await supabase
+    .from("events")
+    .select("id, slug, starts_at, ends_at")
+    .in(
+      "id",
+      events.map((event) => event.event_id)
+    )
+    .order("starts_at", { nullsFirst: false })
+    .order("slug")
+  if (error) throw new Error(error.message)
+  return currentEvent(data, Date.now())
+}
 
 export async function getProjectEvent(slug: string) {
   const event = (await getProjectEvents()).find((event) => event.slug === slug)

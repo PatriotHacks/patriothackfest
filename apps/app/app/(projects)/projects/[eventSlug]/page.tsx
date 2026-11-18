@@ -20,10 +20,11 @@ export default async function EventProjectsPage({
   if (error) throw new Error(error.message)
   return (
     <div className="flex max-w-3xl flex-col gap-5 text-[#3A4A2B]">
-      <Link href="/projects" className="text-sm underline">
-        All project events
-      </Link>
-      <h1 className={cn(SERIF, "text-4xl")}>{event.name}: projects</h1>
+      <h1 className={cn(SERIF, "text-4xl")}>Project Submission</h1>
+      <p>
+        Submit a project for {event.name}. Build it solo or as a team; you can
+        be on one team per event.
+      </p>
       <ProjectAvailability event={event} />
       {canManageProject(event) &&
         !projects.some((project) => project.status !== "withdrawn") && (

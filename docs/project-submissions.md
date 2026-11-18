@@ -4,7 +4,7 @@ This implements Person B's workflow on `feat/submissions-and-judging`. C1 judge 
 
 ## What's available
 
-- `/projects`: your eligible enabled events, plus events containing a project you own/collaborate on.
+- `/projects` (the Project Submission tab): redirects to the current event, the earliest of your eligible enabled events (plus events containing a project you own/collaborate on) whose last day in America/New_York has not ended. With no current event it says no project submission is open. Past events stay reachable by direct URL.
 - `/projects/[eventSlug]`: your team's project. Each person can be on one team (non-withdrawn project) per event.
 - `/projects/[eventSlug]/[projectId]`: a Team section at the top and, after opening, content editing/submission.
 - Every team member can edit, upload files, and submit; only the owner can remove teammates or withdraw. See [Project teams](project-teams.md).
@@ -49,8 +49,8 @@ Use real participant OTP sign-in and separate browser profiles/private windows. 
 Create a disposable event in the development SQL Editor:
 
 ```sql
-insert into public.events (slug, name)
-values ('project-submission-test', 'Project submission test')
+insert into public.events (slug, name, starts_at)
+values ('project-submission-test', 'Project submission test', now() + interval '7 days')
 on conflict (slug) do nothing;
 ```
 
@@ -73,7 +73,7 @@ pnpm --filter admin dev
 
 ### Before opening
 
-1. As A, open `http://localhost:3001/projects`. The sandbox should appear. Open it and create a project.
+1. As A, open `http://localhost:3001/projects`. It should redirect to the sandbox event if that is the current event. Create a project.
 2. Verify the project has no content form or track selector yet. Its title is Untitled project, and the opening time is shown in America/New_York.
 3. Add B using the exact registered email. Upper/lowercase should not matter.
 4. Try C's email and a nonexistent email: both fail with the same generic unavailable/ineligible response. There is no email search/list endpoint.
