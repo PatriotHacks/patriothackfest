@@ -127,9 +127,13 @@ select is(pg_temp.patch(jsonb_build_object(pg_temp.q(3),'c4800000-0000-4000-8000
 select is(pg_temp.errors('{}',null,'{b4800000-0000-0000-0000-000000000002}'),
   '{"track_ids":"Choose active tracks for this event; remove unavailable selections"}'::jsonb,'inactive tracks rejected');
 select lives_ok($$select pg_temp.patch('{}',null,'{b4800000-0000-0000-0000-000000000001}')$$,'active tracks saved');
+reset role;
 select is((select count(*) from public.project_tracks where project_id=pg_temp.pid()),1::bigint,'track selection stored');
+select pg_temp.login(1);
 select lives_ok($$select pg_temp.patch(jsonb_build_object(pg_temp.q(1),'Hi'))$$,'omitted tracks are untouched');
+reset role;
 select is((select count(*) from public.project_tracks where project_id=pg_temp.pid()),1::bigint,'track selection kept');
+select pg_temp.login(1);
 
 -- Files use real storage metadata and report replaced paths.
 select is(pg_temp.errors(jsonb_build_object(pg_temp.q(5),pg_temp.file(pg_temp.path(5,1,'a4800000-0000-0000-0000-000000000009')))),
