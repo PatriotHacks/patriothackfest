@@ -1472,6 +1472,15 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: undefined
       }
+      participant_patch_project: {
+        Args: {
+          p_answers?: Json
+          p_name?: string
+          p_project_id: string
+          p_track_ids?: string[]
+        }
+        Returns: Json
+      }
       participant_project_detail: {
         Args: { p_event_id: string; p_project_id: string }
         Returns: Json
@@ -1488,6 +1497,10 @@ export type Database = {
           project_submissions_open_at: string
           slug: string
         }[]
+      }
+      participant_project_version: {
+        Args: { p_project_id: string }
+        Returns: string
       }
       participant_projects: {
         Args: { p_event_id: string }
@@ -1522,6 +1535,10 @@ export type Database = {
           p_submit?: boolean
           p_track_ids?: string[]
         }
+        Returns: string
+      }
+      participant_submit_project: {
+        Args: { p_expected_updated_at: string; p_project_id: string }
         Returns: string
       }
       participant_withdraw_project: {
