@@ -3,9 +3,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar"
-import Image from "next/image"
 
 import { ApplicantSidebar } from "@/components/applicant-sidebar"
+import { LogoLockup } from "@/components/logo-lockup"
 import { getApplicant } from "@/lib/applicant"
 
 // Unlike the admissions layout, projects do not require the latest application
@@ -31,13 +31,7 @@ export default async function ProjectsLayout({
       <SidebarInset className="bg-white">
         <header className="flex items-center gap-3 border-b border-[#E7E4D9] px-4 py-2 md:hidden">
           <SidebarTrigger />
-          <Image
-            src="/logo.png"
-            alt="Patriot HackFest"
-            width={400}
-            height={211}
-            className="h-[32px] w-auto"
-          />
+          <LogoLockup view="participant" imageClassName="h-[32px]" />
         </header>
         <main className="flex-1 p-4 sm:p-8 lg:px-12">{children}</main>
       </SidebarInset>
