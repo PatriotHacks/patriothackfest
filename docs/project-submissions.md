@@ -49,8 +49,8 @@ Use real participant OTP sign-in and separate browser profiles/private windows. 
 Create a disposable event in the development SQL Editor:
 
 ```sql
-insert into public.events (slug, name)
-values ('project-submission-test', 'Project submission test')
+insert into public.events (slug, name, starts_at)
+values ('project-submission-test', 'Project submission test', now() + interval '7 days')
 on conflict (slug) do nothing;
 ```
 
