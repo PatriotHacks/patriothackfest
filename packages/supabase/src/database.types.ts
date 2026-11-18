@@ -1135,6 +1135,10 @@ export type Database = {
           queued: number
         }[]
       }
+      admin_event_projects: {
+        Args: { p_event_id: string; p_page?: number; p_status?: string }
+        Returns: Json
+      }
       admin_finish_email: {
         Args: {
           p_error?: string
@@ -1151,6 +1155,10 @@ export type Database = {
       admin_judge_roster: { Args: { p_event_id: string }; Returns: Json }
       admin_judging_results: {
         Args: { p_event_id: string; p_page?: number; p_track_id?: string }
+        Returns: Json
+      }
+      admin_project_detail: {
+        Args: { p_event_id: string; p_project_id: string }
         Returns: Json
       }
       admin_project_questions: {
@@ -1556,6 +1564,7 @@ export type Database = {
         }
         Returns: Json
       }
+      project_answer_present: { Args: { p_value: Json }; Returns: boolean }
       project_answers_normalized: {
         Args: { p_answers: Json; p_event_id: string }
         Returns: Json
