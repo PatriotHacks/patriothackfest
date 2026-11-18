@@ -144,10 +144,6 @@ export function ProjectTeam({
                 Add teammate
               </Button>
             </div>
-            <p className="text-sm text-[#6E6E68]">
-              They are added right away. They must have been accepted for this
-              event; use the address they registered with.
-            </p>
           </form>
         ))}
       {editable &&
