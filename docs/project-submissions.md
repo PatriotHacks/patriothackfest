@@ -7,9 +7,9 @@ This implements Person B's workflow on `feat/submissions-and-judging`. C1 judge 
 - `/projects` (the Project Submission tab): redirects to the current event, the earliest of your eligible enabled events (plus events containing a project you own/collaborate on) whose last day in America/New_York has not ended. With no current event it says no project submission is open. Past events stay reachable by direct URL.
 - `/projects/[eventSlug]`: your team's project. Each person can be on one team (non-withdrawn project) per event.
 - `/projects/[eventSlug]/[projectId]`: a Team section at the top and, after opening, content editing/submission.
-- Every team member can edit, upload files, and submit; only the owner can remove teammates or withdraw. See [Project teams](project-teams.md).
+- Every team member can edit, upload files, and submit; only the owner can remove teammates. See [Project teams](project-teams.md).
 - Exact-email addition of registered eligible teammates by any member; no user directory or invitations.
-- Save draft, Submit project, Save changes, and final pre-close withdrawal.
+- Save draft, Submit project, and Save changes. The app has no withdraw action.
 - Optional multi-track selection; all submitted projects enter general judging.
 - Closed/disabled/withdrawn projects remain readable to associated people, but not editable.
 - OTP login returns to a validated project link without changing ordinary admissions login routing.
@@ -96,14 +96,13 @@ pnpm --filter admin dev
 3. Edit a field, then click an internal back/sidebar link: confirm before discarding unsaved changes. A full reload/tab close also warns. This is a basic warning, not cross-tab synchronization or local draft storage.
 4. Open the project in two tabs (or as A and B), save content in one, then try saving old content in the other. It should say someone else saved and offer Reload page, preserving that tab's input rather than overwriting the newer save. Reload deliberately after copying any changes you want to keep.
 
-### Withdraw and close
+### Close
 
-1. On a spare project (a different owner, or after withdrawing the first), click Withdraw project and confirm. A withdrawn project no longer counts as a team. It remains visible as withdrawn, cannot be restored/edited, and does not withdraw the admissions application.
-2. Keep another project open in a tab. As organizer, set submission closing in the past (after opening).
-3. A refreshed project becomes read-only. A save from the already-open old tab must fail without silently submitting or discarding its local field values.
-4. Roster changes, new projects, and withdrawals are also blocked after closing.
-5. Start judging in admin. This is permanent for the sandbox, so use a new event slug to repeat the full test.
-6. Extend judging end. Participant editing must remain locked. Existing content/collaborators/track selections must still be readable.
+1. Keep another project open in a tab. As organizer, set submission closing in the past (after opening).
+2. A refreshed project becomes read-only. A save from the already-open old tab must fail without silently submitting or discarding its local field values.
+3. Roster changes and new projects are also blocked after closing.
+4. Start judging in admin. This is permanent for the sandbox, so use a new event slug to repeat the full test.
+5. Extend judging end. Participant editing must remain locked. Existing content/collaborators/track selections must still be readable.
 
 ### Login and event isolation
 
@@ -144,6 +143,8 @@ participant_leave_project(p_project_id)
 participant_save_project(p_project_id, p_content, p_answers, p_track_ids, p_submit, p_expected_updated_at)
 participant_withdraw_project(p_project_id)
 ```
+
+- `participant_withdraw_project` still exists in the database but the participant app no longer calls it.
 
 - Eligibility helpers and mutation locks are private, not user-directory APIs.
 - `participant_project_detail` returns project content, the owner's and collaborators' names/IDs, the event's `max_team_size`, selected tracks (including inactive selections), and currently available tracks.

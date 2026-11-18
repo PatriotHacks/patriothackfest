@@ -14,7 +14,6 @@ import {
   leaveProject,
   removeProjectCollaborator,
   saveProject,
-  withdrawProject,
 } from "./actions"
 
 const id = "a0000000-0000-4000-8000-000000000001"
@@ -50,8 +49,7 @@ describe("project mutations", () => {
     await addProjectCollaborator(id, "a@example.com")
     await removeProjectCollaborator(id, id)
     await leaveProject(id)
-    await withdrawProject(id)
-    expect(getApplicant).toHaveBeenCalledTimes(6)
+    expect(getApplicant).toHaveBeenCalledTimes(5)
   })
   it("does not write when authentication fails", async () => {
     getApplicant.mockRejectedValue(new Error("Sign in"))

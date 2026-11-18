@@ -10,8 +10,7 @@ A team is a project's owner (`projects.owner_user_id`) plus its collaborators
   files, and submit. Concurrent saves rely on `p_expected_updated_at`; a stale save
   fails with `PT409` and the form says someone else saved and offers a reload.
 - **Roster:** any member adds a teammate by exact registered email; they join
-  immediately (no invitation). Only the owner removes teammates or withdraws the
-  project. A collaborator can leave; the owner cannot (no ownership transfer).
+  immediately (no invitation). Only the owner removes teammates. A collaborator can leave; the owner cannot (no ownership transfer).
 - **Eligibility:** members need a submitted and accepted application for the event.
   Unknown, ineligible, or self addresses get one generic error. Only after that
   check passes can a caller learn that the person is already on a team or that the
@@ -43,7 +42,7 @@ A team is a project's owner (`projects.owner_user_id`) plus its collaborators
 participant_add_project_collaborator(p_project_id, p_email)   any member
 participant_remove_project_collaborator(p_project_id, p_user_id)  owner only
 participant_leave_project(p_project_id)                       collaborators only
-participant_withdraw_project(p_project_id)                    owner only
+participant_withdraw_project(p_project_id)                    owner only; unused by the app
 admin_set_max_team_size(p_event_id, p_value default null)     organizer
 admin_set_judges_see_team(p_event_id, p_value)                organizer
 ```

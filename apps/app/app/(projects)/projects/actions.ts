@@ -129,17 +129,3 @@ export async function leaveProject(projectId: string): Promise<ProjectResult> {
   if (error) return projectFailure(error)
   return { error: null }
 }
-
-export async function withdrawProject(
-  projectId: string
-): Promise<ProjectResult> {
-  const { supabase } = await getApplicant()
-  const id = z.guid().safeParse(projectId)
-  if (!id.success) return { error: "Invalid project" }
-  const { error } = await supabase.rpc("participant_withdraw_project", {
-    p_project_id: id.data,
-  })
-  if (error) return projectFailure(error)
-  revalidatePath("/projects", "layout")
-  return { error: null }
-}
