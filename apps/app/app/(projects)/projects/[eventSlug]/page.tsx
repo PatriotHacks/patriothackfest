@@ -46,7 +46,6 @@ export default async function EventProjectsPage({
             {project.status} ·{" "}
             {project.owner_user_id === userId ? "Your project" : "Team member"}
           </p>
-          {project.summary && <p>{project.summary}</p>}
         </Link>
       ))}
     </div>
