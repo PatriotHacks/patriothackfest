@@ -1,19 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getAdmin, from, rpc, getSubmittedProjects, redirect } = vi.hoisted(
-  () => ({
-    getAdmin: vi.fn(),
-    from: vi.fn(),
-    rpc: vi.fn(),
-    getSubmittedProjects: vi.fn(),
-    redirect: vi.fn(() => {
-      throw new Error("Redirect to forms")
-    }),
-  })
-)
+const { getAdmin, from, rpc, redirect } = vi.hoisted(() => ({
+  getAdmin: vi.fn(),
+  from: vi.fn(),
+  rpc: vi.fn(),
+  redirect: vi.fn(() => {
+    throw new Error("Redirect to forms")
+  }),
+}))
 vi.mock("@/lib/admin", () => ({ getAdmin }))
-vi.mock("@/lib/organizer-project-data", () => ({ getSubmittedProjects }))
 vi.mock("next/navigation", () => ({ redirect }))
 vi.mock("@/components/submission-forms/settings-form", () => ({
   SubmissionSettingsForm: () => "Existing submission settings",
@@ -117,7 +113,6 @@ beforeEach(() => {
     ],
     error: null,
   })
-  getSubmittedProjects.mockResolvedValue({ projects: [], has_more: false })
 })
 
 describe("organizer submission forms page", () => {
@@ -127,14 +122,11 @@ describe("organizer submission forms page", () => {
     expect(redirect).toHaveBeenCalledWith("/forms")
     expect(from).not.toHaveBeenCalled()
   })
-  it("renders settings, questions, visibility, tracks, and submitted projects", async () => {
-    const html = renderToStaticMarkup(
-      await page({ event: event.slug, projectsPage: "2" })
-    )
+  it("renders settings, questions, visibility, teams, and tracks without projects", async () => {
+    const html = renderToStaticMarkup(await page({ event: event.slug }))
     expect(rpc).toHaveBeenCalledWith("admin_project_questions", {
       p_event_id: id,
     })
-    expect(getSubmittedProjects).toHaveBeenCalledWith(id, 2)
     for (const text of [
       "Submission Forms",
       "Existing submission settings",
@@ -142,11 +134,11 @@ describe("organizer submission forms page", () => {
       "Judge visibility true",
       "Team settings 4 false",
       "Existing track settings",
-      "Submitted projects",
     ])
       expect(html).toContain(text)
     expect(html).toContain('href="/submission-forms?event=fall-2026"')
     expect(html).not.toContain("Assignments")
+    expect(html).not.toContain("Submitted projects")
   })
   it("requires saved settings before tracks and visibility", async () => {
     responses.event_competition_settings = { data: null, error: null }

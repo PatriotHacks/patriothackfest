@@ -1,35 +1,45 @@
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
-vi.mock("@/app/(admin)/applications/actions", () => ({
-  applicationFileUrl: vi.fn(),
-}))
 vi.mock("@/app/(admin)/project-submissions/actions", () => ({
   projectFileUrl: vi.fn(),
 }))
 
-import { SubmittedProjectsList } from "./projects"
-import { SubmittedProjectDetails } from "./project-details"
-import type {
-  SubmittedProjectDetail,
-  SubmittedProjects,
-} from "@/lib/organizer-projects"
+import { ProjectsList } from "./projects-list"
+import { ProjectDetails } from "./project-details"
+import type { EventProjects, ProjectDetail } from "@/lib/organizer-projects"
 
 const id = "a0000000-0000-4000-8000-000000000001"
+const draftId = "a0000000-0000-4000-8000-000000000002"
 const event = { slug: "fall-2026", name: "Fall 2026" }
-const data: SubmittedProjects = {
+const all = { status: null, page: 1 }
+const data: EventProjects = {
   has_more: true,
+  required_count: 3,
+  counts: { draft: 1, submitted: 1, withdrawn: 0 },
   projects: [
     {
       id,
       name: "Demo",
+      status: "submitted",
       submitted_at: "2026-11-15T05:00:00Z",
+      updated_at: "2026-11-16T05:00:00Z",
       owner: { id, full_name: "Owner" },
-      tracks: [{ id, name: "Sponsor A", active: false }],
+      answered_count: 3,
+    },
+    {
+      id: draftId,
+      name: "Sketch",
+      status: "draft",
+      submitted_at: null,
+      updated_at: "2026-11-14T05:00:00Z",
+      owner: { id, full_name: "Drafter" },
+      answered_count: 1,
     },
   ],
 }
-const detail: SubmittedProjectDetail = {
+const tracks = [{ id, name: "Sponsor A", active: false }]
+const detail: ProjectDetail = {
   project: {
     id,
     event_id: id,
@@ -40,7 +50,7 @@ const detail: SubmittedProjectDetail = {
   },
   owner: { id, full_name: "Owner" },
   collaborators: [{ id, full_name: "Collaborator" }],
-  tracks: data.projects[0]!.tracks,
+  tracks,
   answers: [
     {
       question_id: id,
@@ -58,77 +68,120 @@ const detail: SubmittedProjectDetail = {
     },
   ],
 }
+const empty: EventProjects = {
+  projects: [],
+  has_more: false,
+  required_count: 0,
+  counts: { draft: 0, submitted: 0, withdrawn: 0 },
+}
 
-describe("organizer submitted projects", () => {
-  it("shows summary fields, inactive labels, Eastern dates and event-scoped detail links", () => {
+describe("organizer project list", () => {
+  it("shows status badges, labelled times, completion, and event-scoped detail links", () => {
     const html = renderToStaticMarkup(
-      createElement(SubmittedProjectsList, {
-        eventSlug: event.slug,
-        page: 1,
-        data,
-      })
+      createElement(ProjectsList, { eventSlug: event.slug, query: all, data })
     )
     for (const text of [
       "Demo",
+      "Sketch",
       "Owner",
-      "Sponsor A",
-      "(inactive)",
-      "America/New_York",
+      "Draft",
+      "Submitted",
+      "Submitted <time",
+      "Updated <time",
       "Nov 15",
+      "Nov 14",
+      "3 / 3 required",
+      "1 / 3 required",
       "View project",
     ])
       expect(html).toContain(text)
-    expect(html).toContain(`/submission-forms/projects/${id}?event=fall-2026`)
-    expect(html).toContain("projectsPage=1")
+    expect(html).not.toContain("Nov 16")
+    expect(html).toContain(`/project-submissions/${id}?event=fall-2026`)
+    expect(html).toContain(`/project-submissions/${draftId}?event=fall-2026`)
     expect(html).toContain(">Next</a>")
     expect(html).not.toContain(">Previous</a>")
   })
-  it("preserves pagination and distinguishes an empty later page", () => {
+  it("filters by status with counts and hides withdrawn when there are none", () => {
     const html = renderToStaticMarkup(
-      createElement(SubmittedProjectsList, {
+      createElement(ProjectsList, {
         eventSlug: event.slug,
-        page: 3,
-        data: { projects: [], has_more: false },
+        query: { status: "draft", page: 1 },
+        data,
       })
     )
-    expect(html).toContain("No submitted projects on this page")
-    expect(html).toContain("projectsPage=2#submitted-projects")
+    expect(html).toMatch(
+      /aria-current="page"[^>]*href="\/project-submissions\?event=fall-2026&amp;status=draft&amp;projectsPage=1"/
+    )
+    expect(html).toContain(
+      'href="/project-submissions?event=fall-2026&amp;projectsPage=1"'
+    )
+    expect(html).toContain("status=submitted")
+    expect(html).not.toContain("Withdrawn")
+    expect(html).toContain("status=draft&amp;projectsPage=2")
+  })
+  it("offers the withdrawn filter only when withdrawn projects exist", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectsList, {
+        eventSlug: event.slug,
+        query: all,
+        data: { ...empty, counts: { draft: 0, submitted: 0, withdrawn: 2 } },
+      })
+    )
+    expect(html).toContain("Withdrawn")
+    expect(html).toContain("status=withdrawn")
+  })
+  it("preserves pagination and distinguishes an empty later page", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectsList, {
+        eventSlug: event.slug,
+        query: { status: "submitted", page: 3 },
+        data: empty,
+      })
+    )
+    expect(html).toContain("No projects on this page")
+    expect(html).toContain("status=submitted&amp;projectsPage=2")
     expect(html).toContain(">First page</a>")
     expect(html).not.toContain(">Next</a>")
   })
-  it("renders a clear first-page empty state without inventing failures or totals", () => {
+  it("renders a clear first-page empty state", () => {
     const html = renderToStaticMarkup(
-      createElement(SubmittedProjectsList, {
+      createElement(ProjectsList, {
         eventSlug: event.slug,
-        page: 1,
-        data: { projects: [], has_more: false },
+        query: all,
+        data: empty,
       })
     )
-    expect(html).toContain("No submitted projects for this event yet")
+    expect(html).toContain("No projects match this filter yet")
     expect(html).not.toContain("<table")
   })
-  it("uses unnamed/general-only fallbacks and escapes submitted names", () => {
+  it("uses unnamed fallbacks, escapes names, and handles events without required questions", () => {
     const project = {
       ...data.projects[0]!,
       name: "<script>alert(1)</script>",
       owner: { id, full_name: null },
-      tracks: [],
     }
     const html = renderToStaticMarkup(
-      createElement(SubmittedProjectsList, {
+      createElement(ProjectsList, {
         eventSlug: event.slug,
-        page: 1,
-        data: { projects: [project], has_more: false },
+        query: all,
+        data: { ...empty, projects: [project] },
       })
     )
     expect(html).toContain("Unnamed participant")
-    expect(html).toContain("None (general judging only)")
+    expect(html).toContain("None required")
     expect(html).not.toContain("<script>alert(1)</script>")
     expect(html).toContain("&lt;script&gt;")
   })
+})
+
+describe("organizer project detail", () => {
   it("renders complete read-only detail and context-preserving back navigation", () => {
     const html = renderToStaticMarkup(
-      createElement(SubmittedProjectDetails, { event, detail, page: 2 })
+      createElement(ProjectDetails, {
+        event,
+        detail,
+        query: { status: "submitted", page: 2 },
+      })
     )
     for (const text of [
       "Owner",
@@ -142,11 +195,33 @@ describe("organizer submitted projects", () => {
       "No answer",
     ])
       expect(html).toContain(text)
-    expect(html).toContain("projectsPage=2#submitted-projects")
+    expect(html).toContain(
+      'href="/project-submissions?event=fall-2026&amp;status=submitted&amp;projectsPage=2"'
+    )
+    expect(html).toContain("Back to project submissions")
     expect(html).not.toContain("Project links")
     expect(html).not.toContain("<form")
     expect(html).not.toContain("<input")
     expect(html).not.toContain("<button")
+  })
+  it("opens drafts read-only with a draft badge and no submission time", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectDetails, {
+        event,
+        query: all,
+        detail: {
+          ...detail,
+          project: { ...detail.project, status: "draft", submitted_at: null },
+        },
+      })
+    )
+    expect(html).toContain(">Draft</span>")
+    expect(html).toContain("Read-only organizer view of a draft")
+    expect(html).toContain("What inspired you?")
+    expect(html).toContain("Last updated")
+    expect(html).not.toContain(">Submitted</dt>")
+    expect(html).not.toContain("<form")
+    expect(html).not.toContain("<input")
   })
   it("never renders the project name as HTML", () => {
     const unsafe = {
@@ -154,7 +229,7 @@ describe("organizer submitted projects", () => {
       project: { ...detail.project, name: '<img src=x onerror="alert(1)">' },
     }
     const html = renderToStaticMarkup(
-      createElement(SubmittedProjectDetails, { event, detail: unsafe, page: 1 })
+      createElement(ProjectDetails, { event, detail: unsafe, query: all })
     )
     expect(html).toContain("&lt;img")
     expect(html).not.toContain("<img src=x")
@@ -168,9 +243,9 @@ describe("organizer submitted projects", () => {
     ]
     const base = { question_id: id, options: null }
     const html = renderToStaticMarkup(
-      createElement(SubmittedProjectDetails, {
+      createElement(ProjectDetails, {
         event,
-        page: 1,
+        query: all,
         detail: {
           ...detail,
           answers: [

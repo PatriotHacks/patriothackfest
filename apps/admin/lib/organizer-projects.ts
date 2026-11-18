@@ -15,28 +15,36 @@ const trackSchema = z.object({
 })
 const timestamp = z.iso.datetime({ offset: true })
 
-export const submittedProjectsSchema = z.object({
+export const projectStatusSchema = z.enum(["draft", "submitted", "withdrawn"])
+export type ProjectStatus = z.infer<typeof projectStatusSchema>
+const count = z.number().int().min(0)
+
+export const eventProjectsSchema = z.object({
   projects: z
     .array(
       z.object({
         id: z.guid(),
         name: z.string(),
-        submitted_at: timestamp,
+        status: projectStatusSchema,
+        submitted_at: timestamp.nullable(),
+        updated_at: timestamp,
         owner: personSchema,
-        tracks: z.array(trackSchema),
+        answered_count: count,
       })
     )
     .max(PROJECT_PAGE_SIZE),
   has_more: z.boolean(),
+  required_count: count,
+  counts: z.object({ draft: count, submitted: count, withdrawn: count }),
 })
 
-export const submittedProjectDetailSchema = z.object({
+export const projectDetailSchema = z.object({
   project: z.object({
     id: z.guid(),
     event_id: z.guid(),
-    status: z.literal("submitted"),
+    status: projectStatusSchema,
     name: z.string(),
-    submitted_at: timestamp,
+    submitted_at: timestamp.nullable(),
     updated_at: timestamp,
   }),
   owner: personSchema,
@@ -45,10 +53,16 @@ export const submittedProjectDetailSchema = z.object({
   answers: z.array(projectQuestionAnswerSchema),
 })
 
-export type SubmittedProjects = z.infer<typeof submittedProjectsSchema>
-export type SubmittedProjectDetail = z.infer<
-  typeof submittedProjectDetailSchema
->
+export type EventProjects = z.infer<typeof eventProjectsSchema>
+export type ProjectDetail = z.infer<typeof projectDetailSchema>
+export type ProjectTrack = ProjectDetail["tracks"][number]
+export type ProjectsQuery = { status: ProjectStatus | null; page: number }
+
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  draft: "Draft",
+  submitted: "Submitted",
+  withdrawn: "Withdrawn",
+}
 
 export function parseProjectsPage(value: unknown) {
   if (typeof value !== "string" || !/^[1-9][0-9]*$/.test(value)) return 1
@@ -56,16 +70,28 @@ export function parseProjectsPage(value: unknown) {
   return parsed.success ? parsed.data : 1
 }
 
-export function submittedProjectsHref(eventSlug: string, page: number) {
-  return `/submission-forms?${new URLSearchParams({ event: eventSlug, projectsPage: String(page) })}#submitted-projects`
+export function parseProjectStatus(value: unknown) {
+  const parsed = projectStatusSchema.safeParse(value)
+  return parsed.success ? parsed.data : null
 }
 
-export function submittedProjectHref(
+function projectsQueryParams(eventSlug: string, query: ProjectsQuery) {
+  const params = new URLSearchParams({ event: eventSlug })
+  if (query.status) params.set("status", query.status)
+  params.set("projectsPage", String(query.page))
+  return params
+}
+
+export function projectsHref(eventSlug: string, query: ProjectsQuery) {
+  return `/project-submissions?${projectsQueryParams(eventSlug, query)}`
+}
+
+export function projectHref(
   eventSlug: string,
   projectId: string,
-  page: number
+  query: ProjectsQuery
 ) {
-  return `/submission-forms/projects/${encodeURIComponent(projectId)}?${new URLSearchParams({ event: eventSlug, projectsPage: String(page) })}`
+  return `/project-submissions/${encodeURIComponent(projectId)}?${projectsQueryParams(eventSlug, query)}`
 }
 
 export function projectPersonLabel(person: {

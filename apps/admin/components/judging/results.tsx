@@ -15,7 +15,7 @@ import {
   type JudgingResults,
   type ResultsFilters,
 } from "@/lib/judging-results"
-import { submittedProjectHref } from "@/lib/organizer-projects"
+import { projectHref } from "@/lib/organizer-projects"
 
 export function ResultsSection({
   eventSlug,
@@ -132,11 +132,10 @@ export function ResultsSection({
                         <TableCell className="break-words whitespace-normal">
                           <Link
                             className="underline"
-                            href={submittedProjectHref(
-                              eventSlug,
-                              project.project_id,
-                              projectsPage
-                            )}
+                            href={projectHref(eventSlug, project.project_id, {
+                              status: null,
+                              page: projectsPage,
+                            })}
                           >
                             {project.project_name.trim() || "Untitled project"}
                           </Link>
