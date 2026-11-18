@@ -53,7 +53,7 @@ export function ApplicantSidebar({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const nav = [
     { href: "/", label: "Dashboard", icon: LayoutDashboardIcon },
-    { href: "/projects", label: "Projects", icon: FolderOpenIcon },
+    { href: "/projects", label: "Project Submission", icon: FolderOpenIcon },
     ...(applicationId
       ? [
           {
