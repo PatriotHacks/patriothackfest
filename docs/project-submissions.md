@@ -9,7 +9,7 @@ This implements Person B's workflow on `feat/submissions-and-judging`. C1 judge 
 - `/projects/[eventSlug]/[projectId]`: a Team section at the top and, after opening, content editing/submission.
 - Every team member can edit, upload files, and submit; only the owner can remove teammates. See [Project teams](project-teams.md).
 - Exact-email addition of registered eligible teammates by any member; no user directory or invitations.
-- Save draft, Submit project, and Save changes. The app has no withdraw action.
+- Drafts autosave and show teammates' saved changes live; submitted projects use Submit project, then Save changes. The app has no withdraw action. See [Draft autosave](#draft-autosave).
 - Optional multi-track selection; all submitted projects enter general judging.
 - Closed/disabled/withdrawn projects remain readable to associated people, but not editable.
 - OTP login returns to a validated project link without changing ordinary admissions login routing.
@@ -82,9 +82,9 @@ pnpm --filter admin dev
 ### Open, save, and submit
 
 1. As organizer, move project opening into the past; keep closing unset. Refresh A's project page.
-2. Save an incomplete draft. Reload; it persists, without being marked submitted.
+2. Type into an incomplete draft. The status near the top reads Saving…, then Saved about 2 seconds after you stop typing (immediately on leaving the field, choosing an option, or finishing an upload). Reload; it persists, without being marked submitted. There is no Save draft button.
 3. Fill in the project name and answer every required project question. Nothing else is built in.
-4. Select tracks A and B and submit **without saving those latest edits first**. Submission atomically saves the latest form/track values.
+4. Select tracks A and B and click Submit within 2 seconds of your last keystroke. Submit flushes pending edits first, then submits the stored draft. The heading shows the saved name.
 5. Verify Submitted status after reload, both selected tracks, and the saved answers. B can edit and save the same project.
 6. Make and save a complete change before closing. The project stays submitted. Clearing required fields and saving should fail with field errors; the previous valid submission remains intact.
 7. A and B no longer see Create project for this event, and the database rejects a second project. A solo project and zero sponsor tracks are also valid.
@@ -93,13 +93,14 @@ pnpm --filter admin dev
 
 1. Before judging starts, deactivate a selected sponsor track in admin. Reload the project.
 2. Verify the selected track is shown as unavailable, not silently removed. Uncheck it before saving again.
-3. Edit a field, then click an internal back/sidebar link: confirm before discarding unsaved changes. A full reload/tab close also warns. This is a basic warning, not cross-tab synchronization or local draft storage.
-4. Open the project in two tabs (or as A and B), save content in one, then try saving old content in the other. It should say someone else saved and offer Reload page, preserving that tab's input rather than overwriting the newer save. Reload deliberately after copying any changes you want to keep.
+3. Edit a field and immediately reload or click an internal link: the browser warns while edits are unsaved, in flight, or uploading. Once the status reads Saved, leaving does not warn.
+4. Submitted projects keep manual saving. Open a submitted project in two tabs (or as A and B), save content in one, then try saving old content in the other. It should say someone else saved and offer Reload page, preserving that tab's input rather than overwriting the newer save.
+5. Go offline (DevTools) and type in a draft: the status reads "Couldn't save — retrying" and retries with backoff; reconnecting saves it. Enter an invalid URL: the field shows its error, and other fields keep autosaving.
 
 ### Close
 
 1. Keep another project open in a tab. As organizer, set submission closing in the past (after opening).
-2. A refreshed project becomes read-only. A save from the already-open old tab must fail without silently submitting or discarding its local field values.
+2. A refreshed project becomes read-only. An autosave or save from the already-open old tab must fail without silently submitting or discarding its local field values.
 3. Roster changes and new projects are also blocked after closing.
 4. Start judging in admin. This is permanent for the sandbox, so use a new event slug to repeat the full test.
 5. Extend judging end. Participant editing must remain locked. Existing content/collaborators/track selections must still be readable.
@@ -141,6 +142,9 @@ participant_add_project_collaborator(p_project_id, p_email)
 participant_remove_project_collaborator(p_project_id, p_user_id)
 participant_leave_project(p_project_id)
 participant_save_project(p_project_id, p_content, p_answers, p_track_ids, p_submit, p_expected_updated_at)
+participant_patch_project(p_project_id, p_name, p_answers, p_track_ids)
+participant_submit_project(p_project_id, p_expected_updated_at)
+participant_project_version(p_project_id)
 participant_withdraw_project(p_project_id)
 ```
 
@@ -154,3 +158,14 @@ participant_withdraw_project(p_project_id)
 - Mutations lock settings before the project and check current database time. Existing Start judging triggers remain the final freeze guard.
 - Read RPCs use caller identity; never query them with a service-role browser key.
 - Person A/C can consume submitted project rows/selected tracks under their own appropriately authorized operations. This work does not grant judge access or implement scoring.
+
+## Draft autosave
+
+Migration `20261120000001_project_autosave.sql`. Apply it before deploying the app; draft editors call these RPCs as soon as they open.
+
+- `participant_patch_project` saves only the fields sent: `p_name` (null leaves the name alone), `p_answers` (keys merged into the stored answers; JSON `null`, blank text, or `[]` clears a key) and `p_track_ids` (null leaves tracks alone, otherwise replaces the selection). It runs the same member, eligibility, window, and judging-lock checks as saving, and only while the project is a draft (`PT409` once submitted). Only the patched keys are validated, with the same per-type rules, archived-option normalization, and stored file metadata as a full save; required questions wait for submission. There is no stale check: the later patch wins per field. It returns `updated_at`, the stored `name`, the normalized patched `answers`, and `removed_paths`.
+- `removed_paths` lists files that a patched file question no longer references and that no other answer references, computed under the project row lock. The server action deletes them with the caller's session, where the storage policy rechecks that no answer references the file.
+- `participant_project_version` returns `updated_at` for a project the caller can access, or null. Open draft editors poll it every 4 seconds while the tab is visible and refetch `participant_project_detail` only when it changes. Teammates' changes replace a field unless the user is focused in it or has unsaved or in-flight edits there; those keep the local value, and the user's save then wins. Fields replaced this way show "Updated by a teammate". Polling was chosen over Realtime because the projects table stays default-deny and the poll is one indexed lookup.
+- Submit flushes pending edits, then calls `participant_submit_project`. It submits the stored name, tracks, and answers rather than this tab's copy, through `participant_save_project` with the same full validation, stale check, and member eligibility. If a teammate saved after this tab last synced, it fails with `PT409`; the editor pulls their changes and asks the user to review and submit again.
+- The page heading follows the saved project name, including teammates' changes.
+- Submitted projects keep the manual Save changes flow with the stale check and required-question recheck.
