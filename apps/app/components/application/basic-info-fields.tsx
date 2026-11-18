@@ -77,6 +77,7 @@ export function BasicInfoFields({
           onBlur={onBlur}
           disabled={disabled}
           aria-invalid={a11y("full_name").invalid}
+          aria-required
           aria-describedby={a11y("full_name").describedBy}
         />
       )}
@@ -127,6 +128,7 @@ export function BasicInfoFields({
           onBlur={onBlur}
           disabled={dateOfBirthDisabled}
           aria-invalid={a11y("date_of_birth").invalid}
+          aria-required
           aria-describedby={a11y("date_of_birth").describedBy}
         />
       )}

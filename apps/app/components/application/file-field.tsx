@@ -132,6 +132,7 @@ export function FileField({
             }}
             disabled={uploading}
             aria-invalid={invalid || error !== null}
+            aria-required={field.required}
             aria-describedby={invalid ? fieldErrorId(field.id) : undefined}
           />
         </label>

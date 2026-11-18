@@ -45,6 +45,7 @@ export function DateOfBirthEditor({ initial }: { initial: string }) {
         onChange={(e) => change(e.target.value)}
         onBlur={() => void save.flush()}
         aria-invalid={error !== null}
+        aria-required
         aria-describedby={error ? ERROR_ID : undefined}
       />
       {error ? (

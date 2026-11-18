@@ -54,6 +54,7 @@ export function PhoneField({
         onBlur={onBlur}
         disabled={disabled}
         aria-invalid={invalid}
+        aria-required
         aria-describedby={describedBy}
       />
     </div>
