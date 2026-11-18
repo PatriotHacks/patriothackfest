@@ -38,3 +38,15 @@ export async function getNamedApplicant() {
   if (!fullName) redirect("/welcome")
   return { ...applicant, fullName }
 }
+
+export const getSubmittedApplications = cache(async () => {
+  const { supabase, userId } = await getApplicant()
+  const { data, error } = await supabase
+    .from("applications")
+    .select("id, role, events(starts_at, ends_at)")
+    .eq("user_id", userId)
+    .neq("status", "draft")
+    .order("created_at", { ascending: false })
+  if (error) throw new Error(error.message)
+  return data
+})

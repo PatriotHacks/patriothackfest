@@ -33,19 +33,21 @@ import {
   LayoutDashboardIcon,
   SettingsIcon,
 } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 
+import { LogoLockup } from "@/components/logo-lockup"
 import { signOut } from "@/lib/auth-actions"
 
 export function ApplicantSidebar({
   applicationId,
   email,
+  view,
 }: {
   applicationId?: string
   email: string
+  view: "participant" | "mentor"
 }) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
@@ -69,14 +71,7 @@ export function ApplicantSidebar({
     <Sidebar>
       <SidebarHeader className="px-4 pt-5 pb-3">
         <Link href="/" onClick={() => setOpenMobile(false)} className="w-fit">
-          <Image
-            src="/logo.png"
-            alt="Patriot HackFest"
-            width={400}
-            height={211}
-            preload
-            className="h-[42px] w-auto"
-          />
+          <LogoLockup view={view} imageClassName="h-[42px]" preload />
         </Link>
       </SidebarHeader>
       <SidebarContent>
