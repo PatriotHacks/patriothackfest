@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 vi.mock("@/app/(projects)/projects/actions", () => ({
   saveProject: vi.fn(),
+  patchProject: vi.fn(),
+  submitProject: vi.fn(),
   addProjectCollaborator: vi.fn(),
   removeProjectCollaborator: vi.fn(),
   leaveProject: vi.fn(),
@@ -107,11 +109,12 @@ const typedDetail: ProjectDetail = {
 }
 
 describe("project form views", () => {
-  it("renders explicit draft/save/submit controls and optional tracks", () => {
+  it("autosaves drafts with a status indicator, submit, and optional tracks", () => {
     const html = renderToStaticMarkup(
       createElement(ProjectEditor, { detail, editable: true })
     )
-    expect(html).toContain("Save draft")
+    expect(html).toMatch(/role="status"[^>]*>Saved</)
+    expect(html).not.toContain("Save draft")
     expect(html).toContain("Submit project")
     expect(html).toContain("Sponsor tracks (optional)")
     expect(html).toMatch(
@@ -131,6 +134,7 @@ describe("project form views", () => {
     )
     expect(html).toContain("Save changes")
     expect(html).not.toContain("Submit project")
+    expect(html).not.toContain("Saving…")
   })
   it("renders no editable controls for collaborators or closed projects", () => {
     const html = renderToStaticMarkup(

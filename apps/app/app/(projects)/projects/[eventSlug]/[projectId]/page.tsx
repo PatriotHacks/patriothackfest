@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ProjectAvailability } from "@/components/project/availability"
 import { ProjectEditor } from "@/components/project/editor"
 import { ProjectTeam } from "@/components/project/team"
+import { ProjectTitle } from "@/components/project/project-title"
 import { getApplicant } from "@/lib/applicant"
 import { getProjectDetail, getProjectEvent } from "@/lib/project-data"
 import { canManageProject, projectPhase } from "@/lib/projects"
@@ -25,27 +26,29 @@ export default async function ProjectPage({
       <Link href={eventHref} className="text-sm underline">
         Back to event projects
       </Link>
-      <h1 className={cn(SERIF, "text-4xl")}>
-        {detail.project.name || "Untitled project"}
-      </h1>
-      <p className="capitalize">
-        {detail.project.status} · {isOwner ? "Project owner" : "Team member"}
-      </p>
-      <ProjectAvailability event={event} />
-      <article className={cn(PAPER, "flex flex-col gap-4 p-6")}>
-        <ProjectTeam
-          detail={detail}
-          userId={userId}
-          editable={editable}
-          eventHref={eventHref}
-        />
-        {projectPhase(event) !== "scheduled" && (
-          <ProjectEditor
+      <ProjectTitle
+        initial={detail.project.name}
+        className={cn(SERIF, "text-4xl")}
+      >
+        <p className="capitalize">
+          {detail.project.status} · {isOwner ? "Project owner" : "Team member"}
+        </p>
+        <ProjectAvailability event={event} />
+        <article className={cn(PAPER, "flex flex-col gap-4 p-6")}>
+          <ProjectTeam
             detail={detail}
-            editable={editable && projectPhase(event) === "open"}
+            userId={userId}
+            editable={editable}
+            eventHref={eventHref}
           />
-        )}
-      </article>
+          {projectPhase(event) !== "scheduled" && (
+            <ProjectEditor
+              detail={detail}
+              editable={editable && projectPhase(event) === "open"}
+            />
+          )}
+        </article>
+      </ProjectTitle>
     </div>
   )
 }

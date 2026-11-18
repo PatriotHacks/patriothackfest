@@ -59,7 +59,6 @@ describe("project fields", () => {
         content: {},
         answers: {},
         trackIds: [],
-        submit: false,
         updatedAt: "2026-11-15T05:00:00.123456+00:00",
         status: "submitted",
       }).success
@@ -74,7 +73,6 @@ describe("project fields", () => {
         content: {},
         answers: {},
         trackIds: [],
-        submit: false,
         updatedAt,
       }).updatedAt
     ).toBe(updatedAt)
@@ -97,7 +95,6 @@ describe("typed project answers", () => {
       content: {},
       answers,
       trackIds: [],
-      submit: false,
       updatedAt: "2026-11-15T05:00:00Z",
     })
 
