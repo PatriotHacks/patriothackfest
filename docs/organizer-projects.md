@@ -47,7 +47,7 @@ It shows the project name, question answers, owner/collaborator names, selected 
 - Each person is on at most one non-withdrawn project per event, so a person appears on at most one listed project ([Project teams](project-teams.md)).
 - There is no new acceptance/decision-release check on organizer reads. The saved project submission status determines inclusion.
 - Disabled events, closed submissions, started judging, or an elapsed judging deadline do not hide submitted projects from organizers.
-- This is a current read-only view, not a snapshot. Before closing, participants can still save valid changes or withdraw; refresh to see the current state. New submissions can move rows between pages until closing.
+- This is a current read-only view, not a snapshot. Before closing, participants can still save valid changes; refresh to see the current state. New submissions can move rows between pages until closing.
 - Detail event identity must match exactly. Missing/unknown event, malformed project ID, draft/withdrawn/missing project, or wrong event/project pair is not found; detail lookup never falls back to another event.
 - Admissions reviewers, judges, participants, and anonymous callers cannot use the organizer RPCs. Existing participant/member and judge access remains separate.
 - No profile contact details, application answers, resumes, or scores are included. Viewing never changes project content/status/timestamps or locks submissions.
@@ -62,7 +62,7 @@ It shows the project name, question answers, owner/collaborator names, selected 
 5. Use Back to submitted projects; event and page should be preserved. Switch events and verify only that event's projects appear.
 6. Copy a project-detail URL and change its event slug to another/unknown event: not found. A copied draft/withdrawn project ID must also be not found.
 7. Open an event with no submissions and verify the empty state. The automated fixtures cover 53 submissions, page boundaries, and tied timestamps if your real sandbox is small.
-8. If submissions are still open, save a participant change or withdraw a spare submitted project and refresh admin: content updates or the project disappears, respectively. The admin view itself must not cause either change.
+8. If submissions are still open, save a participant change and refresh admin: content updates. The admin view itself must not cause the change.
 9. If a previously selected track is already inactive, its label must remain visible. Track definitions cannot be changed after Start judging; use a separate pre-judging sandbox if you need to test that case.
 10. Confirm existing settings/tracks/judges and the user-verified C1 judge login still work. A reviewer visiting the organizer page redirects to Forms; participant/judge/anonymous attempts are denied by existing admin authentication and the new RPC checks.
 
