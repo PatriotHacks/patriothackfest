@@ -35,12 +35,6 @@ const detail: SubmittedProjectDetail = {
     event_id: id,
     status: "submitted",
     name: "Demo",
-    summary: "Summary",
-    description: "Description",
-    technologies: "TypeScript",
-    repository_url: null,
-    demo_url: "https://example.com",
-    video_url: null,
     submitted_at: "2026-11-15T05:00:00Z",
     updated_at: "2026-11-15T06:00:00Z",
   },
@@ -132,14 +126,11 @@ describe("organizer submitted projects", () => {
     expect(html).not.toContain("<script>alert(1)</script>")
     expect(html).toContain("&lt;script&gt;")
   })
-  it("renders complete read-only detail, safe new-tab links, and context-preserving back navigation", () => {
+  it("renders complete read-only detail and context-preserving back navigation", () => {
     const html = renderToStaticMarkup(
       createElement(SubmittedProjectDetails, { event, detail, page: 2 })
     )
     for (const text of [
-      "Summary",
-      "Description",
-      "TypeScript",
       "Owner",
       "Collaborator",
       "Sponsor A",
@@ -152,29 +143,21 @@ describe("organizer submitted projects", () => {
     ])
       expect(html).toContain(text)
     expect(html).toContain("projectsPage=2#submitted-projects")
-    expect(html).toContain('href="https://example.com"')
-    expect(html).toContain('target="_blank"')
-    expect(html).toContain('rel="noopener noreferrer"')
+    expect(html).not.toContain("Project links")
     expect(html).not.toContain("<form")
     expect(html).not.toContain("<input")
     expect(html).not.toContain("<button")
   })
-  it("never renders project text as HTML or links unsafe legacy URLs", () => {
+  it("never renders the project name as HTML", () => {
     const unsafe = {
       ...detail,
-      project: {
-        ...detail.project,
-        description: '<img src=x onerror="alert(1)">',
-        demo_url: "javascript:alert(1)",
-      },
+      project: { ...detail.project, name: '<img src=x onerror="alert(1)">' },
     }
     const html = renderToStaticMarkup(
       createElement(SubmittedProjectDetails, { event, detail: unsafe, page: 1 })
     )
     expect(html).toContain("&lt;img")
     expect(html).not.toContain("<img src=x")
-    expect(html).not.toContain('href="javascript:')
-    expect(html).toContain("No usable HTTP(S) project links")
   })
   it("renders typed answers as labels, safe links, and signed file links", () => {
     const optionA = "c0000000-0000-4000-8000-000000000001"
