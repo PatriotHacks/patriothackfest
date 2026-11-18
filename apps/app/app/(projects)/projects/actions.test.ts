@@ -12,8 +12,10 @@ import {
   addProjectCollaborator,
   createProject,
   leaveProject,
+  patchProject,
   removeProjectCollaborator,
   saveProject,
+  submitProject,
 } from "./actions"
 
 const id = "a0000000-0000-4000-8000-000000000001"
@@ -25,7 +27,6 @@ const input = {
   content: { name: "A" },
   answers: { [questionId]: " Answer " },
   trackIds: [],
-  submit: true,
   updatedAt,
 }
 beforeEach(() => {
@@ -37,7 +38,18 @@ beforeEach(() => {
     Promise.resolve(
       name === "participant_project_detail"
         ? { data: null, error: null }
-        : { data: updatedAt, error: null }
+        : name === "participant_patch_project"
+          ? {
+              data: {
+                updated_at: updatedAt,
+                name: "",
+                answers: {},
+                removed_paths: [],
+              },
+              error: null,
+              status: 200,
+            }
+          : { data: updatedAt, error: null }
     )
   )
 })
@@ -46,10 +58,12 @@ describe("project mutations", () => {
   it("authenticates every action", async () => {
     await createProject(id)
     await saveProject(input)
+    await patchProject({ projectId: id, answers: {} })
+    await submitProject({ projectId: id, updatedAt })
     await addProjectCollaborator(id, "a@example.com")
     await removeProjectCollaborator(id, id)
     await leaveProject(id)
-    expect(getApplicant).toHaveBeenCalledTimes(5)
+    expect(getApplicant).toHaveBeenCalledTimes(7)
   })
   it("does not write when authentication fails", async () => {
     getApplicant.mockRejectedValue(new Error("Sign in"))
@@ -57,7 +71,7 @@ describe("project mutations", () => {
     await expect(saveProject(input)).rejects.toThrow("Sign in")
     expect(rpc).not.toHaveBeenCalled()
   })
-  it("submits the current content and tracks atomically, preserving revision precision", async () => {
+  it("saves submitted content and tracks atomically, preserving revision precision", async () => {
     expect(await saveProject(input)).toEqual({ error: null, updatedAt })
     expect(rpc).toHaveBeenCalledWith(
       "participant_save_project",
@@ -66,7 +80,6 @@ describe("project mutations", () => {
         p_content: expect.objectContaining(input.content),
         p_answers: { [questionId]: "Answer" },
         p_track_ids: [],
-        p_submit: true,
         p_expected_updated_at: updatedAt,
       })
     )
@@ -92,15 +105,6 @@ describe("project mutations", () => {
     expect((await removeProjectCollaborator(id, "bad")).error).toBeTruthy()
     expect((await leaveProject("bad")).error).toBeTruthy()
     expect(rpc).not.toHaveBeenCalled()
-  })
-  it("saves incomplete drafts without requiring a reviewable link", async () => {
-    expect(
-      (await saveProject({ ...input, submit: false, content: {} })).error
-    ).toBeNull()
-    expect(rpc).toHaveBeenCalledWith(
-      "participant_save_project",
-      expect.objectContaining({ p_submit: false })
-    )
   })
   it("does not report success or revalidate failed saves", async () => {
     rpc.mockResolvedValue({
@@ -211,5 +215,148 @@ describe("replaced project files", () => {
       stale: true,
     })
     expect(remove).not.toHaveBeenCalled()
+  })
+})
+
+describe("draft autosave", () => {
+  const fileQuestion = "b0000000-0000-4000-8000-000000000002"
+  const path = `${id}/${fileQuestion}/c0000000-0000-4000-8000-000000000001.pdf`
+  const patched = (removed: string[] = []) => ({
+    data: {
+      updated_at: updatedAt,
+      name: "A",
+      answers: { [questionId]: "Answer" },
+      removed_paths: removed,
+    },
+    error: null,
+    status: 200,
+  })
+
+  it("sends only the changed fields", async () => {
+    rpc.mockResolvedValue(patched())
+    expect(
+      await patchProject({
+        projectId: id,
+        answers: { [questionId]: " Answer " },
+      })
+    ).toEqual({
+      error: null,
+      updatedAt,
+      name: "A",
+      answers: { [questionId]: "Answer" },
+    })
+    expect(rpc).toHaveBeenCalledWith("participant_patch_project", {
+      p_project_id: id,
+      p_name: undefined,
+      p_answers: { [questionId]: "Answer" },
+      p_track_ids: undefined,
+    })
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+  it("keeps cleared answers and rejects bad input before writing", async () => {
+    rpc.mockResolvedValue(patched())
+    await patchProject({
+      projectId: id,
+      name: " B ",
+      answers: { [questionId]: null },
+    })
+    expect(rpc).toHaveBeenCalledWith(
+      "participant_patch_project",
+      expect.objectContaining({
+        p_name: "B",
+        p_answers: { [questionId]: null },
+      })
+    )
+    rpc.mockClear()
+    expect(
+      (
+        await patchProject({
+          projectId: id,
+          name: "a".repeat(121),
+          answers: {},
+        })
+      ).fieldErrors?.name
+    ).toBeTruthy()
+    expect(
+      (await patchProject({ projectId: id, answers: {}, status: "submitted" }))
+        .error
+    ).toBeTruthy()
+    expect(rpc).not.toHaveBeenCalled()
+  })
+  it("deletes files the database reports as replaced", async () => {
+    rpc.mockResolvedValue(patched([path, "other-project/file.pdf"]))
+    await patchProject({ projectId: id, answers: { [fileQuestion]: null } })
+    expect(remove).toHaveBeenCalledWith([path])
+  })
+  it("flags network and server failures as retryable only", async () => {
+    for (const [status, retry] of [
+      [0, true],
+      [503, true],
+      [422, undefined],
+    ] as const) {
+      rpc.mockResolvedValue({
+        data: null,
+        error: { code: status === 422 ? "PT422" : "", message: "Failed" },
+        status,
+      })
+      expect((await patchProject({ projectId: id, answers: {} })).retry).toBe(
+        retry
+      )
+    }
+    expect(remove).not.toHaveBeenCalled()
+  })
+  it("reports a submitted project as stale", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { code: "PT409", message: "This project was submitted." },
+      status: 409,
+    })
+    expect(await patchProject({ projectId: id, answers: {} })).toEqual({
+      error: STALE_PROJECT_MESSAGE,
+      stale: true,
+    })
+  })
+})
+
+describe("draft submission", () => {
+  it("submits the stored draft at the synced revision", async () => {
+    expect(await submitProject({ projectId: id, updatedAt })).toEqual({
+      error: null,
+      updatedAt,
+    })
+    expect(rpc).toHaveBeenCalledWith("participant_submit_project", {
+      p_project_id: id,
+      p_expected_updated_at: updatedAt,
+    })
+    expect(revalidatePath).toHaveBeenCalledWith("/projects", "layout")
+  })
+  it("rejects client content and malformed input before calling the database", async () => {
+    expect(
+      (
+        await submitProject({
+          projectId: id,
+          updatedAt,
+          content: { name: "A" },
+        })
+      ).error
+    ).toBeTruthy()
+    expect(
+      (await submitProject({ projectId: "bad", updatedAt })).error
+    ).toBeTruthy()
+    expect(rpc).not.toHaveBeenCalled()
+  })
+  it("surfaces stored-content field errors without revalidating", async () => {
+    rpc.mockResolvedValue({
+      error: {
+        code: "PT422",
+        message: "Some project fields need attention",
+        details: '{"name":"This field is required"}',
+      },
+    })
+    expect(await submitProject({ projectId: id, updatedAt })).toEqual({
+      error: "Some project fields need attention",
+      fieldErrors: { name: "This field is required" },
+    })
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })

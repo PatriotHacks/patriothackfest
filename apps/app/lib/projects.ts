@@ -10,13 +10,25 @@ import {
 import type { Database } from "@workspace/supabase/types"
 import * as z from "zod"
 
-const text = (max: number) =>
-  z.string().trim().max(max, `Use ${max} characters or fewer`).default("")
-export const projectContentSchema = z.object({ name: text(120) }).strict()
+const name = z.string().trim().max(120, "Use 120 characters or fewer")
+export const projectContentSchema = z
+  .object({ name: name.default("") })
+  .strict()
 
 export const completeProjectContentSchema = projectContentSchema.refine(
   (value) => Boolean(value.name),
   { path: ["name"], message: "This field is required" }
+)
+
+const answersSchema = z.record(
+  z.guid(),
+  z
+    .union([
+      z.string().trim().max(MAX_PROJECT_ANSWER_LENGTH),
+      z.array(z.guid()).max(50),
+      fileAnswerSchema,
+    ])
+    .nullable()
 )
 
 export const projectSaveSchema = z
@@ -24,25 +36,39 @@ export const projectSaveSchema = z
     projectId: z.guid(),
     eventId: z.guid(),
     content: projectContentSchema,
-    answers: z.record(
-      z.guid(),
-      z
-        .union([
-          z.string().trim().max(MAX_PROJECT_ANSWER_LENGTH),
-          z.array(z.guid()).max(50),
-          fileAnswerSchema,
-        ])
-        .nullable()
-    ),
+    answers: answersSchema,
     trackIds: z.array(z.guid()),
-    submit: z.boolean(),
     updatedAt: z.iso.datetime({ offset: true }),
   })
   .strict()
 
+export const projectSubmitSchema = z
+  .object({
+    projectId: z.guid(),
+    updatedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict()
+
+export const projectPatchSchema = z
+  .object({
+    projectId: z.guid(),
+    name: name.optional(),
+    answers: answersSchema,
+    trackIds: z.array(z.guid()).optional(),
+  })
+  .strict()
+
+export const projectPatchResultSchema = z.object({
+  updated_at: z.string(),
+  name: z.string(),
+  answers: z.record(z.string(), z.unknown()),
+  removed_paths: z.array(z.string()),
+})
+
 export type ProjectContent = z.infer<typeof projectContentSchema>
 export type ProjectAnswers = Record<string, ProjectAnswer>
 export type ProjectSaveInput = z.input<typeof projectSaveSchema>
+export type ProjectPatchInput = z.input<typeof projectPatchSchema>
 // SQL RETURNS TABLE metadata does not encode nullable output columns.
 export type ProjectEvent = Omit<
   Database["public"]["Functions"]["participant_project_events"]["Returns"][number],
@@ -199,4 +225,8 @@ export function projectFailure(error: {
     }
   }
   return { error: error.message }
+}
+
+export function retryableStatus(status: number) {
+  return status === 0 || status >= 500
 }

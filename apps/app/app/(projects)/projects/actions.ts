@@ -10,8 +10,12 @@ import {
   fieldErrors,
   projectDetailSchema,
   projectFailure,
+  projectPatchResultSchema,
+  projectPatchSchema,
   projectSaveSchema,
+  projectSubmitSchema,
   replacedFilePaths,
+  retryableStatus,
 } from "@/lib/projects"
 
 export type ProjectResult = {
@@ -21,6 +25,14 @@ export type ProjectResult = {
   fieldErrors?: Record<string, string>
   stale?: true
 }
+
+export type ProjectPatchResult = ProjectResult & {
+  retry?: true
+  name?: string
+  answers?: Record<string, unknown>
+}
+
+const INVALID_FIELDS = "Some project fields need attention"
 
 export async function createProject(eventId: string): Promise<ProjectResult> {
   const { supabase } = await getApplicant()
@@ -34,23 +46,77 @@ export async function createProject(eventId: string): Promise<ProjectResult> {
   return { error: null, projectId: data }
 }
 
+// Drafts only. Later patches win per field; no stale check.
+export async function patchProject(
+  input: unknown
+): Promise<ProjectPatchResult> {
+  const { supabase } = await getApplicant()
+  const parsed = projectPatchSchema.safeParse(input)
+  if (!parsed.success)
+    return {
+      error: INVALID_FIELDS,
+      fieldErrors: fieldErrors(parsed.error.issues),
+    }
+  const value = parsed.data
+  const { data, error, status } = await supabase.rpc(
+    "participant_patch_project",
+    {
+      p_project_id: value.projectId,
+      p_name: value.name,
+      p_answers: value.answers,
+      p_track_ids: value.trackIds,
+    }
+  )
+  if (error)
+    return {
+      ...projectFailure(error),
+      ...(retryableStatus(status) && { retry: true as const }),
+    }
+  const result = projectPatchResultSchema.parse(data)
+  const removed = result.removed_paths.filter((path) =>
+    path.startsWith(`${value.projectId}/`)
+  )
+  if (removed.length > 0)
+    await supabase.storage.from(PROJECT_FILES_BUCKET).remove(removed)
+  return {
+    error: null,
+    updatedAt: result.updated_at,
+    name: result.name,
+    answers: result.answers,
+  }
+}
+
+// Submits the stored draft, so a teammate's newer autosaves are never
+// replaced by this client's copy.
+export async function submitProject(input: unknown): Promise<ProjectResult> {
+  const { supabase } = await getApplicant()
+  const parsed = projectSubmitSchema.safeParse(input)
+  if (!parsed.success) return { error: "Invalid project" }
+  const { data, error } = await supabase.rpc("participant_submit_project", {
+    p_project_id: parsed.data.projectId,
+    p_expected_updated_at: parsed.data.updatedAt,
+  })
+  if (error) return projectFailure(error)
+  revalidatePath("/projects", "layout")
+  return { error: null, updatedAt: data }
+}
+
+// Submitted projects only; every save rechecks required questions.
 export async function saveProject(input: unknown): Promise<ProjectResult> {
   const { supabase } = await getApplicant()
   const parsed = projectSaveSchema.safeParse(input)
   if (!parsed.success)
     return {
-      error: "Some project fields need attention",
+      error: INVALID_FIELDS,
       fieldErrors: fieldErrors(parsed.error.issues),
     }
   const value = parsed.data
-  if (value.submit) {
-    const complete = completeProjectContentSchema.safeParse(value.content)
-    if (!complete.success)
-      return {
-        error: "Some project fields need attention",
-        fieldErrors: fieldErrors(complete.error.issues),
-      }
-  }
+  const complete = completeProjectContentSchema.safeParse(value.content)
+  if (!complete.success)
+    return {
+      error: INVALID_FIELDS,
+      fieldErrors: fieldErrors(complete.error.issues),
+    }
   const before = await supabase.rpc("participant_project_detail", {
     p_project_id: value.projectId,
     p_event_id: value.eventId,
@@ -61,7 +127,6 @@ export async function saveProject(input: unknown): Promise<ProjectResult> {
     p_content: value.content,
     p_answers: value.answers,
     p_track_ids: value.trackIds,
-    p_submit: value.submit,
     p_expected_updated_at: value.updatedAt,
   })
   if (error) return projectFailure(error)
