@@ -21,12 +21,6 @@ const detail: ProjectDetail = {
     event_id: id,
     owner_user_id: id,
     name: "Demo",
-    summary: "Summary",
-    description: "Description",
-    technologies: "",
-    repository_url: null,
-    demo_url: "https://example.com",
-    video_url: null,
     status: "draft",
     submitted_at: null,
     updated_at: "2026-11-15T05:00:00Z",
@@ -138,7 +132,7 @@ describe("project form views", () => {
     const html = renderToStaticMarkup(
       createElement(ProjectEditor, { detail, editable: false })
     )
-    expect(html).toContain("Summary")
+    expect(html).toContain("Our &lt;b&gt;story&lt;/b&gt;")
     expect(html).not.toContain("<input")
     expect(html).not.toContain("Submit project")
   })
@@ -201,16 +195,14 @@ describe("project form views", () => {
     )
     expect(blank).toContain("No answer")
   })
-  it("does not render unsafe URLs as clickable links", () => {
+  it("renders the project name as the only built-in field", () => {
     const html = renderToStaticMarkup(
-      createElement(ProjectReadOnly, {
-        detail: {
-          ...detail,
-          project: { ...detail.project, demo_url: "javascript:alert(1)" },
-        },
-      })
+      createElement(ProjectEditor, { detail, editable: true })
     )
-    expect(html).not.toContain("javascript:")
+    expect(html).toContain("Project name")
+    expect(html).toContain('value="Demo"')
+    expect(html).not.toContain("Short summary")
+    expect(html).not.toContain("Repository")
   })
   it("renders typed inputs for choice, URL, and file questions", () => {
     const html = renderToStaticMarkup(

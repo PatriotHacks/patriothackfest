@@ -34,33 +34,16 @@ describe("project fields", () => {
     expect(projectContentSchema.safeParse({}).success).toBe(true)
     expect(completeProjectContentSchema.safeParse({}).success).toBe(false)
   })
-  it("requires only short text and one reviewable link", () => {
-    expect(
-      completeProjectContentSchema.parse({
-        name: " A ",
-        summary: "B",
-        description: "C",
-        video_url: "https://example.com",
-      }).name
-    ).toBe("A")
+  it("requires only a project name to submit", () => {
+    expect(completeProjectContentSchema.parse({ name: " A " }).name).toBe("A")
+    expect(completeProjectContentSchema.safeParse({ name: " " }).success).toBe(
+      false
+    )
   })
-  it.each([
-    "javascript:alert(1)",
-    "https://",
-    "ftp://example.com",
-    "https://a b.test",
-    "https://user:pass@example.com",
-    "https:\\example.com",
-  ])("rejects unsafe/invalid link %s", (demo_url) => {
-    expect(projectContentSchema.safeParse({ demo_url }).success).toBe(false)
-  })
-  it("accepts blank optional links and ordinary local demo links", () => {
+  it("rejects removed built-in fields", () => {
     expect(
-      projectContentSchema.parse({
-        demo_url: " ",
-        repository_url: "http://localhost:3000",
-      }).demo_url
-    ).toBe("")
+      projectContentSchema.safeParse({ name: "A", summary: "B" }).success
+    ).toBe(false)
   })
   it("rejects excess lengths and privilege fields", () => {
     expect(
@@ -138,12 +121,6 @@ describe("typed project answers", () => {
         event_id: id,
         owner_user_id: id,
         name: "",
-        summary: "",
-        description: "",
-        technologies: "",
-        repository_url: null,
-        demo_url: null,
-        video_url: null,
         status: "draft",
         submitted_at: null,
         updated_at: "2026-11-15T05:00:00Z",

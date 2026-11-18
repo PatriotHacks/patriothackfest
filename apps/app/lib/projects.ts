@@ -12,52 +12,11 @@ import * as z from "zod"
 
 const text = (max: number) =>
   z.string().trim().max(max, `Use ${max} characters or fewer`).default("")
-const projectUrl = text(2048).refine((value) => {
-  if (!value) return true
-  if (/\s|\\/.test(value)) return false
-  try {
-    const url = new URL(value)
-    return (
-      ["http:", "https:"].includes(url.protocol) &&
-      Boolean(url.host) &&
-      !url.username &&
-      !url.password
-    )
-  } catch {
-    return false
-  }
-}, "Enter an HTTP or HTTPS URL")
+export const projectContentSchema = z.object({ name: text(120) }).strict()
 
-export const projectContentSchema = z
-  .object({
-    name: text(120),
-    summary: text(300),
-    description: text(10_000),
-    technologies: text(1000),
-    repository_url: projectUrl,
-    demo_url: projectUrl,
-    video_url: projectUrl,
-  })
-  .strict()
-
-export const completeProjectContentSchema = projectContentSchema.superRefine(
-  (value, ctx) => {
-    for (const key of ["name", "summary", "description"] as const) {
-      if (!value[key])
-        ctx.addIssue({
-          code: "custom",
-          path: [key],
-          message: "This field is required",
-        })
-    }
-    if (!value.repository_url && !value.demo_url && !value.video_url) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["repository_url"],
-        message: "Add at least one repository, demo, or video URL",
-      })
-    }
-  }
+export const completeProjectContentSchema = projectContentSchema.refine(
+  (value) => Boolean(value.name),
+  { path: ["name"], message: "This field is required" }
 )
 
 export const projectSaveSchema = z
@@ -107,12 +66,6 @@ export const projectDetailSchema = z.object({
     event_id: z.guid(),
     owner_user_id: z.guid(),
     name: z.string(),
-    summary: z.string(),
-    description: z.string(),
-    technologies: z.string(),
-    repository_url: z.string().nullable(),
-    demo_url: z.string().nullable(),
-    video_url: z.string().nullable(),
     status: z.enum(["draft", "submitted", "withdrawn"]),
     submitted_at: z.string().nullable(),
     updated_at: z.string(),
@@ -177,15 +130,7 @@ export function canManageProject(event: ProjectEvent, now = Date.now()) {
 }
 
 export function projectContent(detail: ProjectDetail): ProjectContent {
-  return {
-    name: detail.project.name,
-    summary: detail.project.summary,
-    description: detail.project.description,
-    technologies: detail.project.technologies,
-    repository_url: detail.project.repository_url ?? "",
-    demo_url: detail.project.demo_url ?? "",
-    video_url: detail.project.video_url ?? "",
-  }
+  return { name: detail.project.name }
 }
 
 export function projectAnswers(detail: ProjectDetail): ProjectAnswers {
