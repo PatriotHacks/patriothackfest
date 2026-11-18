@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-const { rpc, getApplicant, notFound } = vi.hoisted(() => ({
+const { rpc, from, getApplicant, notFound } = vi.hoisted(() => ({
   rpc: vi.fn(),
+  from: vi.fn(),
   getApplicant: vi.fn(),
   notFound: vi.fn(() => {
     throw new Error("Not found")
@@ -10,6 +11,7 @@ vi.mock("server-only", () => ({}))
 vi.mock("@/lib/applicant", () => ({ getApplicant }))
 vi.mock("next/navigation", () => ({ notFound }))
 import {
+  getCurrentProjectEvent,
   getProjectDetail,
   getProjectEvent,
   getProjectEvents,
@@ -18,7 +20,7 @@ import {
 const id = "a0000000-0000-4000-8000-000000000001"
 beforeEach(() => {
   vi.clearAllMocks()
-  getApplicant.mockResolvedValue({ supabase: { rpc } })
+  getApplicant.mockResolvedValue({ supabase: { rpc, from } })
 })
 
 describe("scoped project reads", () => {
@@ -56,6 +58,59 @@ describe("scoped project reads", () => {
     })
     await expect(getProjectEvents()).rejects.toThrow("Database unavailable")
     await expect(getProjectDetail(id, id)).rejects.toThrow(
+      "Database unavailable"
+    )
+  })
+})
+
+describe("getCurrentProjectEvent", () => {
+  const other = "a0000000-0000-4000-8000-000000000002"
+  function eventsQuery(result: { data: unknown; error: unknown }) {
+    const query = {
+      select: vi.fn(() => query),
+      in: vi.fn(() => query),
+      order: vi.fn(() => query),
+      then: (resolve: (value: unknown) => void) => resolve(result),
+    }
+    from.mockReturnValue(query)
+    return query
+  }
+
+  it("selects the earliest listed event that has not ended", async () => {
+    vi.useFakeTimers({ now: Date.parse("2026-05-01T00:00:00Z") })
+    rpc.mockResolvedValue({
+      data: [{ event_id: id }, { event_id: other }],
+      error: null,
+    })
+    const ended = {
+      id,
+      slug: "spring-2026",
+      starts_at: "2026-03-01T14:00:00Z",
+      ends_at: "2026-03-02T22:00:00Z",
+    }
+    const next = {
+      id: other,
+      slug: "fall-2026",
+      starts_at: "2026-10-13T14:00:00Z",
+      ends_at: null,
+    }
+    const query = eventsQuery({ data: [ended, next], error: null })
+    expect(await getCurrentProjectEvent()).toBe(next)
+    expect(from).toHaveBeenCalledWith("events")
+    expect(query.in).toHaveBeenCalledWith("id", [id, other])
+    vi.useRealTimers()
+  })
+
+  it("returns null without querying events when none are listed", async () => {
+    rpc.mockResolvedValue({ data: [], error: null })
+    expect(await getCurrentProjectEvent()).toBeNull()
+    expect(from).not.toHaveBeenCalled()
+  })
+
+  it("surfaces event query failures", async () => {
+    rpc.mockResolvedValue({ data: [{ event_id: id }], error: null })
+    eventsQuery({ data: null, error: { message: "Database unavailable" } })
+    await expect(getCurrentProjectEvent()).rejects.toThrow(
       "Database unavailable"
     )
   })
