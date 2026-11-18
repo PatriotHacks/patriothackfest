@@ -19,7 +19,7 @@ create function pg_temp.save_errors(p_answers jsonb,p_submit boolean default fal
 declare v_detail text;
 begin
   perform public.participant_save_project('a4500000-0000-0000-0000-000000000001',
-    '{"name":"Demo","summary":"Summary","description":"Description","demo_url":"https://example.com"}'::jsonb,
+    '{"name":"Demo"}'::jsonb,
     p_answers,'{}',p_submit,(pg_temp.detail()->'project'->>'updated_at')::timestamptz);
   return '{}'::jsonb;
 exception when sqlstate 'PT422' then

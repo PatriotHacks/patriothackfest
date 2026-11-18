@@ -26,8 +26,8 @@ insert into public.competition_tracks(id,event_id,name,active) values
  ('cd100000-0000-0000-0000-000000000002','ed100000-0000-0000-0000-000000000001','B',true),
  ('cd100000-0000-0000-0000-000000000003','ed100000-0000-0000-0000-000000000001','Inactive',false),
  ('cd100000-0000-0000-0000-000000000004','ed100000-0000-0000-0000-000000000002','Foreign',true);
-select set_config('test.content','{"name":" Demo ","summary":"Summary","description":"Description","demo_url":"https://example.com"}',true);
-select plan(44);
+select set_config('test.content','{"name":" Demo "}',true);
+select plan(41);
 select pg_temp.login(1);
 select set_config('test.project',public.participant_create_project('ed100000-0000-0000-0000-000000000001')::text,true);
 select throws_ok($$select pg_temp.save()$$,'P0001','Project submissions have not opened yet','cannot save even empty content before opening');
@@ -41,12 +41,10 @@ select throws_ok($$select pg_temp.save('{}','{}',true)$$,'PT422',null,'complete 
 select throws_ok($$select pg_temp.save('{"name":42}')$$,'PT422',null,'content types checked in database');
 select throws_ok($$select pg_temp.save('{"owner_user_id":"bad"}')$$,'PT422',null,'cannot inject owner/status fields');
 select throws_ok($$select pg_temp.save(jsonb_build_object('name',repeat('x',121)))$$,'PT422',null,'length limits checked');
-select throws_ok($$select pg_temp.save('{"demo_url":"javascript:alert(1)"}')$$,'PT422',null,'unsafe URL rejected');
-select throws_ok($$select pg_temp.save('{"demo_url":"https://"}')$$,'PT422',null,'URL needs host');
-select throws_ok($$select pg_temp.save('{"demo_url":"https://example.com:invalid"}')$$,'PT422',null,'non-numeric port rejected in direct RPC');
-select throws_ok($$select pg_temp.save('{"demo_url":"https://example.com:99999"}')$$,'PT422',null,'out of range port rejected');
-select throws_ok($$select pg_temp.save(jsonb_build_object('demo_url','https://example.com' || chr(92) || 'path'))$$,'PT422',null,'URL backslashes rejected');
-select lives_ok($$select pg_temp.save('{"demo_url":"http://[::1]:3000/demo"}')$$,'IPv6 demo link with port is valid');
+select throws_ok($$select pg_temp.save('{"name":"Demo","summary":"Summary"}')$$,'PT422',null,'removed built-in fields rejected');
+select throws_ok($$select pg_temp.save('{"name":"  "}','{}',true)$$,'PT422',null,'blank name rejected on submit');
+select ok(not exists(select 1 from information_schema.columns where table_schema='public' and table_name='projects'
+  and column_name in ('summary','description','technologies','repository_url','demo_url','video_url')),'removed project columns dropped');
 select throws_ok($$select pg_temp.save(current_setting('test.content')::jsonb,array['cd100000-0000-0000-0000-000000000003'::uuid])$$,'PT422',null,'inactive track rejected');
 select throws_ok($$select pg_temp.save(current_setting('test.content')::jsonb,array['cd100000-0000-0000-0000-000000000004'::uuid])$$,'PT422',null,'foreign track rejected');
 select lives_ok($$select pg_temp.save(current_setting('test.content')::jsonb,array['cd100000-0000-0000-0000-000000000001'::uuid,'cd100000-0000-0000-0000-000000000002'::uuid],true)$$,'latest content and multiple tracks submit together');
@@ -59,7 +57,7 @@ select ok(public.participant_project_detail(current_setting('test.project')::uui
 select throws_ok($$select pg_temp.save(current_setting('test.content')::jsonb,array['cd100000-0000-0000-0000-000000000002'::uuid])$$,'PT422',null,'must explicitly remove deactivated selection before saving');
 select is(jsonb_array_length(public.participant_project_detail(current_setting('test.project')::uuid,'ed100000-0000-0000-0000-000000000001')->'selected_tracks'),2,'invalid track save preserves existing selections atomically');
 select set_config('test.first_submission',public.participant_project_detail(current_setting('test.project')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'submitted_at',true);
-select throws_ok($$select pg_temp.save('{"name":"Invalid change"}')$$,'PT422',null,'submitted project cannot become incomplete through draft save');
+select throws_ok($$select pg_temp.save('{"name":" "}')$$,'PT422',null,'submitted project cannot become incomplete through draft save');
 select is(public.participant_project_detail(current_setting('test.project')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'name','Demo','failed validation rolls back content');
 select lives_ok($$select pg_temp.save(current_setting('test.content')::jsonb,'{}',true)$$,'repeat submit succeeds with no sponsor tracks');
 select is(public.participant_project_detail(current_setting('test.project')::uuid,'ed100000-0000-0000-0000-000000000001')->'project'->>'submitted_at',current_setting('test.first_submission'),'first submission timestamp preserved');
