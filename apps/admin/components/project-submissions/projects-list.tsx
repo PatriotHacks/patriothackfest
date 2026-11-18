@@ -21,6 +21,7 @@ import {
   type ProjectStatus,
   type ProjectsQuery,
 } from "@/lib/organizer-projects"
+import { TEXT_LINK } from "@/lib/styles"
 
 const STATUS_TONES = {
   draft: "amber",
@@ -116,7 +117,6 @@ export function ProjectsList({
                 <TableHead>Owner</TableHead>
                 <TableHead>Last updated</TableHead>
                 <TableHead>Required answers</TableHead>
-                <TableHead>Details</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,8 +127,13 @@ export function ProjectsList({
                 const at = submittedAt ?? project.updated_at
                 return (
                   <TableRow key={project.id}>
-                    <TableCell className="max-w-64 font-medium break-words whitespace-normal">
-                      {name}
+                    <TableCell className="max-w-64 break-words whitespace-normal">
+                      <Link
+                        href={projectHref(eventSlug, project.id, query)}
+                        className={TEXT_LINK}
+                      >
+                        {name}
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <ProjectStatusBadge status={project.status} />
@@ -144,15 +149,6 @@ export function ProjectsList({
                       {data.required_count === 0
                         ? "None required"
                         : `${project.answered_count} / ${data.required_count} required`}
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={projectHref(eventSlug, project.id, query)}
-                        className="underline"
-                        aria-label={`View ${name}`}
-                      >
-                        View project
-                      </Link>
                     </TableCell>
                   </TableRow>
                 )

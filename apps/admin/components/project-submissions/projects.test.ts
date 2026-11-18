@@ -92,12 +92,17 @@ describe("organizer project list", () => {
       "Nov 14",
       "3 / 3 required",
       "1 / 3 required",
-      "View project",
     ])
       expect(html).toContain(text)
     expect(html).not.toContain("Nov 16")
-    expect(html).toContain(`/project-submissions/${id}?event=fall-2026`)
-    expect(html).toContain(`/project-submissions/${draftId}?event=fall-2026`)
+    for (const [projectId, name] of [
+      [id, "Demo"],
+      [draftId, "Sketch"],
+    ])
+      expect(html).toContain(
+        `href="/project-submissions/${projectId}?event=fall-2026&amp;projectsPage=1">${name}</a>`
+      )
+    expect(html).not.toContain("View project")
     expect(html).toContain(">Next</a>")
     expect(html).not.toContain(">Previous</a>")
   })
