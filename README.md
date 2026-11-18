@@ -162,8 +162,9 @@ To open applications, set `event.startsOn` and `event.endsOn` (`YYYY-MM-DD`) and
 ### Project submissions and judging (in progress)
 
 Organizers/owners configure project submission dates, sponsor tracks, and paragraph
-questions in **Submission Forms** (`/submission-forms`) in the admin app, where they
-can also list and inspect submitted projects in read-only detail. Judging deadlines,
+questions in **Submission Forms** (`/submission-forms`) in the admin app, and browse
+every project, drafts included, in **Project Submissions** (`/project-submissions`)
+with status filters and required-question completion. Judging deadlines,
 judges, assignments, and results are in **Judging Management** (`/judging`). This is separate from admissions
 form deadlines. Competitions are disabled by default. Eligible participants can
 create projects, add collaborators, save drafts, and submit through `/projects`
@@ -193,7 +194,7 @@ revocation checks, and the assignment/review integration contract.
 See [Project questions](docs/project-questions.md) for organizer-defined
 questions, judge answer visibility, and the admin page split.
 
-See [Organizer submitted projects](docs/organizer-projects.md) for the submitted-only
+See [Organizer project submissions](docs/organizer-projects.md) for the project
 list/detail view, development migration, and manual verification checklist.
 
 See [Judging assignments](docs/judging-assignments.md) for A2 generation, capacity and

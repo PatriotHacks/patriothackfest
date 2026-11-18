@@ -2,7 +2,6 @@ import { Card, CardContent } from "@workspace/ui/components/card"
 import { redirect } from "next/navigation"
 
 import { CompetitionTrackForm } from "@/components/judging/track-form"
-import { SubmittedProjectsList } from "@/components/judging/projects"
 import { JudgeVisibilityToggle } from "@/components/submission-forms/judge-visibility"
 import { ProjectQuestions } from "@/components/submission-forms/questions"
 import { SubmissionSettingsForm } from "@/components/submission-forms/settings-form"
@@ -13,16 +12,13 @@ import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { adminProjectQuestionsSchema } from "@/lib/judging"
 import { hasLevel } from "@/lib/levels"
-import { getSubmittedProjects } from "@/lib/organizer-project-data"
-import { parseProjectsPage } from "@/lib/organizer-projects"
 
 export default async function SubmissionFormsPage({
   searchParams,
 }: PageProps<"/submission-forms">) {
   const { supabase, level } = await getAdmin()
   if (!hasLevel(level, "organizer")) redirect("/forms")
-  const { event: slug, projectsPage } = await searchParams
-  const page = parseProjectsPage(projectsPage)
+  const { event: slug } = await searchParams
   const { data: events, error: eventsError } = await supabase
     .from("events")
     .select("id, slug, name, starts_at, ends_at")
@@ -38,7 +34,7 @@ export default async function SubmissionFormsPage({
       />
     )
 
-  const [settings, tracks, questions, projects] = await Promise.all([
+  const [settings, tracks, questions] = await Promise.all([
     supabase
       .from("event_competition_settings")
       .select("*")
@@ -51,7 +47,6 @@ export default async function SubmissionFormsPage({
       .order("created_at")
       .order("id"),
     supabase.rpc("admin_project_questions", { p_event_id: event.id }),
-    getSubmittedProjects(event.id, page),
   ])
   if (settings.error) throw new Error(settings.error.message)
   if (tracks.error) throw new Error(tracks.error.message)
@@ -62,7 +57,7 @@ export default async function SubmissionFormsPage({
     <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="Submission Forms"
-        description="Project submission dates, sponsor tracks, project questions, and submitted projects. These do not change admissions applications."
+        description="Project submission dates, sponsor tracks, project questions, and team settings. These do not change admissions applications."
       />
       <EventTabs
         events={events}
@@ -169,11 +164,6 @@ export default async function SubmissionFormsPage({
           </>
         )}
       </section>
-      <SubmittedProjectsList
-        eventSlug={event.slug}
-        page={page}
-        data={projects}
-      />
     </div>
   )
 }

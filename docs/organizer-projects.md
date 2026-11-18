@@ -1,72 +1,69 @@
-# Organizer submitted-project visibility
+# Organizer project submissions
 
-Organizers/owners can inspect submitted projects inside admin **Submission Forms** (`/submission-forms`). This completes the project-visibility slice of A3, not assignments, review progress, or results.
+Organizers/owners browse every project for an event, drafts included, in the admin **Project Submissions** page (`/project-submissions`). Submission Forms (`/submission-forms`) keeps only the submission settings, question builder, team settings, and sponsor tracks. Admissions reviewers do not see the page in the sidebar and are redirected to Forms.
 
 ## 1. Development setup
 
-Verify root `.env` targets your **development** database and `apps/admin/.env.local` points to that same Supabase project. Apply the new migration without resetting or reseeding the events/accounts used for B3/C1:
+Verify root `.env` targets your **development** database and `apps/admin/.env.local` points to that same Supabase project. Apply the new migration without resetting or reseeding existing events/accounts:
 
 ```sh
 pnpm db:push
 pnpm --filter admin dev
 ```
 
-The migration is `supabase/migrations/20261114000001_admin_submitted_projects.sql`. Opening the new view before applying it will fail because its RPCs do not exist yet; do not treat that as an empty project list.
+The migration is `supabase/migrations/20261121000001_admin_event_projects.sql`. Apply it before deploying the admin app: the page calls its RPCs and fails (rather than showing an empty list) until they exist. The older `admin_submitted_projects` and `admin_submitted_project_detail` RPCs are left in place and are no longer called by the app.
 
-No new dependencies, Auth settings, service-role keys, application eligibility rules, or participant/judge permissions are needed. Sign in through the existing Google admin login with an organizer/owner account.
+No new dependencies, Auth settings, storage policies, or participant/judge permissions are needed. Sign in through the existing Google admin login with an organizer/owner account.
 
 ## 2. Where to look
 
-Open:
-
 ```text
-http://localhost:3002/submission-forms?event=YOUR_SANDBOX_SLUG
+http://localhost:3002/project-submissions?event=YOUR_SANDBOX_SLUG
 ```
 
-The **Submitted projects** section appears at the bottom of the page, after the submission settings, questions, and tracks. Each row shows:
+Event tabs select the event. Status tabs filter the list: **All**, **Draft**, **Submitted**, and **Withdrawn** (shown only when the event has withdrawn projects). Each tab shows the event-wide count for that status. Each row shows:
 
 - Project name.
+- Status badge (Draft, Submitted, or Withdrawn).
 - Owner display name (or an explicit unnamed-participant fallback).
-- Selected sponsor tracks, including inactive selections.
-- Submission time in America/New_York.
+- Last updated: "Submitted" with the submission time for submitted projects, otherwise "Updated" with the last save time. Times are in America/New_York.
+- Required answers: `answered / N required`, where N is the event's active (not archived) required questions. Events with no required questions show "None required".
 - A View project link.
 
-Use Previous/Next for pages of 50. Page links preserve the event and scroll to the submitted-project section. Switching event tabs resets pagination. No total count is invented from the current page; empty later pages have a First page link.
+Rows are ordered by that displayed time, newest first, with project ID as the tie-breaker. Use Previous/Next for pages of 50. Status and page links preserve the event; switching event or status resets to page 1. No total is invented from the current page; empty later pages have a First page link.
 
-The detail URL includes both project and event context:
+A required question counts as answered when its stored value is non-blank text, a chosen option, a non-empty multiple-choice array, or an uploaded file object. This matches what submission treats as answered; it does not re-run format or length validation.
+
+The detail URL includes the project, event, and list context:
 
 ```text
-/submission-forms/projects/PROJECT_UUID?event=YOUR_SANDBOX_SLUG&projectsPage=1
+/project-submissions/PROJECT_UUID?event=YOUR_SANDBOX_SLUG&status=draft&projectsPage=1
 ```
 
-It shows the project name, question answers, owner/collaborator names, selected tracks, submission time, and last-updated time. Back to submitted projects returns to the selected event/page.
+Drafts, submitted, and withdrawn projects open on the same read-only page with a status badge. It shows the question answers (file answers open through short-lived signed links), owner/collaborator names, selected tracks, submission time (submitted projects only), and last-updated time. Back to project submissions returns to the selected event, status, and page. Judging Management results and assignment links open this same page.
 
 ## 3. Inclusion and permissions
 
-- Only `status = submitted` projects appear in list or detail. Drafts and withdrawn projects are excluded, even if a withdrawn project retains its earlier submission timestamp.
-- Each person is on at most one non-withdrawn project per event, so a person appears on at most one listed project ([Project teams](project-teams.md)).
-- There is no new acceptance/decision-release check on organizer reads. The saved project submission status determines inclusion.
-- Disabled events, closed submissions, started judging, or an elapsed judging deadline do not hide submitted projects from organizers.
-- This is a current read-only view, not a snapshot. Before closing, participants can still save valid changes; refresh to see the current state. New submissions can move rows between pages until closing.
-- Detail event identity must match exactly. Missing/unknown event, malformed project ID, draft/withdrawn/missing project, or wrong event/project pair is not found; detail lookup never falls back to another event.
-- Admissions reviewers, judges, participants, and anonymous callers cannot use the organizer RPCs. Existing participant/member and judge access remains separate.
+- Every project status is included. A draft that was submitted and later reopened shows as a draft with its update time.
+- Each person is on at most one non-withdrawn project per event ([Project teams](project-teams.md)).
+- Disabled events, closed submissions, started judging, or an elapsed judging deadline do not hide projects from organizers.
+- This is a current read-only view, not a snapshot. Drafts autosave, so refresh to see the latest content. Saves can move rows between pages.
+- Detail event identity must match exactly. A missing/unknown event, malformed project ID, missing project, or wrong event/project pair is not found; detail lookup never falls back to another event.
+- Admissions reviewers, judges, participants, and anonymous callers cannot use the organizer RPCs. `project_file_readable` already lets organizers sign any project file, drafts included; judges remain limited to their assignments.
 - No profile contact details, application answers, resumes, or scores are included. Viewing never changes project content/status/timestamps or locks submissions.
-- Project names and answers render as text. Only HTTP(S) URL answers are clickable; no server-side fetching, previews, embeds, or raw HTML rendering.
+- Project names and answers render as text. Only HTTP(S) URL answers are clickable.
 
-## 4. Manual verification with your existing B3 data
+## 4. Manual verification
 
-1. Sign into admin as organizer/owner and select the sandbox used for submission testing.
-2. Verify every submitted project is listed. A saved-only draft and withdrawn spare project must not appear.
-3. Open View project. Compare content, owner/collaborator names, tracks, and timestamps with the participant's saved submission. Confirm there are no Edit/Save/Withdraw/assignment/score controls.
-4. Open a URL answer: it should open a new tab. Viewing must not change the participant's project state or timestamps.
-5. Use Back to submitted projects; event and page should be preserved. Switch events and verify only that event's projects appear.
-6. Copy a project-detail URL and change its event slug to another/unknown event: not found. A copied draft/withdrawn project ID must also be not found.
-7. Open an event with no submissions and verify the empty state. The automated fixtures cover 53 submissions, page boundaries, and tied timestamps if your real sandbox is small.
-8. If submissions are still open, save a participant change and refresh admin: content updates. The admin view itself must not cause the change.
-9. If a previously selected track is already inactive, its label must remain visible. Track definitions cannot be changed after Start judging; use a separate pre-judging sandbox if you need to test that case.
-10. Confirm existing settings/tracks/judges and the user-verified C1 judge login still work. A reviewer visiting the organizer page redirects to Forms; participant/judge/anonymous attempts are denied by existing admin authentication and the new RPC checks.
-
-Use existing authenticated accounts; this feature does not require a fresh SMTP/OTP setup or new seed data. Automated role tests cover permission cases for which you do not have extra manual accounts.
+1. Sign into admin as organizer/owner. **Project Submissions** appears in the sidebar after Submission Forms; with a reviewer account it does not, and visiting `/project-submissions` redirects to Forms.
+2. Select a sandbox event. All lists drafts and submitted projects; the counts on each tab match the rows.
+3. Filter by Draft and Submitted. Withdrawn appears only if the event has withdrawn projects.
+4. As a participant, save a draft answer to a required question and refresh the admin list: the draft's completion count and Updated time change.
+5. Archive a required question in Submission Forms: N drops and answers to it stop counting.
+6. Open a draft. Confirm the Draft badge, typed answers, team, and that a file answer opens. Confirm there are no Edit/Save/Submit controls.
+7. Use Back to project submissions; event, status, and page are preserved.
+8. From Judging Management results or assignments, open a project link: it lands on the same detail page.
+9. Submission Forms no longer shows a project list.
 
 ## 5. Tests and database contract
 
@@ -74,23 +71,21 @@ Use existing authenticated accounts; this feature does not require a fresh SMTP/
 pnpm test
 pnpm lint
 pnpm typecheck
-pnpm build
 pnpm db:test
 ```
 
-The new pgTAP file `34_admin_submitted_projects_test.sql` covers roles/auth methods, submitted-only filtering, event isolation, inactive tracks, bounded stable pagination, invalid pages/overflow, minimal person payloads, unchanged direct-table permissions, and unchanged stored project data.
+`49_admin_event_projects_test.sql` covers reviewer/participant/anonymous denial, organizer and owner access, drafts included, status filters and counts, sort order, completion per question type (blank text, empty and null choices, files, optional and archived questions), per-event isolation, draft detail, and organizer signing of draft files. `34_admin_submitted_projects_test.sql` still covers the older submitted-only RPCs.
 
-Admin Vitest tests cover typed/scoped reads, exact event resolution, invalid identity, database failure versus not found, pagination, escaped/read-only rendering, and detail-page authorization/navigation.
-
-Automated database verification uses an isolated local PostgreSQL/pgTAP instance with Supabase SQL fixtures. It does not replace the authenticated click-through above against real development Supabase/PostgREST. No hosted data or Auth settings are changed automatically.
+Admin Vitest tests cover status/page parsing, typed list/detail schemas, RPC arguments, exact event resolution, the redirect for reviewers, rendering of badges, completion, filters, pagination, and read-only draft detail.
 
 Read-only RPCs:
 
 ```text
-admin_submitted_projects(p_event_id, p_page = 1)
-admin_submitted_project_detail(p_event_id, p_project_id)
+admin_event_projects(p_event_id, p_status = null, p_page = 1)
+  -> {projects: [{id, name, status, submitted_at, updated_at, owner, answered_count}],
+      has_more, required_count, counts: {draft, submitted, withdrawn}}
+admin_project_detail(p_event_id, p_project_id)
+  -> {project, owner, collaborators, tracks, answers}
 ```
 
-Both enforce organizer authorization independently and use fixed search paths. Direct project/collaborator table access is still denied. The list returns at most 50 summaries plus a has-more indicator; detail explicitly projects the allowed project/participant/track fields rather than returning full profiles.
-
-The separate [A2 assignment area](judging-assignments.md) adds generation, coverage/loads, and untouched management. [C2/C3](judge-reviews.md) adds judge queues/scorecards; [A3 results](judging-results.md) adds contextual completed-review counts, averages, coverage flags, and ties. This submitted-project detail view remains read-only.
+Both enforce `has_admin_level('organizer')`, and use fixed search paths. An unknown status or a page below 1 raises `22023`. Direct project/collaborator table access is still denied.

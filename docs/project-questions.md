@@ -10,13 +10,15 @@ team names when that switch is on).
 
 ## Admin layout
 
-The organizer console has two competition pages (organizer/owner only):
+The organizer console has three competition pages (organizer/owner only):
 
 - **Submission Forms** (`/submission-forms?event=SLUG`): submission enablement and
   open/close dates, project questions, the **Judges can see question answers**
-  switch, sponsor tracks, and the submitted-projects list. Project detail lives at
-  `/submission-forms/projects/PROJECT_UUID?event=SLUG&projectsPage=N` and shows
-  answers with their question labels.
+  switch, team settings, and sponsor tracks.
+- **Project Submissions** (`/project-submissions?event=SLUG`): every project,
+  drafts included, with status filters and required-question completion. Project
+  detail lives at `/project-submissions/PROJECT_UUID?event=SLUG` and shows answers
+  with their question labels. See [Organizer project submissions](organizer-projects.md).
 - **Judging Management** (`/judging?event=SLUG`): judging end, general reviews per
   project, Start judging, judge roster, assignments, and results.
 
@@ -136,7 +138,7 @@ project_file_writable(name) / project_file_deletable(name) / project_file_readab
 
 `participant_project_detail` adds `questions` (active, ordered, with `type`,
 `options`, `validation`, `max_length`, `length_unit`) and the project's `answers`.
-`judge_assignment` and `admin_submitted_project_detail` return
+`judge_assignment` and `admin_project_detail` return
 `answers: [{question_id, label, type, options, answer}]` where `answer` is the
 stored JSON value or `null`; the organizer view ignores the switch. Clients render
 choice ids as their current labels and ignore ids no longer in `options`.

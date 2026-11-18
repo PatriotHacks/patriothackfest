@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest"
 import {
+  eventProjectsSchema,
   parseProjectsPage,
+  parseProjectStatus,
+  projectDetailSchema,
+  projectHref,
   projectPersonLabel,
-  submittedProjectDetailSchema,
-  submittedProjectHref,
-  submittedProjectsHref,
-  submittedProjectsSchema,
+  projectsHref,
 } from "./organizer-projects"
 
 describe("project page parsing", () => {
@@ -28,14 +29,35 @@ describe("project page parsing", () => {
     expect(parseProjectsPage("2")).toBe(2)
     expect(parseProjectsPage("2147483647")).toBe(2147483647)
   })
-  it("keeps event and page in detail/back links with query-safe encoding", () => {
-    expect(submittedProjectHref("fall-2026", "project-id", 2)).toBe(
-      "/submission-forms/projects/project-id?event=fall-2026&projectsPage=2"
+  it("keeps event, status, and page in detail/back links with query-safe encoding", () => {
+    expect(
+      projectHref("fall-2026", "project-id", { status: null, page: 2 })
+    ).toBe("/project-submissions/project-id?event=fall-2026&projectsPage=2")
+    expect(
+      projectHref("fall-2026", "project-id", { status: "draft", page: 1 })
+    ).toBe(
+      "/project-submissions/project-id?event=fall-2026&status=draft&projectsPage=1"
     )
-    expect(submittedProjectsHref("event&other=value", 3)).toBe(
-      "/submission-forms?event=event%26other%3Dvalue&projectsPage=3#submitted-projects"
+    expect(
+      projectsHref("event&other=value", { status: "submitted", page: 3 })
+    ).toBe(
+      "/project-submissions?event=event%26other%3Dvalue&status=submitted&projectsPage=3"
     )
   })
+})
+
+describe("project status parsing", () => {
+  it("accepts known statuses", () => {
+    expect(parseProjectStatus("draft")).toBe("draft")
+    expect(parseProjectStatus("submitted")).toBe("submitted")
+    expect(parseProjectStatus("withdrawn")).toBe("withdrawn")
+  })
+  it.each([undefined, "", "all", "Draft", ["draft"]])(
+    "treats %s as all statuses",
+    (value) => {
+      expect(parseProjectStatus(value)).toBeNull()
+    }
+  )
 })
 
 describe("read-only project values", () => {
@@ -51,16 +73,41 @@ describe("read-only project values", () => {
     )
   })
   it("validates bounded list/read models rather than masking malformed data", () => {
+    const empty = {
+      projects: [],
+      has_more: false,
+      required_count: 0,
+      counts: { draft: 0, submitted: 0, withdrawn: 0 },
+    }
+    expect(eventProjectsSchema.parse(empty)).toEqual(empty)
     expect(
-      submittedProjectsSchema.parse({ projects: [], has_more: false })
-    ).toEqual({ projects: [], has_more: false })
-    expect(
-      submittedProjectsSchema.safeParse({ projects: null, has_more: false })
-        .success
+      eventProjectsSchema.safeParse({ ...empty, projects: null }).success
     ).toBe(false)
     expect(
-      submittedProjectDetailSchema.safeParse({ project: { status: "draft" } })
-        .success
+      eventProjectsSchema.safeParse({ ...empty, required_count: -1 }).success
+    ).toBe(false)
+    expect(
+      projectDetailSchema.safeParse({ project: { status: "draft" } }).success
+    ).toBe(false)
+  })
+  it("accepts drafts without a submission time", () => {
+    const id = "a0000000-0000-4000-8000-000000000001"
+    const row = {
+      id,
+      name: "Demo",
+      status: "draft",
+      submitted_at: null,
+      updated_at: "2026-11-15T05:00:00Z",
+      owner: { id, full_name: null },
+      answered_count: 1,
+    }
+    expect(eventProjectsSchema.shape.projects.safeParse([row]).success).toBe(
+      true
+    )
+    expect(
+      eventProjectsSchema.shape.projects.safeParse([
+        { ...row, status: "archived" },
+      ]).success
     ).toBe(false)
   })
   it("parses typed question answers", () => {
@@ -76,13 +123,12 @@ describe("read-only project values", () => {
         type: "application/pdf",
       },
     }
+    expect(projectDetailSchema.shape.answers.safeParse([answer]).success).toBe(
+      true
+    )
     expect(
-      submittedProjectDetailSchema.shape.answers.safeParse([answer]).success
-    ).toBe(true)
-    expect(
-      submittedProjectDetailSchema.shape.answers.safeParse([
-        { ...answer, answer: 42 },
-      ]).success
+      projectDetailSchema.shape.answers.safeParse([{ ...answer, answer: 42 }])
+        .success
     ).toBe(false)
   })
 })

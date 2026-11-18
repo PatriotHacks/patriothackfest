@@ -5,27 +5,28 @@ import * as z from "zod"
 
 import { requireAdmin } from "./admin"
 import {
+  eventProjectsSchema,
+  projectDetailSchema,
   projectPageSchema,
-  submittedProjectDetailSchema,
-  submittedProjectsSchema,
+  projectStatusSchema,
+  type ProjectsQuery,
 } from "./organizer-projects"
 
-export async function getSubmittedProjects(eventId: string, page: number) {
+export async function getEventProjects(eventId: string, query: ProjectsQuery) {
   const { supabase } = await requireAdmin("organizer")
   const id = z.guid().parse(eventId)
-  const selectedPage = projectPageSchema.parse(page)
-  const { data, error } = await supabase.rpc("admin_submitted_projects", {
+  const page = projectPageSchema.parse(query.page)
+  const status = projectStatusSchema.nullable().parse(query.status)
+  const { data, error } = await supabase.rpc("admin_event_projects", {
     p_event_id: id,
-    p_page: selectedPage,
+    p_status: status ?? undefined,
+    p_page: page,
   })
   if (error) throw new Error(error.message)
-  return submittedProjectsSchema.parse(data)
+  return eventProjectsSchema.parse(data)
 }
 
-export async function getSubmittedProject(
-  eventSlug: unknown,
-  projectId: string
-) {
+export async function getProject(eventSlug: unknown, projectId: string) {
   const { supabase } = await requireAdmin("organizer")
   if (
     typeof eventSlug !== "string" ||
@@ -42,13 +43,13 @@ export async function getSubmittedProject(
     .maybeSingle()
   if (eventError) throw new Error(eventError.message)
   if (!event) notFound()
-  const { data, error } = await supabase.rpc("admin_submitted_project_detail", {
+  const { data, error } = await supabase.rpc("admin_project_detail", {
     p_event_id: event.id,
     p_project_id: id,
   })
   if (error) throw new Error(error.message)
   if (data === null) notFound()
-  const detail = submittedProjectDetailSchema.parse(data)
+  const detail = projectDetailSchema.parse(data)
   if (detail.project.event_id !== event.id || detail.project.id !== id)
     notFound()
   return { event, detail }

@@ -4,7 +4,7 @@ import type { ProjectQuestionAnswer } from "@workspace/forms"
 import { signedUrlOrThrow } from "@workspace/supabase/storage"
 import { ProjectAnswerView } from "@workspace/ui/components/project-answer"
 
-import { projectFileUrl } from "@/app/(admin)/submission-forms/actions"
+import { projectFileUrl } from "@/app/(admin)/project-submissions/actions"
 
 export function ProjectAnswers({
   answers,

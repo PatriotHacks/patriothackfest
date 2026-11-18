@@ -31,6 +31,7 @@ import {
   ChevronsUpDownIcon,
   ClipboardListIcon,
   FileTextIcon,
+  FolderKanbanIcon,
   InboxIcon,
   MailIcon,
   SettingsIcon,
@@ -64,6 +65,12 @@ const NAV: {
     href: "/submission-forms",
     label: "Submission Forms",
     icon: ClipboardListIcon,
+    min: "organizer",
+  },
+  {
+    href: "/project-submissions",
+    label: "Project Submissions",
+    icon: FolderKanbanIcon,
     min: "organizer",
   },
   {

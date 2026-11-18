@@ -5,7 +5,7 @@
 This document covers **Person A's A1 foundation**, not the complete judging system. Person B's participant workflow and C1 judge roster/access are now implemented; see [Participant project submissions](project-submissions.md) and [Judge roster and access](judge-access.md) for setup and rehearsal.
 
 - `/judging` in the existing admin app: per-event enablement, submission dates, judging end, general review target, and sponsor tracks.
-- Read-only submitted-project list/detail: see [Organizer submitted projects](organizer-projects.md). Drafts and withdrawn projects are excluded. A2 now adds [assignment generation and management](judging-assignments.md); scorecards/results remain follow-up work.
+- Read-only project list/detail, drafts included: see [Organizer project submissions](organizer-projects.md). A2 now adds [assignment generation and management](judging-assignments.md); scorecards/results remain follow-up work.
 - Organizer/owner-only navigation, page access, server actions, and database mutations.
 - Eight base tables matching the simplified plan, with generated TypeScript types.
 - Three admin RPCs for saving settings, saving tracks, and starting judging.
@@ -13,7 +13,7 @@ This document covers **Person A's A1 foundation**, not the complete judging syst
 - Optional submission closing, irreversible Start judging, and adjustable judging end even after expiry.
 - Database triggers lock projects/collaborators/selected tracks/track definitions after Start judging, including writes from later security-definer RPCs.
 
-Admissions forms, application deadlines, ordinary applicant login routing, admissions decisions, and existing application pages are unchanged. Project links additionally retain a validated return destination through OTP login. Competition settings are split across two admin pages: **Submission Forms** (`/submission-forms`: enablement, submission dates, sponsor tracks, project questions, submitted projects) and **Judging Management** (`/judging`: judging end, general reviews, Start judging, judges, assignments, results). See [Project questions](project-questions.md).
+Admissions forms, application deadlines, ordinary applicant login routing, admissions decisions, and existing application pages are unchanged. Project links additionally retain a validated return destination through OTP login. Competition settings are split across two admin pages: **Submission Forms** (`/submission-forms`: enablement, submission dates, sponsor tracks, project questions) and **Judging Management** (`/judging`: judging end, general reviews, Start judging, judges, assignments, results). See [Project questions](project-questions.md).
 
 ## Not implemented yet
 

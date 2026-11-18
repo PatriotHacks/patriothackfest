@@ -14,7 +14,7 @@ import {
   type AssignmentFilters,
   type AssignmentOverview,
 } from "@/lib/assignments"
-import { submittedProjectHref } from "@/lib/organizer-projects"
+import { projectHref } from "@/lib/organizer-projects"
 import { GenerateAssignments } from "./generate-assignments"
 import { AssignmentControls, ManualAssignmentForm } from "./assignment-controls"
 
@@ -154,11 +154,10 @@ export function AssignmentsSection({
                   <TableCell className="whitespace-normal">
                     <Link
                       className="underline"
-                      href={submittedProjectHref(
-                        eventSlug,
-                        context.project_id,
-                        projectsPage
-                      )}
+                      href={projectHref(eventSlug, context.project_id, {
+                        status: null,
+                        page: projectsPage,
+                      })}
                     >
                       {context.project_name}
                     </Link>
@@ -313,11 +312,10 @@ export function AssignmentsSection({
                   <TableCell className="whitespace-normal">
                     <Link
                       className="underline"
-                      href={submittedProjectHref(
-                        eventSlug,
-                        assignment.project_id,
-                        projectsPage
-                      )}
+                      href={projectHref(eventSlug, assignment.project_id, {
+                        status: null,
+                        page: projectsPage,
+                      })}
                     >
                       {assignment.project_name}
                     </Link>
