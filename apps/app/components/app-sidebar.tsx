@@ -16,8 +16,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
   useSidebar,
 } from "@workspace/ui/components/sidebar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip"
 import {
   SIDEBAR_ACCOUNT_ROW,
   SIDEBAR_ACCOUNT_TRIGGER,
@@ -26,7 +32,13 @@ import {
   SIDEBAR_MENU_ITEM,
 } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
-import { ChevronsUpDownIcon, SettingsIcon, type LucideIcon } from "lucide-react"
+import {
+  ChevronsUpDownIcon,
+  CircleUserRoundIcon,
+  LogOutIcon,
+  SettingsIcon,
+  type LucideIcon,
+} from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -53,20 +65,22 @@ export function AppSidebar({
   view: "participant" | "mentor" | "judging"
 }) {
   const pathname = usePathname()
-  const { setOpenMobile } = useSidebar()
+  const { isMobile, setOpenMobile, state } = useSidebar()
+  const collapsed = state === "collapsed" && !isMobile
   const [menuOpen, setMenuOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
-    <Sidebar>
-      <SidebarHeader className="px-4 pt-5 pb-3">
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="min-h-[74px] flex-row items-center justify-between overflow-hidden px-4 pt-5 pb-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
         <Link
           href={homeHref}
           onClick={() => setOpenMobile(false)}
-          className="w-fit"
+          className="w-fit group-data-[collapsible=icon]:hidden"
         >
           <LogoLockup view={view} imageClassName="h-[42px]" preload />
         </Link>
+        {!isMobile && <SidebarTrigger className="text-[#6E6E68]" />}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -76,6 +90,7 @@ export function AppSidebar({
                 <SidebarMenuButton
                   asChild
                   className={SIDEBAR_ITEM}
+                  tooltip={item.label}
                   isActive={
                     item.match
                       ? item.match(pathname)
@@ -93,24 +108,52 @@ export function AppSidebar({
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className={SIDEBAR_FOOTER}>
+      <SidebarFooter
+        className={cn(SIDEBAR_FOOTER, "group-data-[collapsible=icon]:p-2")}
+      >
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={cn(SIDEBAR_ACCOUNT_ROW, SIDEBAR_ACCOUNT_TRIGGER)}
-            >
-              <span className="min-w-0 flex-1 truncate" title={email}>
-                {email}
-              </span>
-              <ChevronsUpDownIcon className="size-4 shrink-0 text-[#6E6E68]" />
-            </button>
-          </PopoverTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={collapsed ? "Account" : undefined}
+                  className={cn(
+                    SIDEBAR_ACCOUNT_ROW,
+                    SIDEBAR_ACCOUNT_TRIGGER,
+                    collapsed && "size-8 justify-center px-0"
+                  )}
+                >
+                  {collapsed ? (
+                    <CircleUserRoundIcon className="size-4" />
+                  ) : (
+                    <>
+                      <span className="min-w-0 flex-1 truncate" title={email}>
+                        {email}
+                      </span>
+                      <ChevronsUpDownIcon className="size-4 shrink-0 text-[#6E6E68]" />
+                    </>
+                  )}
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right" hidden={!collapsed || menuOpen}>
+              {email}
+            </TooltipContent>
+          </Tooltip>
           <PopoverContent
-            side="top"
-            align="start"
-            className="w-(--radix-popover-trigger-width) gap-0 p-1 font-(family-name:--font-auth-sans)"
+            side={collapsed ? "right" : "top"}
+            align={collapsed ? "end" : "start"}
+            className={cn(
+              "gap-0 p-1 font-(family-name:--font-auth-sans)",
+              collapsed ? "w-56" : "w-(--radix-popover-trigger-width)"
+            )}
           >
+            {collapsed && (
+              <p className="truncate px-2 py-1.5 text-[13px] text-[#6E6E68]">
+                {email}
+              </p>
+            )}
             <button
               type="button"
               className={SIDEBAR_MENU_ITEM}
@@ -126,13 +169,25 @@ export function AppSidebar({
           </PopoverContent>
         </Popover>
         <form action={signOut}>
-          <Button
-            type="submit"
-            variant="outline"
-            className="w-full border-[#E7E4D9] bg-white text-[#3A4A2B] hover:bg-[#F3F1EA] hover:text-[#3A4A2B] focus-visible:border-[#8C9580] focus-visible:ring-[#8C9580]/50"
-          >
-            Sign out
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="submit"
+                variant="outline"
+                size={collapsed ? "icon" : "default"}
+                aria-label={collapsed ? "Sign out" : undefined}
+                className={cn(
+                  "border-[#E7E4D9] bg-white text-[#3A4A2B] hover:bg-[#F3F1EA] hover:text-[#3A4A2B] focus-visible:border-[#8C9580] focus-visible:ring-[#8C9580]/50",
+                  !collapsed && "w-full"
+                )}
+              >
+                {collapsed ? <LogOutIcon /> : "Sign out"}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" hidden={!collapsed}>
+              Sign out
+            </TooltipContent>
+          </Tooltip>
         </form>
       </SidebarFooter>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

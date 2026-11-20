@@ -3,6 +3,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar"
+import { cookies } from "next/headers"
 import Image from "next/image"
 
 import { AdminSidebar } from "@/components/admin-sidebar"
@@ -11,8 +12,9 @@ import { getAdmin } from "@/lib/admin"
 export default async function AdminLayout({ children }: LayoutProps<"/">) {
   const { email, level } = await getAdmin()
 
+  const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false"
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarOpen}>
       <AdminSidebar email={email} level={level} />
       <SidebarInset className="bg-white">
         <header className="flex items-center gap-3 border-b px-4 py-2 md:hidden">

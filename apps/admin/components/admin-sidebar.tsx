@@ -17,8 +17,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
   useSidebar,
 } from "@workspace/ui/components/sidebar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip"
 import {
   SIDEBAR_ACCOUNT_ROW,
   SIDEBAR_ACCOUNT_TRIGGER,
@@ -29,10 +35,12 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ChevronsUpDownIcon,
+  CircleUserRoundIcon,
   ClipboardListIcon,
   FileTextIcon,
   FolderKanbanIcon,
   InboxIcon,
+  LogOutIcon,
   MailIcon,
   SettingsIcon,
   ShieldIcon,
@@ -90,17 +98,18 @@ export function AdminSidebar({
   level: AdminLevel
 }) {
   const pathname = usePathname()
-  const { setOpenMobile } = useSidebar()
+  const { isMobile, setOpenMobile, state } = useSidebar()
+  const collapsed = state === "collapsed" && !isMobile
   const [menuOpen, setMenuOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
-    <Sidebar>
-      <SidebarHeader className="px-4 pt-5 pb-3">
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="min-h-[74px] flex-row items-center justify-between overflow-hidden px-4 pt-5 pb-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
         <Link
           href="/forms"
           onClick={() => setOpenMobile(false)}
-          className="flex w-fit items-center gap-3"
+          className="flex w-fit items-center gap-3 group-data-[collapsible=icon]:hidden"
         >
           <Image
             src="/logo.png"
@@ -114,6 +123,7 @@ export function AdminSidebar({
             Admin
           </span>
         </Link>
+        {!isMobile && <SidebarTrigger className="text-[#6E6E68]" />}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -123,6 +133,7 @@ export function AdminSidebar({
                 <SidebarMenuButton
                   asChild
                   className={SIDEBAR_ITEM}
+                  tooltip={item.label}
                   isActive={
                     pathname === item.href ||
                     pathname.startsWith(`${item.href}/`)
@@ -138,27 +149,64 @@ export function AdminSidebar({
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className={SIDEBAR_FOOTER}>
+      <SidebarFooter
+        className={cn(SIDEBAR_FOOTER, "group-data-[collapsible=icon]:p-2")}
+      >
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={cn(SIDEBAR_ACCOUNT_ROW, SIDEBAR_ACCOUNT_TRIGGER)}
-            >
-              <span className="min-w-0 flex-1 truncate" title={email}>
-                {email}
-              </span>
-              <Pill tone="sage" size="sm" className="shrink-0 capitalize">
-                {level}
-              </Pill>
-              <ChevronsUpDownIcon className="size-4 shrink-0 text-[#6E6E68]" />
-            </button>
-          </PopoverTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={collapsed ? "Account" : undefined}
+                  className={cn(
+                    SIDEBAR_ACCOUNT_ROW,
+                    SIDEBAR_ACCOUNT_TRIGGER,
+                    collapsed && "size-8 justify-center px-0"
+                  )}
+                >
+                  {collapsed ? (
+                    <CircleUserRoundIcon className="size-4" />
+                  ) : (
+                    <>
+                      <span className="min-w-0 flex-1 truncate" title={email}>
+                        {email}
+                      </span>
+                      <Pill
+                        tone="sage"
+                        size="sm"
+                        className="shrink-0 capitalize"
+                      >
+                        {level}
+                      </Pill>
+                      <ChevronsUpDownIcon className="size-4 shrink-0 text-[#6E6E68]" />
+                    </>
+                  )}
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right" hidden={!collapsed || menuOpen}>
+              {email}
+            </TooltipContent>
+          </Tooltip>
           <PopoverContent
-            side="top"
-            align="start"
-            className="w-(--radix-popover-trigger-width) gap-0 p-1"
+            side={collapsed ? "right" : "top"}
+            align={collapsed ? "end" : "start"}
+            className={cn(
+              "gap-0 p-1",
+              collapsed ? "w-60" : "w-(--radix-popover-trigger-width)"
+            )}
           >
+            {collapsed && (
+              <div className="flex items-center gap-2 px-2 py-1.5">
+                <span className="min-w-0 flex-1 truncate text-[13px] text-[#6E6E68]">
+                  {email}
+                </span>
+                <Pill tone="sage" size="sm" className="shrink-0 capitalize">
+                  {level}
+                </Pill>
+              </div>
+            )}
             <button
               type="button"
               className={SIDEBAR_MENU_ITEM}
@@ -174,9 +222,22 @@ export function AdminSidebar({
           </PopoverContent>
         </Popover>
         <form action={signOut}>
-          <Button type="submit" variant="outline" className="w-full">
-            Sign out
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="submit"
+                variant="outline"
+                size={collapsed ? "icon" : "default"}
+                aria-label={collapsed ? "Sign out" : undefined}
+                className={cn(!collapsed && "w-full")}
+              >
+                {collapsed ? <LogOutIcon /> : "Sign out"}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" hidden={!collapsed}>
+              Sign out
+            </TooltipContent>
+          </Tooltip>
         </form>
       </SidebarFooter>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

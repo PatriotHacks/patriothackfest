@@ -3,6 +3,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar"
+import { cookies } from "next/headers"
 
 import { JudgeSidebar } from "@/components/judge-sidebar"
 import { LogoLockup } from "@/components/logo-lockup"
@@ -16,8 +17,9 @@ export default async function JudgeLayout({
   // Authentication only: judges do not need an application or profile name.
   const { email } = await getApplicant()
   const applications = await getSubmittedApplications()
+  const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false"
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarOpen}>
       <JudgeSidebar applicationId={applications[0]?.id} email={email} />
       <SidebarInset className="bg-white text-[#3A4A2B]">
         <header className="flex items-center gap-3 border-b border-[#E7E4D9] px-4 py-2 md:hidden">
