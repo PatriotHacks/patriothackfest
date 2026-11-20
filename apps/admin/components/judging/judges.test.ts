@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 vi.mock("@/app/(admin)/judging/judges-actions", () => ({
   saveEventJudge: vi.fn(),
+  deleteEventJudge: vi.fn(),
 }))
 import { AddJudgeForm, EventJudgeForm, JudgeRoster } from "./judges"
 import type { JudgeRosterEntry } from "@/lib/judges"
@@ -48,6 +49,7 @@ describe("judge admin form", () => {
         eventId: id,
         tracks,
         judges: [judge, general],
+        started: false,
       })
     )
     expect(html).toContain('aria-label="Judges"')
@@ -59,6 +61,19 @@ describe("judge admin form", () => {
     expect(html).toContain('aria-label="Edit person@example.com"')
     expect(html).toContain('aria-expanded="false"')
     expect(html).not.toContain("Save judge")
+  })
+  it("offers delete only before judging starts", () => {
+    const render = (started: boolean) =>
+      renderToStaticMarkup(
+        createElement(JudgeRoster, {
+          eventId: id,
+          tracks,
+          judges: [judge],
+          started,
+        })
+      )
+    expect(render(false)).toContain('aria-label="Delete person@example.com"')
+    expect(render(true)).not.toContain("Delete")
   })
   it("keeps referenced inactive sponsor scopes visible and protected when editing", () => {
     const html = renderToStaticMarkup(
