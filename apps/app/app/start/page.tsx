@@ -3,8 +3,10 @@ import { redirect } from "next/navigation"
 
 import { isFormOpen } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
+import { getJudgeEvents } from "@/lib/judge-access"
 
 export default async function StartPage() {
+  if ((await getJudgeEvents()).length > 0) redirect("/judge")
   const { supabase, userId } = await getNamedApplicant()
 
   const [events, forms, applications] = await Promise.all([

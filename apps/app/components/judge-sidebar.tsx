@@ -3,6 +3,7 @@
 import {
   AwardIcon,
   ClipboardListIcon,
+  FileTextIcon,
   LayoutDashboardIcon,
   ListChecksIcon,
 } from "lucide-react"
@@ -10,9 +11,11 @@ import {
 import { AppSidebar } from "@/components/app-sidebar"
 
 export function JudgeSidebar({
+  applicationId,
   email,
   eventSlug,
 }: {
+  applicationId?: string
   email: string
   eventSlug?: string
 }) {
@@ -34,6 +37,15 @@ export function JudgeSidebar({
       : []),
     { href: "/judge/rubric", label: "Rubric", icon: ListChecksIcon },
     { href: "/judge/certificate", label: "Certificate", icon: AwardIcon },
+    ...(applicationId
+      ? [
+          {
+            href: `/applications/${applicationId}`,
+            label: "My application",
+            icon: FileTextIcon,
+          },
+        ]
+      : []),
   ]
   return <AppSidebar email={email} homeHref="/judge" nav={nav} view="judging" />
 }
