@@ -1,5 +1,16 @@
 "use client"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -13,7 +24,10 @@ import {
 } from "@workspace/ui/components/table"
 import { Fragment, useId, useState, useTransition } from "react"
 
-import { saveEventJudge } from "@/app/(admin)/judging/judges-actions"
+import {
+  deleteEventJudge,
+  saveEventJudge,
+} from "@/app/(admin)/judging/judges-actions"
 import { TableCard } from "@/components/table-card"
 import type { JudgeRosterEntry } from "@/lib/judges"
 
@@ -332,14 +346,88 @@ export function EventJudgeForm({
   )
 }
 
+function DeleteJudgeDialog({
+  eventId,
+  judge,
+}: {
+  eventId: string
+  judge: JudgeRosterEntry
+}) {
+  const [open, setOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        setError(null)
+      }}
+    >
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label={`Delete ${judge.email}`}
+        >
+          Delete
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete judge</AlertDialogTitle>
+          <AlertDialogDescription>
+            Remove {judge.email} from this event&apos;s judge roster. They lose
+            judge access for this event and are not emailed.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={pending}
+            onClick={(event) => {
+              event.preventDefault()
+              setError(null)
+              startTransition(async () => {
+                try {
+                  const result = await deleteEventJudge({
+                    eventId,
+                    judgeId: judge.id,
+                  })
+                  setError(result.error)
+                  if (!result.error) setOpen(false)
+                } catch {
+                  setError("Could not delete judge. Try again.")
+                }
+              })
+            }}
+          >
+            {pending ? "Deleting…" : "Delete judge"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
 export function JudgeRoster({
   eventId,
   judges,
   tracks,
+  started,
 }: {
   eventId: string
   judges: JudgeRosterEntry[]
   tracks: Track[]
+  started: boolean
 }) {
   const [editing, setEditing] = useState<string | null>(null)
 
@@ -396,16 +484,24 @@ export function JudgeRoster({
                         {judge.bound ? "Linked" : "Not linked yet"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          aria-expanded={open}
-                          aria-label={`Edit ${judge.email}`}
-                          onClick={() => setEditing(open ? null : judge.id)}
-                        >
-                          {open ? "Close" : "Edit"}
-                        </Button>
+                        <div className="inline-flex gap-2">
+                          {!started && (
+                            <DeleteJudgeDialog
+                              eventId={eventId}
+                              judge={judge}
+                            />
+                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            aria-expanded={open}
+                            aria-label={`Edit ${judge.email}`}
+                            onClick={() => setEditing(open ? null : judge.id)}
+                          >
+                            {open ? "Close" : "Edit"}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                     {open && (

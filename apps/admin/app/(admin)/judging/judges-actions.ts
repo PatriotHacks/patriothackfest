@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
-import { eventJudgeInput } from "@/lib/judges"
+import { deleteEventJudgeInput, eventJudgeInput } from "@/lib/judges"
 
 export async function saveEventJudge(input: unknown): Promise<ActionResult> {
   const { supabase } = await requireAdmin("organizer")
@@ -21,6 +21,19 @@ export async function saveEventJudge(input: unknown): Promise<ActionResult> {
     p_active: value.active,
     p_capacity: value.capacity,
     p_track_ids: value.trackIds,
+  })
+  if (error) return failure(error)
+  revalidatePath("/judging")
+  return ok
+}
+
+export async function deleteEventJudge(input: unknown): Promise<ActionResult> {
+  const { supabase } = await requireAdmin("organizer")
+  const parsed = deleteEventJudgeInput.safeParse(input)
+  if (!parsed.success) return failure({ message: "Invalid judge" })
+  const { error } = await supabase.rpc("admin_delete_event_judge", {
+    p_event_id: parsed.data.eventId,
+    p_judge_id: parsed.data.judgeId,
   })
   if (error) return failure(error)
   revalidatePath("/judging")
