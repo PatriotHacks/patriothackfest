@@ -1221,6 +1221,10 @@ export type Database = {
         Args: { p_event_id: string; p_question_ids: string[] }
         Returns: undefined
       }
+      admin_restore_application: {
+        Args: { p_application_id: string }
+        Returns: undefined
+      }
       admin_retry_failed_broadcast: {
         Args: { p_broadcast_id: string }
         Returns: number
@@ -1299,6 +1303,10 @@ export type Database = {
       admin_submitted_projects: {
         Args: { p_event_id: string; p_page?: number }
         Returns: Json
+      }
+      admin_withdraw_application: {
+        Args: { p_application_id: string }
+        Returns: undefined
       }
       application_answer_errors: {
         Args: { p_answers: Json; p_application_id: string; p_schema: Json }

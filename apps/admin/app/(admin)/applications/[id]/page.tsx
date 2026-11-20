@@ -29,6 +29,7 @@ import { AnswersView } from "@/components/answers-view"
 import { DecisionBadge } from "@/components/decision-badge"
 import { DecisionControl } from "@/components/decision-control"
 import { RoleChangeDialog } from "@/components/role-change-dialog"
+import { WithdrawApplicationDialog } from "@/components/withdraw-application-dialog"
 import { getAdmin } from "@/lib/admin"
 import {
   applyFilters,
@@ -149,6 +150,14 @@ export default async function ApplicationPage({
       : application.declined_at
         ? "Declined applications cannot change role."
         : null
+  const withdrawBlockedReason =
+    application.status === "withdrawn"
+      ? application.submitted_at
+        ? null
+        : "This application was withdrawn before it was submitted."
+      : application.declined_at
+        ? "Declined applications cannot be withdrawn."
+        : null
 
   const timeline = [
     { label: "Started", at: application.created_at },
@@ -265,6 +274,13 @@ export default async function ApplicationPage({
               applicationId={id}
               options={roleOptions}
               blockedReason={roleBlockedReason}
+            />
+          )}
+          {isOrganizer && application.status !== "draft" && (
+            <WithdrawApplicationDialog
+              applicationId={id}
+              withdrawn={application.status === "withdrawn"}
+              blockedReason={withdrawBlockedReason}
             />
           )}
         </CardContent>

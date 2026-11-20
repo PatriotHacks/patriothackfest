@@ -56,3 +56,33 @@ export async function changeApplicationRole(
   revalidatePath("/applications", "layout")
   return ok
 }
+
+export async function withdrawApplication(
+  applicationId: string
+): Promise<ActionResult> {
+  const id = z.guid().parse(applicationId)
+  const { supabase } = await requireAdmin("organizer")
+
+  const { error } = await supabase.rpc("admin_withdraw_application", {
+    p_application_id: id,
+  })
+  if (error) return failure(error)
+
+  revalidatePath("/applications", "layout")
+  return ok
+}
+
+export async function restoreApplication(
+  applicationId: string
+): Promise<ActionResult> {
+  const id = z.guid().parse(applicationId)
+  const { supabase } = await requireAdmin("organizer")
+
+  const { error } = await supabase.rpc("admin_restore_application", {
+    p_application_id: id,
+  })
+  if (error) return failure(error)
+
+  revalidatePath("/applications", "layout")
+  return ok
+}
