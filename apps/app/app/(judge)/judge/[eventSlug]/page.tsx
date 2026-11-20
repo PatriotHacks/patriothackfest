@@ -3,8 +3,12 @@ import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 
 import { JudgeEventDetails } from "@/components/judge/event-details"
-import { getJudgeEvent } from "@/lib/judge-access"
+import { getJudgeEvent, getProjectSubmissionsCloseAt } from "@/lib/judge-access"
 import { getJudgeQueue } from "@/lib/judge-review-data"
+import {
+  formatSubmissionDeadline,
+  submissionsStillOpen,
+} from "@/lib/judge-status"
 import { JudgeQueueList } from "@/components/judge/queue"
 
 export default async function JudgeEventPage({
@@ -26,7 +30,10 @@ export default async function JudgeEventPage({
         </Link>
       </>
     )
-  const queue = await getJudgeQueue(eventSlug)
+  const [queue, closeAt] = await Promise.all([
+    getJudgeQueue(eventSlug),
+    getProjectSubmissionsCloseAt(event.event_id),
+  ])
   return (
     <>
       <Link href="/judge" className="text-sm underline">
@@ -34,7 +41,12 @@ export default async function JudgeEventPage({
       </Link>
       <h1 className={cn(SERIF, "text-4xl")}>{event.name}</h1>
       <JudgeEventDetails event={event} />
-      {queue ? (
+      {closeAt && submissionsStillOpen(closeAt) ? (
+        <p className="text-sm text-[#6E6E68]">
+          This is available after the submission period is completed on{" "}
+          {formatSubmissionDeadline(closeAt)}
+        </p>
+      ) : queue ? (
         <JudgeQueueList eventSlug={eventSlug} queue={queue} />
       ) : (
         <p>

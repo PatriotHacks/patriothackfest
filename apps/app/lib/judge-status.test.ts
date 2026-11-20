@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { judgeWindowStatus } from "./judge-status"
+import {
+  formatSubmissionDeadline,
+  judgeWindowStatus,
+  submissionsStillOpen,
+} from "./judge-status"
 describe("judge landing status", () => {
   const cutoff = "2026-11-21T05:00:00Z"
   it("does not claim judging is open when disabled or missing a deadline", () => {
@@ -54,5 +58,18 @@ describe("judge landing status", () => {
         now
       )
     ).toBe("started")
+  })
+})
+describe("submission period gate", () => {
+  const close = "2026-11-21T04:59:00Z"
+  it("hides assignments until the submission deadline passes", () => {
+    expect(submissionsStillOpen(close, Date.parse(close) - 1)).toBe(true)
+    expect(submissionsStillOpen(close, Date.parse(close))).toBe(false)
+  })
+  it("formats the deadline in event time", () => {
+    expect(formatSubmissionDeadline(close)).toBe("Nov 20th 11:59pm")
+    expect(formatSubmissionDeadline("2026-11-22T15:05:00Z")).toBe(
+      "Nov 22nd 10:05am"
+    )
   })
 })
