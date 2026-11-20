@@ -3,6 +3,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar"
+import { cookies } from "next/headers"
 
 import { ApplicantSidebar } from "@/components/applicant-sidebar"
 import { LogoLockup } from "@/components/logo-lockup"
@@ -19,8 +20,9 @@ export default async function ProjectsLayout({
   const { email } = await getApplicant()
   const applications = await getSubmittedApplications()
   const view = participantView(applications, Date.now())
+  const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false"
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarOpen}>
       <ApplicantSidebar
         applicationId={applications[0]?.id}
         email={email}

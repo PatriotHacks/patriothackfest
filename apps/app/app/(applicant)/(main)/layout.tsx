@@ -3,6 +3,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { ApplicantSidebar } from "@/components/applicant-sidebar"
@@ -17,8 +18,9 @@ export default async function MainLayout({ children }: LayoutProps<"/">) {
   const { email } = await getNamedApplicant()
   const view = participantView(applications, Date.now())
 
+  const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false"
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarOpen}>
       <ApplicantSidebar applicationId={latest.id} email={email} view={view} />
       <SidebarInset className="bg-white">
         <header className="flex items-center gap-3 border-b border-[#E7E4D9] px-4 py-2 md:hidden">
