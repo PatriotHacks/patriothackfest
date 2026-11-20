@@ -6,7 +6,7 @@ const { rpc, requireAdmin, revalidatePath } = vi.hoisted(() => ({
 }))
 vi.mock("@/lib/admin", () => ({ requireAdmin }))
 vi.mock("next/cache", () => ({ revalidatePath }))
-import { saveEventJudge } from "./judges-actions"
+import { deleteEventJudge, saveEventJudge } from "./judges-actions"
 const id = "a0000000-0000-4000-8000-000000000001"
 const input = {
   eventId: id,
@@ -59,6 +59,34 @@ describe("judge admin action", () => {
       "This email has a participant application for this event and cannot be a judge"
     rpc.mockResolvedValue({ error: { message } })
     expect(await saveEventJudge(input)).toEqual({ error: message })
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+})
+describe("delete judge action", () => {
+  const judgeId = "a0000000-0000-4000-8000-000000000002"
+  it("requires organizer access and deletes the event judge", async () => {
+    expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({
+      error: null,
+    })
+    expect(requireAdmin).toHaveBeenCalledWith("organizer")
+    expect(rpc).toHaveBeenCalledWith("admin_delete_event_judge", {
+      p_event_id: id,
+      p_judge_id: judgeId,
+    })
+    expect(revalidatePath).toHaveBeenCalledWith("/judging")
+  })
+  it("never writes for invalid input", async () => {
+    expect(
+      (await deleteEventJudge({ eventId: id, judgeId: "nope" })).error
+    ).toBeTruthy()
+    expect(rpc).not.toHaveBeenCalled()
+  })
+  it("returns the judging-started refusal", async () => {
+    const message = "Judging has started; deactivate this judge instead"
+    rpc.mockResolvedValue({ error: { message } })
+    expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({
+      error: message,
+    })
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 })

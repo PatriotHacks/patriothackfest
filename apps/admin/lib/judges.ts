@@ -28,6 +28,10 @@ export const eventJudgeInput = z
     }
   })
 
+export const deleteEventJudgeInput = z
+  .object({ eventId: z.guid(), judgeId: z.guid() })
+  .strict()
+
 export const judgeRosterSchema = z.array(
   z.object({
     id: z.guid(),
