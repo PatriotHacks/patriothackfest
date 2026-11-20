@@ -38,7 +38,7 @@ export type AppSidebarItem = {
   href: string
   label: string
   icon: LucideIcon
-  exact?: boolean
+  match?: (pathname: string) => boolean
 }
 
 export function AppSidebar({
@@ -77,8 +77,10 @@ export function AppSidebar({
                   asChild
                   className={SIDEBAR_ITEM}
                   isActive={
-                    pathname === item.href ||
-                    (!item.exact && pathname.startsWith(`${item.href}/`))
+                    item.match
+                      ? item.match(pathname)
+                      : pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`)
                   }
                 >
                   <Link href={item.href} onClick={() => setOpenMobile(false)}>
