@@ -8,6 +8,7 @@ import { Pill } from "@workspace/ui/components/pill"
 import { OUTLINE_PILL, PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 import { DeclineButton } from "@/components/application/decline-button"
 import { WithdrawButton } from "@/components/application/withdraw-button"
@@ -19,8 +20,10 @@ import {
 } from "@/lib/application-status"
 import { getNamedApplicant } from "@/lib/applicant"
 import { deadlineText } from "@/lib/deadline-text"
+import { getJudgeEvents } from "@/lib/judge-access"
 
 export default async function DashboardPage() {
+  if ((await getJudgeEvents()).length > 0) redirect("/judge")
   const { supabase, userId, fullName } = await getNamedApplicant()
 
   const { data: applications, error } = await supabase

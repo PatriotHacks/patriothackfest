@@ -11,10 +11,10 @@ import { getNamedApplicant, getSubmittedApplications } from "@/lib/applicant"
 import { participantView } from "@/lib/participant-view"
 
 export default async function MainLayout({ children }: LayoutProps<"/">) {
-  const { email } = await getNamedApplicant()
   const applications = await getSubmittedApplications()
   const latest = applications[0]
   if (!latest) redirect("/start")
+  const { email } = await getNamedApplicant()
   const view = participantView(applications, Date.now())
 
   return (
