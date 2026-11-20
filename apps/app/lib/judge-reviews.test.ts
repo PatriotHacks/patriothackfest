@@ -55,7 +55,7 @@ describe("judge scorecard contracts", () => {
         completed: 0,
         assignments: [],
       })
-    ).toBe("/judge/fall-2026")
+    ).toBe("/judge")
     expect(
       judgeContinuation("fall-2026", {
         total: 1,
