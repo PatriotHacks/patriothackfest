@@ -1,44 +1,8 @@
 "use client"
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@workspace/ui/components/popover"
-import { SettingsDialog } from "@workspace/ui/components/settings-dialog"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@workspace/ui/components/sidebar"
-import {
-  OUTLINE_PILL,
-  SIDEBAR_ACCOUNT_ROW,
-  SIDEBAR_ACCOUNT_TRIGGER,
-  SIDEBAR_FOOTER,
-  SIDEBAR_ITEM,
-  SIDEBAR_MENU_ITEM,
-} from "@workspace/ui/lib/brand"
-import { cn } from "@workspace/ui/lib/utils"
-import {
-  ChevronsUpDownIcon,
-  FileTextIcon,
-  FolderOpenIcon,
-  LayoutDashboardIcon,
-  SettingsIcon,
-} from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { FileTextIcon, FolderOpenIcon, LayoutDashboardIcon } from "lucide-react"
 
-import { LogoLockup } from "@/components/logo-lockup"
-import { signOut } from "@/lib/auth-actions"
+import { AppSidebar } from "@/components/app-sidebar"
 
 export function ApplicantSidebar({
   applicationId,
@@ -49,10 +13,6 @@ export function ApplicantSidebar({
   email: string
   view: "participant" | "mentor"
 }) {
-  const pathname = usePathname()
-  const { setOpenMobile } = useSidebar()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const nav = [
     { href: "/", label: "Dashboard", icon: LayoutDashboardIcon },
     { href: "/projects", label: "Project Submission", icon: FolderOpenIcon },
@@ -66,82 +26,5 @@ export function ApplicantSidebar({
         ]
       : []),
   ]
-
-  return (
-    <Sidebar>
-      <SidebarHeader className="px-4 pt-5 pb-3">
-        <Link href="/" onClick={() => setOpenMobile(false)} className="w-fit">
-          <LogoLockup view={view} imageClassName="h-[42px]" preload />
-        </Link>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarMenu className="gap-1 font-(family-name:--font-auth-sans)">
-            {nav.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  className={SIDEBAR_ITEM}
-                  isActive={
-                    pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`)
-                  }
-                >
-                  <Link href={item.href} onClick={() => setOpenMobile(false)}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter className={SIDEBAR_FOOTER}>
-        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={cn(SIDEBAR_ACCOUNT_ROW, SIDEBAR_ACCOUNT_TRIGGER)}
-            >
-              <span className="min-w-0 flex-1 truncate" title={email}>
-                {email}
-              </span>
-              <ChevronsUpDownIcon className="size-4 shrink-0 text-[#6E6E68]" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent
-            side="top"
-            align="start"
-            className="w-(--radix-popover-trigger-width) gap-0 p-1 font-(family-name:--font-auth-sans)"
-          >
-            <button
-              type="button"
-              className={SIDEBAR_MENU_ITEM}
-              onClick={() => {
-                setMenuOpen(false)
-                setOpenMobile(false)
-                setSettingsOpen(true)
-              }}
-            >
-              <SettingsIcon />
-              Settings
-            </button>
-          </PopoverContent>
-        </Popover>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className={cn(
-              OUTLINE_PILL,
-              "w-full focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/30 focus-visible:outline-none"
-            )}
-          >
-            Sign out
-          </button>
-        </form>
-      </SidebarFooter>
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-    </Sidebar>
-  )
+  return <AppSidebar email={email} homeHref="/" nav={nav} view={view} />
 }
