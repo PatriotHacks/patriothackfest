@@ -64,7 +64,7 @@ describe("judge review actions", () => {
       p_notes: "notes",
       p_submit: true,
     })
-    expect(revalidatePath).toHaveBeenCalledWith("/judge/fall-2026")
+    expect(revalidatePath).toHaveBeenCalledWith("/judge")
   })
   it("returns validation failures without writing or navigating", async () => {
     expect(

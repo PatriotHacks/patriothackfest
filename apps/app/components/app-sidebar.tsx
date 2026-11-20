@@ -1,5 +1,6 @@
 "use client"
 
+import { Button } from "@workspace/ui/components/button"
 import {
   Popover,
   PopoverContent,
@@ -18,7 +19,6 @@ import {
   useSidebar,
 } from "@workspace/ui/components/sidebar"
 import {
-  OUTLINE_PILL,
   SIDEBAR_ACCOUNT_ROW,
   SIDEBAR_ACCOUNT_TRIGGER,
   SIDEBAR_FOOTER,
@@ -38,7 +38,7 @@ export type AppSidebarItem = {
   href: string
   label: string
   icon: LucideIcon
-  exact?: boolean
+  match?: (pathname: string) => boolean
 }
 
 export function AppSidebar({
@@ -77,8 +77,10 @@ export function AppSidebar({
                   asChild
                   className={SIDEBAR_ITEM}
                   isActive={
-                    pathname === item.href ||
-                    (!item.exact && pathname.startsWith(`${item.href}/`))
+                    item.match
+                      ? item.match(pathname)
+                      : pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`)
                   }
                 >
                   <Link href={item.href} onClick={() => setOpenMobile(false)}>
@@ -124,15 +126,13 @@ export function AppSidebar({
           </PopoverContent>
         </Popover>
         <form action={signOut}>
-          <button
+          <Button
             type="submit"
-            className={cn(
-              OUTLINE_PILL,
-              "w-full focus-visible:ring-2 focus-visible:ring-[#3A4A2B]/30 focus-visible:outline-none"
-            )}
+            variant="outline"
+            className="w-full border-[#E7E4D9] bg-white text-[#3A4A2B] hover:bg-[#F3F1EA] hover:text-[#3A4A2B] focus-visible:border-[#8C9580] focus-visible:ring-[#8C9580]/50"
           >
             Sign out
-          </button>
+          </Button>
         </form>
       </SidebarFooter>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

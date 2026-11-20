@@ -22,18 +22,15 @@ export default async function JudgeAssignmentPage({
     : null
   return (
     <>
-      <Link
-        className="text-sm underline"
-        href={`/judge/${encodeURIComponent(eventSlug)}`}
-      >
-        Back to your queue
+      <Link className="text-sm underline" href="/judge">
+        Back to dashboard
       </Link>
       {!event || !detail ? (
         <section className={cn(PAPER, "p-6")}>
           <h1 className={cn(SERIF, "text-3xl")}>Assignment unavailable</h1>
           <p>
             This review is not available to your active judge account. Return to
-            your queue or contact an organizer.
+            your dashboard or contact an organizer.
           </p>
         </section>
       ) : (

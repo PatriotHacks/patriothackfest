@@ -82,9 +82,7 @@ export function judgeAssignmentHref(eventSlug: string, id: string) {
 }
 export function judgeContinuation(eventSlug: string, queue: JudgeQueue) {
   const next = queue.assignments.find((assignment) => !assignment.submitted_at)
-  return next
-    ? judgeAssignmentHref(eventSlug, next.id)
-    : `/judge/${encodeURIComponent(eventSlug)}`
+  return next ? judgeAssignmentHref(eventSlug, next.id) : "/judge"
 }
 export function reviewContext(assignment: {
   track_id: string | null

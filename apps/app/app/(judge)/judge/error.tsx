@@ -13,7 +13,7 @@ export default function JudgeError({ reset }: { reset: () => void }) {
       </p>
       <Button onClick={reset}>Try again</Button>
       <Link className="underline" href="/judge">
-        Your judging events
+        Back to dashboard
       </Link>
     </section>
   )

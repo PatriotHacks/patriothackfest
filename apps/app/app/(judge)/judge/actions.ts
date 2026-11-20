@@ -43,7 +43,7 @@ export async function saveJudgeReview(input: unknown): Promise<ReviewResult> {
   if (error) return { error: error.message }
   const assignment = judgeScorecardSchema.parse(data)
   try {
-    revalidatePath(`/judge/${value.eventSlug}`)
+    revalidatePath("/judge")
   } catch {
     /* Persistence succeeded; a cache refresh failure must not report a failed save. */
   }
@@ -88,7 +88,7 @@ export async function checkJudgeReview(
       ? { error: null, event, assignment: detail.assignment }
       : {
           error:
-            "Assignment unavailable. Return to your queue or contact an organizer.",
+            "Assignment unavailable. Return to your dashboard or contact an organizer.",
         }
   } catch {
     return {
