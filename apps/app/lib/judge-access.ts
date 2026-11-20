@@ -35,3 +35,14 @@ export async function getJudgeEvent(slug: string): Promise<JudgeEvent | null> {
   if (error) throw new Error(error.message)
   return data === null ? null : judgeEventSchema.parse(data)
 }
+
+export async function getProjectSubmissionsCloseAt(eventId: string) {
+  const { supabase } = await getApplicant()
+  const { data, error } = await supabase
+    .from("event_competition_settings")
+    .select("project_submissions_close_at")
+    .eq("event_id", eventId)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  return data?.project_submissions_close_at ?? null
+}
