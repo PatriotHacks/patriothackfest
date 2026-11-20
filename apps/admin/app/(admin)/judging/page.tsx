@@ -97,6 +97,7 @@ export default async function JudgingPage({
           eventId={event.id}
           tracks={tracks.data}
           judges={judgeRosterSchema.parse(roster.data)}
+          started={started}
         />
       )}
       <AssignmentsSection

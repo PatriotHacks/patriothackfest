@@ -1135,6 +1135,10 @@ export type Database = {
           queued: number
         }[]
       }
+      admin_delete_event_judge: {
+        Args: { p_event_id: string; p_judge_id: string }
+        Returns: undefined
+      }
       admin_event_projects: {
         Args: { p_event_id: string; p_page?: number; p_status?: string }
         Returns: Json
