@@ -234,7 +234,7 @@ export function JudgeScorecardForm({
               disabled={pending}
               onClick={() => run(continueNext)}
             >
-              Continue to queue / next review
+              Continue to next review / dashboard
             </Button>
           </>
         ) : (
