@@ -4,9 +4,10 @@ import Link from "next/link"
 
 import { ProjectAvailability } from "@/components/project/availability"
 import { CreateProjectButton } from "@/components/project/create-project-button"
+import { DeleteDraftButton } from "@/components/project/delete-draft-button"
 import { getApplicant } from "@/lib/applicant"
-import { getProjectEvent } from "@/lib/project-data"
-import { canManageProject } from "@/lib/projects"
+import { getProjectDetail, getProjectEvent } from "@/lib/project-data"
+import { canManageProject, draftLosses } from "@/lib/projects"
 
 export default async function EventProjectsPage({
   params,
@@ -18,6 +19,18 @@ export default async function EventProjectsPage({
     p_event_id: event.event_id,
   })
   if (error) throw new Error(error.message)
+  const deletable = canManageProject(event)
+    ? await Promise.all(
+        projects
+          .filter(
+            (project) =>
+              project.owner_user_id === userId &&
+              project.status === "draft" &&
+              project.submitted_at === null
+          )
+          .map((project) => getProjectDetail(project.id, event.event_id))
+      )
+    : []
   return (
     <div className="flex max-w-3xl flex-col gap-5 text-[#3A4A2B]">
       <h1 className={cn(SERIF, "text-4xl")}>Project Submission</h1>
@@ -34,21 +47,34 @@ export default async function EventProjectsPage({
           />
         )}
       {projects.length === 0 && <p>You have no projects for this event yet.</p>}
-      {projects.map((project) => (
-        <Link
-          key={project.id}
-          href={`/projects/${encodeURIComponent(event.slug)}/${project.id}`}
-          className={cn(PAPER, "flex flex-col gap-2 p-6 hover:underline")}
-        >
-          <h2 className="text-xl font-semibold">
-            {project.name || "Untitled project"}
-          </h2>
-          <p className="text-sm capitalize">
-            {project.status} ·{" "}
-            {project.owner_user_id === userId ? "Your project" : "Team member"}
-          </p>
-        </Link>
-      ))}
+      {projects.map((project) => {
+        const href = `/projects/${encodeURIComponent(event.slug)}/${project.id}`
+        const detail = deletable.find((d) => d.project.id === project.id)
+        return (
+          <div
+            key={project.id}
+            className={cn(PAPER, "flex flex-col gap-2 p-6")}
+          >
+            <Link href={href} className="flex flex-col gap-2 hover:underline">
+              <h2 className="text-xl font-semibold">
+                {project.name || "Untitled project"}
+              </h2>
+              <p className="text-sm capitalize">
+                {project.status} ·{" "}
+                {project.owner_user_id === userId
+                  ? "Your project"
+                  : "Team member"}
+              </p>
+            </Link>
+            {detail && (
+              <DeleteDraftButton
+                projectId={project.id}
+                losses={draftLosses(detail)}
+              />
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

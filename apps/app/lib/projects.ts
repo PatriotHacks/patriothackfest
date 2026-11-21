@@ -168,6 +168,40 @@ export function projectAnswers(detail: ProjectDetail): ProjectAnswers {
   )
 }
 
+export type DraftLosses = {
+  name: string
+  answered: number
+  teammates: string[]
+  tracks: string[]
+}
+
+export function draftLosses(detail: ProjectDetail): DraftLosses {
+  const name = detail.project.name.trim()
+  return {
+    name: name === "Untitled project" ? "" : name,
+    answered: Object.values(projectAnswers(detail)).filter((answer) =>
+      Array.isArray(answer)
+        ? answer.length > 0
+        : typeof answer === "string"
+          ? answer.trim() !== ""
+          : answer !== null
+    ).length,
+    teammates: detail.collaborators.map((person) =>
+      memberName(person.full_name)
+    ),
+    tracks: detail.selected_tracks.map((track) => track.name),
+  }
+}
+
+export function hasDraftLosses(losses: DraftLosses) {
+  return (
+    losses.name !== "" ||
+    losses.answered > 0 ||
+    losses.teammates.length > 0 ||
+    losses.tracks.length > 0
+  )
+}
+
 function filePaths(answers: Record<string, unknown>) {
   return Object.values(answers)
     .map((value) => fileAnswer(value)?.path)
