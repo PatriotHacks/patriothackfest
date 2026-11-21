@@ -25,6 +25,9 @@ vi.mock("next/navigation", () => ({ redirect }))
 vi.mock("@/components/judging/settings-form", () => ({
   JudgingSettingsForm: () => "Existing settings",
 }))
+vi.mock("@/components/judging/criteria", () => ({
+  JudgingCriteria: () => "Existing rubric",
+}))
 vi.mock("@/components/judging/judges", () => ({
   JudgeRoster: () => "Existing judge roster",
 }))
@@ -130,6 +133,7 @@ describe("organizer judging page results integration", () => {
       "Judging Management",
       "Existing settings",
       "Existing judge roster",
+      "Existing rubric",
       "Assignments",
       "General results",
       "Winner decisions are manual",

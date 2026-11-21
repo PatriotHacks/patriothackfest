@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { redirect } from "next/navigation"
 
+import { JudgingCriteria } from "@/components/judging/criteria"
 import { JudgingSettingsForm } from "@/components/judging/settings-form"
 import { JudgeRoster } from "@/components/judging/judges"
 import { AssignmentsSection } from "@/components/judging/assignments"
@@ -11,6 +12,7 @@ import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
 import { judgeRosterSchema } from "@/lib/judges"
+import { judgingCriteriaSchema } from "@/lib/judging-criteria"
 import { parseProjectsPage } from "@/lib/organizer-projects"
 import { getAssignmentOverview } from "@/lib/assignment-data"
 import { assignmentQueryParams, parseAssignmentQuery } from "@/lib/assignments"
@@ -42,7 +44,7 @@ export default async function JudgingPage({
       />
     )
 
-  const [settings, tracks, roster, assignments] = await Promise.all([
+  const [settings, tracks, roster, criteria, assignments] = await Promise.all([
     supabase
       .from("event_competition_settings")
       .select("*")
@@ -55,11 +57,13 @@ export default async function JudgingPage({
       .order("created_at")
       .order("id"),
     supabase.rpc("admin_judge_roster", { p_event_id: event.id }),
+    supabase.rpc("admin_judging_criteria", { p_event_id: event.id }),
     getAssignmentOverview(event.id, assignmentFilters),
   ])
   if (settings.error) throw new Error(settings.error.message)
   if (tracks.error) throw new Error(tracks.error.message)
   if (roster.error) throw new Error(roster.error.message)
+  if (criteria.error) throw new Error(criteria.error.message)
   const started = Boolean(settings.data?.judging_started_at)
   const invalidResultsContext =
     resultsQuery.invalidContext ||
@@ -80,7 +84,7 @@ export default async function JudgingPage({
     <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="Judging Management"
-        description="Judging deadline, judge roster, assignments, and results. Submission dates, tracks, questions, and submitted projects are in Submission Forms."
+        description="Judging deadline, rubric, judge roster, assignments, and results. Submission dates, tracks, questions, and submitted projects are in Submission Forms."
       />
       <EventTabs events={events} selected={event.slug} basePath="/judging" />
       <Card>
@@ -89,6 +93,16 @@ export default async function JudgingPage({
             key={event.id}
             eventId={event.id}
             settings={settings.data}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <JudgingCriteria
+            key={event.id}
+            eventId={event.id}
+            criteria={judgingCriteriaSchema.parse(criteria.data)}
+            locked={started}
           />
         </CardContent>
       </Card>
