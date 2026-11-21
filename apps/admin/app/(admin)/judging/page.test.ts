@@ -114,7 +114,6 @@ beforeEach(() => {
     missing: 0,
     coverage: [],
     assignments: [],
-    judges: [],
     coverage_has_more: true,
     assignments_has_more: true,
   })
