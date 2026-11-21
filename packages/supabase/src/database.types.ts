@@ -1488,6 +1488,10 @@ export type Database = {
         Args: { p_event_id: string }
         Returns: string
       }
+      participant_delete_project_draft: {
+        Args: { p_project_id: string }
+        Returns: string[]
+      }
       participant_leave_project: {
         Args: { p_project_id: string }
         Returns: undefined
@@ -1586,6 +1590,7 @@ export type Database = {
         Returns: Json
       }
       project_file_deletable: { Args: { p_name: string }; Returns: boolean }
+      project_file_orphaned: { Args: { p_name: string }; Returns: boolean }
       project_file_parts: { Args: { p_name: string }; Returns: string[] }
       project_file_readable: { Args: { p_name: string }; Returns: boolean }
       project_file_writable: { Args: { p_name: string }; Returns: boolean }

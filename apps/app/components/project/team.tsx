@@ -11,6 +11,7 @@ import {
   removeProjectCollaborator,
   type ProjectResult,
 } from "@/app/(projects)/projects/actions"
+import { DeleteDraftButton } from "@/components/project/delete-draft-button"
 import { memberName, teamMembers, type ProjectDetail } from "@/lib/projects"
 
 export function ProjectTeam({
@@ -193,6 +194,21 @@ export function ProjectTeam({
             Leave team
           </Button>
         ))}
+      {editable &&
+        isOwner &&
+        detail.project.status === "draft" &&
+        detail.project.submitted_at === null && (
+          <DeleteDraftButton
+            projectId={detail.project.id}
+            teammates={members
+              .filter((member) => !member.owner)
+              .map((member) => ({
+                id: member.user_id,
+                name: memberName(member.full_name),
+              }))}
+            eventHref={eventHref}
+          />
+        )}
       <p role="status" aria-live="polite" className="text-sm">
         {message}
       </p>
