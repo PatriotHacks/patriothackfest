@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@/app/(admin)/judging/judges-actions", () => ({
   saveEventJudge: vi.fn(),
   deleteEventJudge: vi.fn(),
+  previewJudgeTransfer: vi.fn(),
+  setEventJudgeGuest: vi.fn(),
 }))
 import { AddJudgeForm, EventJudgeForm, JudgeRoster } from "./judges"
 import type { JudgeRosterEntry } from "@/lib/judges"
@@ -83,7 +85,12 @@ describe("judge admin form", () => {
   })
   it("keeps referenced inactive sponsor scopes visible and protected when editing", () => {
     const html = renderToStaticMarkup(
-      createElement(EventJudgeForm, { eventId: id, tracks, judge })
+      createElement(EventJudgeForm, {
+        eventId: id,
+        tracks,
+        judge,
+        started: true,
+      })
     )
     expect(html).toContain("Active — uncheck and save to deactivate")
     expect(html).toContain("linked to an account")
@@ -93,5 +100,26 @@ describe("judge admin form", () => {
     expect(html).toContain(
       '<input type="checkbox" disabled="" checked=""/>Sponsor A'
     )
+  })
+  it("badges guests and offers the matching guest toggle", () => {
+    const html = renderToStaticMarkup(
+      createElement(JudgeRoster, {
+        eventId: id,
+        tracks,
+        judges: [
+          { ...judge, guest: true },
+          {
+            ...judge,
+            id: "a0000000-0000-4000-8000-000000000002",
+            email: "other@example.com",
+          },
+        ],
+        started: true,
+      })
+    )
+    expect(html).toContain(">Guest</span>")
+    expect(html.match(/>Guest<\/span>/g)).toHaveLength(1)
+    expect(html).toContain('aria-label="Remove guest person@example.com"')
+    expect(html).toContain('aria-label="Make guest other@example.com"')
   })
 })
