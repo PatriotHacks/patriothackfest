@@ -95,16 +95,6 @@ export const assignmentOverview = z.object({
       })
     )
     .max(50),
-  judges: z.array(
-    z.object({
-      id: z.guid(),
-      email: z.string(),
-      active: z.boolean(),
-      capacity: count,
-      workload: count,
-      unfinished: count,
-    })
-  ),
 })
 export type AssignmentOverview = z.infer<typeof assignmentOverview>
 export type AssignmentCandidate = z.infer<typeof assignmentCandidates>[number]

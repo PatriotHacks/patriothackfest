@@ -211,47 +211,6 @@ export function AssignmentsSection({
         hasMore={data.coverage_has_more}
         resultsQuery={resultsQuery}
       />
-      <h3 className="font-semibold">Judge loads</h3>
-      {data.judges.length === 0 ? (
-        <p className="text-sm">No judges configured for this event.</p>
-      ) : (
-        <TableCard>
-          <Table aria-label="Judge assignment loads">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Judge</TableHead>
-                <TableHead>Assigned / capacity</TableHead>
-                <TableHead>Unfinished</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.judges.map((judge) => (
-                <TableRow key={judge.id}>
-                  <TableCell className="break-words whitespace-normal">
-                    {judge.email}
-                    {!judge.active && (
-                      <p>
-                        Inactive
-                        {judge.unfinished > 0 &&
-                          " — unfinished assignments need organizer attention"}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {judge.workload} / {judge.capacity}
-                    {judge.workload > judge.capacity && (
-                      <p className="text-xs">
-                        Existing work exceeds current capacity
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell>{judge.unfinished}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableCard>
-      )}
       <h3 className="font-semibold">Manage assignments</h3>
       <p className="text-sm text-muted-foreground">
         Only untouched reviews (no scores, saved notes, or submission) can be

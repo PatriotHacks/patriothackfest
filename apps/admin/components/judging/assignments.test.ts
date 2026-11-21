@@ -27,16 +27,6 @@ const data: AssignmentOverview = {
       missing: 2,
     },
   ],
-  judges: [
-    {
-      id,
-      email: "judge@example.test",
-      active: false,
-      capacity: 1,
-      workload: 2,
-      unfinished: 1,
-    },
-  ],
 }
 const render = (started = false, overview = data) =>
   renderToStaticMarkup(
@@ -50,13 +40,11 @@ const render = (started = false, overview = data) =>
     })
   )
 describe("organizer assignment coverage", () => {
-  it("shows shortages, contexts, loads and no optimal promise", () => {
+  it("shows shortages, contexts and no optimal promise", () => {
     const html = render()
     expect(html).toContain("2 missing review slots across this event")
     expect(html).toContain("General")
     expect(html).toContain("does not guarantee optimal coverage")
-    expect(html).toContain("unfinished assignments need organizer attention")
-    expect(html).toContain("Existing work exceeds current capacity")
     expect(html).toContain("coveragePage=2")
     expect(html).toContain("projectsPage=2")
   })
@@ -76,11 +64,9 @@ describe("organizer assignment coverage", () => {
     const html = render(false, {
       ...data,
       coverage: [],
-      judges: [],
       missing: 0,
     })
     expect(html).toContain("No submitted project contexts")
-    expect(html).toContain("No judges configured")
     expect(html).toContain("0 missing review slots")
   })
   it("renders assignment status filters and bounded management navigation", () => {
