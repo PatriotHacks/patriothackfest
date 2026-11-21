@@ -8,7 +8,7 @@ describe("judge queue", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeQueueList, {
         eventSlug: "fall-2026",
-        startHref: "/judge/fall-2026/briefing",
+        startHref: "/judge?briefing=fall-2026",
         queue: {
           total: 2,
           completed: 1,
@@ -39,7 +39,7 @@ describe("judge queue", () => {
     expect(html).toContain("Submitted")
     expect(html).toContain("Draft saved")
     expect(html).toContain("Continue judging")
-    expect(html).toContain('href="/judge/fall-2026/briefing"')
+    expect(html).toContain('href="/judge?briefing=fall-2026"')
     expect(html).toContain("mailto:hello@patriothackfest.com")
   })
   it("hides the start link when judging is not open", () => {

@@ -90,7 +90,7 @@ export function judgeAssignmentHref(eventSlug: string, id: string) {
   return `/judge/${encodeURIComponent(eventSlug)}/${encodeURIComponent(id)}`
 }
 export function judgeBriefingHref(eventSlug: string) {
-  return `/judge/${encodeURIComponent(eventSlug)}/briefing`
+  return `/judge?briefing=${encodeURIComponent(eventSlug)}`
 }
 export function judgeContinuation(
   eventSlug: string,

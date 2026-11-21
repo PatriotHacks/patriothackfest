@@ -52,7 +52,7 @@ describe("judge assignment route", () => {
       briefing_acknowledged_at: null,
     })
     await expect(JudgeAssignmentPage(props)).rejects.toThrow("Redirect")
-    expect(redirect).toHaveBeenCalledWith("/judge/fall-2026/briefing")
+    expect(redirect).toHaveBeenCalledWith("/judge?briefing=fall-2026")
     expect(getJudgeAssignment).not.toHaveBeenCalled()
   })
   it("rejects malformed assignment IDs before any data reads", async () => {
