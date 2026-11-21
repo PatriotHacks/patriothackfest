@@ -11,7 +11,6 @@ const data = {
   missing: 0,
   coverage: [],
   assignments: [],
-  judges: [],
   coverage_has_more: false,
   assignments_has_more: false,
 }
