@@ -40,7 +40,7 @@ export function JudgeWorkload({
           {projects} submitted projects × {reviews} reviews = {result.needed}{" "}
           reviews needed
         </li>
-        <li>{result.judges} active general judges</li>
+        <li>{result.judges} active general judges (guests excluded)</li>
         {result.judges > 0 && (
           <li>
             {result.low === result.high
