@@ -7,6 +7,7 @@ const {
   rpc,
   getAssignmentOverview,
   getJudgingResults,
+  getEventProjects,
   redirect,
 } = vi.hoisted(() => ({
   getAdmin: vi.fn(),
@@ -14,6 +15,7 @@ const {
   rpc: vi.fn(),
   getAssignmentOverview: vi.fn(),
   getJudgingResults: vi.fn(),
+  getEventProjects: vi.fn(),
   redirect: vi.fn(() => {
     throw new Error("Redirect to forms")
   }),
@@ -21,6 +23,7 @@ const {
 vi.mock("@/lib/admin", () => ({ getAdmin }))
 vi.mock("@/lib/assignment-data", () => ({ getAssignmentOverview }))
 vi.mock("@/lib/judging-results-data", () => ({ getJudgingResults }))
+vi.mock("@/lib/organizer-project-data", () => ({ getEventProjects }))
 vi.mock("next/navigation", () => ({ redirect }))
 vi.mock("@/components/judging/settings-form", () => ({
   JudgingSettingsForm: () => "Existing settings",
@@ -80,7 +83,10 @@ beforeEach(() => {
       error: null,
     },
     event_competition_settings: {
-      data: { judging_started_at: "2026-11-15T05:00:00Z" },
+      data: {
+        judging_started_at: "2026-11-15T05:00:00Z",
+        general_reviews_per_project: 3,
+      },
       error: null,
     },
     competition_tracks: { data: tracks, error: null },
@@ -113,6 +119,9 @@ beforeEach(() => {
     assignments_has_more: true,
   })
   getJudgingResults.mockResolvedValue(results)
+  getEventProjects.mockResolvedValue({
+    counts: { draft: 1, submitted: 4, withdrawn: 2 },
+  })
 })
 
 describe("organizer judging page results integration", () => {
@@ -134,11 +143,17 @@ describe("organizer judging page results integration", () => {
       "Existing settings",
       "Existing judge roster",
       "Existing rubric",
+      "Judge workload",
+      "12 reviews needed",
       "Assignments",
       "General results",
       "Winner decisions are manual",
     ])
       expect(html).toContain(text)
+    expect(getEventProjects).toHaveBeenCalledWith(id, {
+      status: "submitted",
+      page: 1,
+    })
     expect(html).toContain('href="/judging?event=other"')
     expect(html).not.toContain("follow-up work")
     expect(html).not.toContain("Submitted projects")

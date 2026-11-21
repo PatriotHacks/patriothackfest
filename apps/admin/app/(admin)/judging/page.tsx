@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { JudgingCriteria } from "@/components/judging/criteria"
 import { JudgingSettingsForm } from "@/components/judging/settings-form"
 import { JudgeRoster } from "@/components/judging/judges"
+import { JudgeWorkload } from "@/components/judging/workload"
 import { AssignmentsSection } from "@/components/judging/assignments"
 import { ResultsSection } from "@/components/judging/results"
 import { EventTabs } from "@/components/event-tabs"
@@ -14,6 +15,7 @@ import { hasLevel } from "@/lib/levels"
 import { judgeRosterSchema } from "@/lib/judges"
 import { judgingCriteriaSchema } from "@/lib/judging-criteria"
 import { parseProjectsPage } from "@/lib/organizer-projects"
+import { getEventProjects } from "@/lib/organizer-project-data"
 import { getAssignmentOverview } from "@/lib/assignment-data"
 import { assignmentQueryParams, parseAssignmentQuery } from "@/lib/assignments"
 import { getJudgingResults } from "@/lib/judging-results-data"
@@ -44,27 +46,30 @@ export default async function JudgingPage({
       />
     )
 
-  const [settings, tracks, roster, criteria, assignments] = await Promise.all([
-    supabase
-      .from("event_competition_settings")
-      .select("*")
-      .eq("event_id", event.id)
-      .maybeSingle(),
-    supabase
-      .from("competition_tracks")
-      .select("*")
-      .eq("event_id", event.id)
-      .order("created_at")
-      .order("id"),
-    supabase.rpc("admin_judge_roster", { p_event_id: event.id }),
-    supabase.rpc("admin_judging_criteria", { p_event_id: event.id }),
-    getAssignmentOverview(event.id, assignmentFilters),
-  ])
+  const [settings, tracks, roster, criteria, assignments, projects] =
+    await Promise.all([
+      supabase
+        .from("event_competition_settings")
+        .select("*")
+        .eq("event_id", event.id)
+        .maybeSingle(),
+      supabase
+        .from("competition_tracks")
+        .select("*")
+        .eq("event_id", event.id)
+        .order("created_at")
+        .order("id"),
+      supabase.rpc("admin_judge_roster", { p_event_id: event.id }),
+      supabase.rpc("admin_judging_criteria", { p_event_id: event.id }),
+      getAssignmentOverview(event.id, assignmentFilters),
+      getEventProjects(event.id, { status: "submitted", page: 1 }),
+    ])
   if (settings.error) throw new Error(settings.error.message)
   if (tracks.error) throw new Error(tracks.error.message)
   if (roster.error) throw new Error(roster.error.message)
   if (criteria.error) throw new Error(criteria.error.message)
   const started = Boolean(settings.data?.judging_started_at)
+  const judges = judgeRosterSchema.parse(roster.data)
   const invalidResultsContext =
     resultsQuery.invalidContext ||
     (resultsQuery.filters.trackId !== null &&
@@ -110,9 +115,23 @@ export default async function JudgingPage({
         <JudgeRoster
           eventId={event.id}
           tracks={tracks.data}
-          judges={judgeRosterSchema.parse(roster.data)}
+          judges={judges}
           started={started}
         />
+      )}
+      {settings.data && (
+        <Card>
+          <CardContent>
+            <JudgeWorkload
+              key={event.id}
+              projects={projects.counts.submitted}
+              reviewsPerProject={settings.data.general_reviews_per_project}
+              capacities={judges
+                .filter((judge) => judge.active && judge.kind === "general")
+                .map((judge) => judge.capacity)}
+            />
+          </CardContent>
+        </Card>
       )}
       <AssignmentsSection
         eventId={event.id}
