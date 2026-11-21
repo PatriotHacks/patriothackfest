@@ -31,9 +31,10 @@ describe("scorecard rendering", () => {
     for (const text of [
       "Criterion A",
       "Criterion B",
-      "2.5 / 5",
+      ">2.5</span>",
       "Not scored",
       "Save draft",
+      'aria-label="Raise Criterion B by 0.1"',
       "Submit &amp; next",
       ">saved</textarea>",
       "Only organizers see this.",

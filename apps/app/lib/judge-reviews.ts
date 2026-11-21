@@ -4,6 +4,7 @@ import * as z from "zod"
 export const SCORE_MIN = 1
 export const SCORE_MAX = 5
 export const SCORE_STEP = 0.1
+export const SCORE_START = (SCORE_MIN + SCORE_MAX) / 2
 
 export const scoreSchema = z
   .number()
@@ -82,6 +83,10 @@ export function reviewAverage(scores: ReviewScores) {
   const values = Object.values(scores)
   if (!reviewComplete(scores)) return null
   return values.reduce<number>((sum, value) => sum + value!, 0) / values.length
+}
+export function stepScore(value: number | null, delta: 1 | -1) {
+  const tenths = Math.round((value ?? SCORE_START) * 10) + delta
+  return Math.min(SCORE_MAX * 10, Math.max(SCORE_MIN * 10, tenths)) / 10
 }
 export function formatScore(value: number) {
   return value.toFixed(1)

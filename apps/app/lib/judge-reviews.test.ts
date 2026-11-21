@@ -7,6 +7,7 @@ import {
   reviewComplete,
   reviewContext,
   reviewSaveSchema,
+  stepScore,
   type JudgeQueue,
 } from "./judge-reviews"
 
@@ -69,6 +70,13 @@ describe("judge scorecard contracts", () => {
     expect(reviewComplete({ [id]: 3, [other]: null })).toBe(false)
     expect(reviewAverage({ [id]: 3, [other]: null })).toBeNull()
     expect(reviewAverage({ [id]: 3.5, [other]: 4 })).toBe(3.75)
+  })
+  it("steps scores by 0.1 from the midpoint within bounds", () => {
+    expect(stepScore(null, 1)).toBe(3.1)
+    expect(stepScore(null, -1)).toBe(2.9)
+    expect(stepScore(3.7, 1)).toBe(3.8)
+    expect(stepScore(5, 1)).toBe(5)
+    expect(stepScore(1, -1)).toBe(1)
   })
   it("keeps sponsor contexts distinct", () => {
     expect(reviewContext({ track_id: null, track_name: null })).toBe(
