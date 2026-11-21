@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 vi.mock("@/app/(admin)/judging/assignments-actions", () => ({
   generateAssignments: vi.fn(),
+  previewRebalanceAssignments: vi.fn(),
+  rebalanceAssignments: vi.fn(),
   addAssignment: vi.fn(),
   cancelAssignment: vi.fn(),
   reassignAssignment: vi.fn(),
@@ -47,6 +49,12 @@ describe("organizer assignment coverage", () => {
     expect(html).toContain("does not guarantee optimal coverage")
     expect(html).toContain("coveragePage=2")
     expect(html).toContain("projectsPage=2")
+  })
+  it("offers rebalancing next to generation, gated on start", () => {
+    expect(render()).toMatch(/disabled=""[^>]*>Rebalance assignments</)
+    const html = render(true)
+    expect(html).toContain("Rebalance assignments")
+    expect(html).not.toMatch(/disabled=""[^>]*>Rebalance assignments</)
   })
   it("gates generation on start and labels sponsor contexts distinctly", () => {
     expect(render()).toContain("disabled")

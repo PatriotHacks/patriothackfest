@@ -1271,6 +1271,14 @@ export type Database = {
         }
         Returns: string
       }
+      admin_rebalance_assignments: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
+      admin_rebalance_assignments_preview: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
       admin_release_counts: {
         Args: { p_form_id: string }
         Returns: {

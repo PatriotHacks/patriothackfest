@@ -16,6 +16,7 @@ import {
 } from "@/lib/assignments"
 import { projectHref } from "@/lib/organizer-projects"
 import { GenerateAssignments } from "./generate-assignments"
+import { RebalanceAssignments } from "./rebalance-assignments"
 import { AssignmentControls, ManualAssignmentForm } from "./assignment-controls"
 
 export function AssignmentPages({
@@ -104,7 +105,10 @@ export function AssignmentsSection({
         coverage. Increase capacity or manually manage untouched work if slots
         remain missing.
       </p>
-      <GenerateAssignments eventId={eventId} started={started} />
+      <div className="flex flex-wrap items-start gap-3">
+        <GenerateAssignments eventId={eventId} started={started} />
+        <RebalanceAssignments eventId={eventId} started={started} />
+      </div>
       <p className="font-medium">
         {data.missing} missing review slots across this event
       </p>
