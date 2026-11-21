@@ -27,6 +27,7 @@ export function DeleteDraftButton({
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const { name, answered, teammates, tracks } = losses
+  const hasLosses = hasDraftLosses(losses)
 
   function remove() {
     setError(null)
@@ -49,7 +50,7 @@ export function DeleteDraftButton({
         size="sm"
         className="self-start"
         disabled={pending}
-        onClick={() => (hasDraftLosses(losses) ? setOpen(true) : remove())}
+        onClick={() => setOpen(true)}
       >
         Delete project
       </Button>
@@ -62,27 +63,31 @@ export function DeleteDraftButton({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This permanently deletes the draft. It cannot be undone. You will
-              lose:
-            </AlertDialogDescription>
+            {hasLosses && (
+              <AlertDialogDescription>
+                This can&apos;t be undone. You will lose:
+              </AlertDialogDescription>
+            )}
           </AlertDialogHeader>
-          <ul className="list-disc pl-5 text-sm">
-            {name && <li>The project name “{name}”</li>}
-            {answered > 0 && (
-              <li>
-                {answered} answered {answered === 1 ? "question" : "questions"}
-              </li>
-            )}
-            {teammates.length > 0 && (
-              <li>
-                {teammates.length}{" "}
-                {teammates.length === 1 ? "teammate" : "teammates"}:{" "}
-                {teammates.join(", ")} (they can join other teams)
-              </li>
-            )}
-            {tracks.length > 0 && <li>Tracks: {tracks.join(", ")}</li>}
-          </ul>
+          {hasLosses && (
+            <ul className="list-disc pl-5 text-sm">
+              {name && <li>The project name “{name}”</li>}
+              {answered > 0 && (
+                <li>
+                  {answered} answered{" "}
+                  {answered === 1 ? "question" : "questions"}
+                </li>
+              )}
+              {teammates.length > 0 && (
+                <li>
+                  {teammates.length}{" "}
+                  {teammates.length === 1 ? "teammate" : "teammates"}:{" "}
+                  {teammates.join(", ")} (they can join other teams)
+                </li>
+              )}
+              {tracks.length > 0 && <li>Tracks: {tracks.join(", ")}</li>}
+            </ul>
+          )}
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}
