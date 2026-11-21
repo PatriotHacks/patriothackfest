@@ -116,11 +116,39 @@ describe("project form views", () => {
     expect(html).toMatch(/role="status"[^>]*>Saved</)
     expect(html).not.toContain("Save draft")
     expect(html).toContain("Submit project")
-    expect(html).toContain("Sponsor tracks (optional)")
     expect(html).toMatch(
       /Project name<span class="text-destructive" aria-hidden="true"> \*<\/span>/
     )
     expect(html).toContain('aria-required="true"')
+  })
+  it("shows sponsor tracks only when the event has active tracks", () => {
+    const render = (value: ProjectDetail) =>
+      renderToStaticMarkup(
+        createElement(ProjectEditor, { detail: value, editable: true })
+      )
+    const track = {
+      id: other,
+      name: "Best AI",
+      description: null,
+      sponsor: null,
+    }
+    expect(render(detail)).not.toContain("Sponsor tracks")
+    expect(render(detail)).not.toContain("general judging")
+    expect(render({ ...detail, available_tracks: [track] })).toContain(
+      "Sponsor tracks (optional)"
+    )
+    expect(
+      render({
+        ...detail,
+        selected_tracks: [{ id: other, name: "Old", active: false }],
+      })
+    ).toContain("Old — unavailable; remove before saving")
+    const readOnly = (value: ProjectDetail) =>
+      renderToStaticMarkup(createElement(ProjectReadOnly, { detail: value }))
+    expect(readOnly(detail)).not.toContain("Sponsor tracks")
+    expect(readOnly({ ...detail, available_tracks: [track] })).toContain(
+      "Sponsor tracks:"
+    )
   })
   it("offers save changes rather than another submit action for submitted projects", () => {
     const html = renderToStaticMarkup(
