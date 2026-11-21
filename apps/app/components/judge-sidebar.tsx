@@ -21,7 +21,8 @@ export function JudgeSidebar({
       href: "/judge",
       label: "Dashboard",
       icon: LayoutDashboardIcon,
-      match: (path: string) => /^\/judge(\/[^/]+\/[^/]+)?$/.test(path),
+      match: (path: string) =>
+        /^\/judge(\/[^/]+(\/projects)?\/[^/]+)?$/.test(path),
     },
     { href: "/judge/rubric", label: "Rubric", icon: ListChecksIcon },
     { href: "/judge/certificate", label: "Certificate", icon: AwardIcon },
