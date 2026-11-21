@@ -63,11 +63,15 @@ export function ProjectReadOnly({ detail }: { detail: ProjectDetail }) {
           />
         </div>
       ))}
-      <p className="text-sm">
-        <strong>Sponsor tracks:</strong>{" "}
-        {detail.selected_tracks.map((track) => track.name).join(", ") || "None"}
-        . All submitted projects enter general judging.
-      </p>
+      {(detail.available_tracks.length > 0 ||
+        detail.selected_tracks.length > 0) && (
+        <p className="text-sm">
+          <strong>Sponsor tracks:</strong>{" "}
+          {detail.selected_tracks.map((track) => track.name).join(", ") ||
+            "None"}
+          . All submitted projects enter general judging.
+        </p>
+      )}
     </section>
   )
 }
@@ -233,60 +237,64 @@ function ProjectFields({
           />
         </Field>
       ))}
-      <Field field={TRACKS_FIELD} {...focus}>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 font-semibold">
-            Sponsor tracks (optional)
-          </legend>
-          <p className="text-sm text-[#6E6E68]">
-            Select any that apply. All submitted projects enter general judging,
-            even if none are selected.
-          </p>
-          {detail.available_tracks.map((track) => (
-            <label key={track.id} className="flex items-start gap-2">
-              <input
-                className="mt-1"
-                type="checkbox"
-                checked={trackIds.includes(track.id)}
-                onChange={(event) =>
-                  onTracks(
-                    event.target.checked
-                      ? [...trackIds, track.id]
-                      : trackIds.filter((selected) => selected !== track.id)
-                  )
-                }
-              />
-              <span>
-                {track.name}
-                {track.sponsor ? ` · ${track.sponsor}` : ""}
-                {track.description && (
-                  <span className="block text-sm text-[#6E6E68]">
-                    {track.description}
-                  </span>
-                )}
-              </span>
-            </label>
-          ))}
-          {unavailable.map((track) => (
-            <label key={track.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={trackIds.includes(track.id)}
-                disabled={!trackIds.includes(track.id)}
-                onChange={() =>
-                  onTracks(trackIds.filter((selected) => selected !== track.id))
-                }
-              />
-              {track.name} — unavailable; remove before saving
-            </label>
-          ))}
-          {errors.track_ids && (
-            <p role="alert" className="text-sm text-red-700">
-              {errors.track_ids}
+      {(detail.available_tracks.length > 0 || unavailable.length > 0) && (
+        <Field field={TRACKS_FIELD} {...focus}>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 font-semibold">
+              Sponsor tracks (optional)
+            </legend>
+            <p className="text-sm text-[#6E6E68]">
+              Select any that apply. All submitted projects enter general
+              judging, even if none are selected.
             </p>
-          )}
-        </fieldset>
-      </Field>
+            {detail.available_tracks.map((track) => (
+              <label key={track.id} className="flex items-start gap-2">
+                <input
+                  className="mt-1"
+                  type="checkbox"
+                  checked={trackIds.includes(track.id)}
+                  onChange={(event) =>
+                    onTracks(
+                      event.target.checked
+                        ? [...trackIds, track.id]
+                        : trackIds.filter((selected) => selected !== track.id)
+                    )
+                  }
+                />
+                <span>
+                  {track.name}
+                  {track.sponsor ? ` · ${track.sponsor}` : ""}
+                  {track.description && (
+                    <span className="block text-sm text-[#6E6E68]">
+                      {track.description}
+                    </span>
+                  )}
+                </span>
+              </label>
+            ))}
+            {unavailable.map((track) => (
+              <label key={track.id} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={trackIds.includes(track.id)}
+                  disabled={!trackIds.includes(track.id)}
+                  onChange={() =>
+                    onTracks(
+                      trackIds.filter((selected) => selected !== track.id)
+                    )
+                  }
+                />
+                {track.name} — unavailable; remove before saving
+              </label>
+            ))}
+            {errors.track_ids && (
+              <p role="alert" className="text-sm text-red-700">
+                {errors.track_ids}
+              </p>
+            )}
+          </fieldset>
+        </Field>
+      )}
     </>
   )
 }
