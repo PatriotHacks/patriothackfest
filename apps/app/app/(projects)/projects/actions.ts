@@ -194,3 +194,21 @@ export async function leaveProject(projectId: string): Promise<ProjectResult> {
   if (error) return projectFailure(error)
   return { error: null }
 }
+
+// Owner only. Files go after the rows, when the storage policy treats them as
+// orphaned. No revalidation, same as leaveProject.
+export async function deleteProjectDraft(
+  projectId: string
+): Promise<ProjectResult> {
+  const { supabase } = await getApplicant()
+  const id = z.guid().safeParse(projectId)
+  if (!id.success) return { error: "Invalid project" }
+  const { data, error } = await supabase.rpc(
+    "participant_delete_project_draft",
+    { p_project_id: id.data }
+  )
+  if (error) return projectFailure(error)
+  if (data.length > 0)
+    await supabase.storage.from(PROJECT_FILES_BUCKET).remove(data)
+  return { error: null }
+}

@@ -11,6 +11,7 @@ import { STALE_PROJECT_MESSAGE } from "@/lib/projects"
 import {
   addProjectCollaborator,
   createProject,
+  deleteProjectDraft,
   leaveProject,
   patchProject,
   removeProjectCollaborator,
@@ -63,7 +64,8 @@ describe("project mutations", () => {
     await addProjectCollaborator(id, "a@example.com")
     await removeProjectCollaborator(id, id)
     await leaveProject(id)
-    expect(getApplicant).toHaveBeenCalledTimes(7)
+    await deleteProjectDraft(id)
+    expect(getApplicant).toHaveBeenCalledTimes(8)
   })
   it("does not write when authentication fails", async () => {
     getApplicant.mockRejectedValue(new Error("Sign in"))
@@ -104,6 +106,7 @@ describe("project mutations", () => {
     ).toBeTruthy()
     expect((await removeProjectCollaborator(id, "bad")).error).toBeTruthy()
     expect((await leaveProject("bad")).error).toBeTruthy()
+    expect((await deleteProjectDraft("bad")).error).toBeTruthy()
     expect(rpc).not.toHaveBeenCalled()
   })
   it("does not report success or revalidate failed saves", async () => {
@@ -147,6 +150,34 @@ describe("project mutations", () => {
     expect((await leaveProject(id)).error).toBe(
       "The project owner cannot leave the team"
     )
+  })
+})
+
+describe("deleteProjectDraft", () => {
+  const path = `${id}/${questionId}/c0000000-0000-4000-8000-000000000001.pdf`
+  it("removes the deleted project's files after the rows", async () => {
+    rpc.mockResolvedValue({ data: [path], error: null })
+    expect(await deleteProjectDraft(id)).toEqual({ error: null })
+    expect(rpc).toHaveBeenCalledWith("participant_delete_project_draft", {
+      p_project_id: id,
+    })
+    expect(remove).toHaveBeenCalledWith([path])
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+  it("skips storage when the draft has no files", async () => {
+    rpc.mockResolvedValue({ data: [], error: null })
+    expect(await deleteProjectDraft(id)).toEqual({ error: null })
+    expect(remove).not.toHaveBeenCalled()
+  })
+  it("keeps files when the database refuses", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "Only unsubmitted drafts can be deleted" },
+    })
+    expect((await deleteProjectDraft(id)).error).toBe(
+      "Only unsubmitted drafts can be deleted"
+    )
+    expect(remove).not.toHaveBeenCalled()
   })
 })
 
