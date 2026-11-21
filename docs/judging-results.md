@@ -16,6 +16,7 @@ the C2/C3 read/write migrations; do not edit previously applied migrations:
 20261115000001_judge_review_reads.sql
 20261115000002_judge_review_writes.sql
 20261115000003_admin_judging_results.sql
+20261124000003_judging_scores.sql
 ```
 
 ```sh
@@ -38,22 +39,23 @@ service-role keys, or participant/judge privileges are added.
   into the selected **active** track for this event. General and every sponsor
   context have separate scorecards and averages. Invalid, inactive, unknown, and
   foreign-event contexts show an explicit unavailable message, not General data.
-- Exclude draft/withdrawn projects, unfinished scorecards (even with all four
-  scores saved), and cancelled assignments. A completed review requires a
+- Exclude draft/withdrawn projects, unfinished scorecards (even with every
+  criterion scored), and cancelled assignments. A completed review requires a
   submission timestamp on its non-cancelled assignment.
-- Mean total out of 20 uses the existing database-generated four-score sum, never
-  a client total. Every qualifying submitted review counts, including above-target
+- Each judge's score is the mean of their criterion scores (1.0 to 5.0); the
+  project average out of 5 is the mean of those judge scores, never a client value. Every qualifying submitted review counts, including above-target
   reviews and completed work from a subsequently deactivated judge.
 - **Completed reviews / target** uses the current general or track review target.
   A cancellation never reduces the configured target. This is not A2's
   **Assigned / target** coverage: an assigned slot is not a completed review.
 - **Insufficient coverage** means completed count is below target. Zero-review
-  projects remain visible with **No reviews** and null average, not 0/20. Averages
+  projects remain visible with **No reviews** and null average, not 0/5. Averages
   with insufficient coverage should not be treated as final results.
 - Highest unrounded database average first; display two decimal places. Equal
   means are **Tied average**, including ties across pages and ties with different
-  review counts/coverage. Exact tie equality uses reduced sum/count fractions,
-  not rounded display strings. Two equal-looking displayed means may not be tied.
+  review counts/coverage. Every submitted review scores every criterion, so the
+  mean equals sum/count of all scores; tie equality compares that reduced
+  fraction, not rounded display strings. Two equal-looking displayed means may not be tied.
 - Project-name/ID ordering within ties is stable presentation only, not a
   tie-break, rank, or winner decision. Unscored projects appear last and are not
   marked tied.

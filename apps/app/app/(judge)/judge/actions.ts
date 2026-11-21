@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache"
 
 import { getApplicant } from "@/lib/applicant"
 import { getJudgeEvent, type JudgeEvent } from "@/lib/judge-access"
-import { getJudgeAssignment, getJudgeQueue } from "@/lib/judge-review-data"
+import {
+  acknowledgeJudgeBriefing,
+  getJudgeQueue,
+} from "@/lib/judge-review-data"
 import {
   judgeContinuation,
   judgeRouteSchema,
@@ -16,22 +19,12 @@ import {
 export type ReviewResult = {
   error: string | null
   assignment?: JudgeScorecard
-  fieldErrors?: Record<string, string>
 }
 
 export async function saveJudgeReview(input: unknown): Promise<ReviewResult> {
   const { supabase } = await getApplicant()
   const parsed = reviewSaveSchema.safeParse(input)
-  if (!parsed.success)
-    return {
-      error: "Check the scorecard fields",
-      fieldErrors: Object.fromEntries(
-        parsed.error.issues.map((issue) => [
-          issue.path.join("."),
-          issue.message,
-        ])
-      ),
-    }
+  if (!parsed.success) return { error: "Check the scorecard fields" }
   const value = parsed.data
   const { data, error } = await supabase.rpc("judge_save_review", {
     p_event_slug: value.eventSlug,
@@ -51,7 +44,8 @@ export async function saveJudgeReview(input: unknown): Promise<ReviewResult> {
 }
 
 export async function continueJudgeQueue(
-  eventSlug: string
+  eventSlug: string,
+  afterId?: string
 ): Promise<{ error: string | null; href?: string }> {
   await getApplicant()
   if (!judgeRouteSchema.shape.eventSlug.safeParse(eventSlug).success)
@@ -59,36 +53,44 @@ export async function continueJudgeQueue(
   try {
     const queue = await getJudgeQueue(eventSlug)
     return queue
-      ? { error: null, href: judgeContinuation(eventSlug, queue) }
+      ? { error: null, href: judgeContinuation(eventSlug, queue, afterId) }
       : { error: "Judge access unavailable" }
   } catch {
-    return {
-      error:
-        "Your review is submitted, but the queue could not be loaded. Try Continue again.",
-    }
+    return { error: "Could not load your judging queue. Try again." }
   }
 }
 
-export async function checkJudgeReview(
-  input: unknown
-): Promise<ReviewResult & { event?: JudgeEvent }> {
+export async function acknowledgeBriefing(
+  eventSlug: string
+): Promise<{ error: string | null; href?: string }> {
   await getApplicant()
-  const parsed = judgeRouteSchema.strict().safeParse(input)
-  if (!parsed.success) return { error: "Invalid assignment" }
-  const { eventSlug, assignmentId } = parsed.data
+  if (!judgeRouteSchema.shape.eventSlug.safeParse(eventSlug).success)
+    return { error: "Invalid judging event" }
+  try {
+    await acknowledgeJudgeBriefing(eventSlug)
+  } catch {
+    return {
+      error:
+        "Could not record that you read the briefing. Try again or contact an organizer.",
+    }
+  }
+  revalidatePath("/judge")
+  return continueJudgeQueue(eventSlug)
+}
+
+export async function checkJudgeReview(
+  eventSlug: string
+): Promise<{ error: string | null; event?: JudgeEvent }> {
+  await getApplicant()
+  if (!judgeRouteSchema.shape.eventSlug.safeParse(eventSlug).success)
+    return { error: "Invalid judging event" }
   try {
     const event = await getJudgeEvent(eventSlug)
-    if (!event)
-      return {
-        error:
-          "Judge access unavailable. Ask an organizer to check your roster entry.",
-      }
-    const detail = await getJudgeAssignment(eventSlug, assignmentId)
-    return detail
-      ? { error: null, event, assignment: detail.assignment }
+    return event
+      ? { error: null, event }
       : {
           error:
-            "Assignment unavailable. Return to your dashboard or contact an organizer.",
+            "Judge access unavailable. Ask an organizer to check your roster entry.",
         }
   } catch {
     return {

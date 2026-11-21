@@ -34,7 +34,7 @@ insert into public.events (id, slug, name) values
   ('ec000000-0000-0000-0000-000000000001', 'competition-test-1', 'Competition test one'),
   ('ec000000-0000-0000-0000-000000000002', 'competition-test-2', 'Competition test two');
 
-select plan(65);
+select plan(68);
 
 select is((select count(*) from pg_class where relname in (
   'event_competition_settings', 'competition_tracks', 'projects', 'project_collaborators',
@@ -114,6 +114,8 @@ select throws_ok($$select public.admin_start_judging('ec000000-0000-0000-0000-00
 select lives_ok($$select pg_temp.save_settings(true, now() - interval '1 hour', now() - interval '1 minute')$$, 'expired deadline is representable');
 select throws_ok($$select public.admin_start_judging('ec000000-0000-0000-0000-000000000001')$$, 'P0001', 'Judging deadline must be in the future', 'expired judging cannot start');
 select lives_ok($$select pg_temp.save_settings(true, now() - interval '1 hour')$$, 'expired deadline can be extended');
+select throws_ok($$select public.admin_start_judging('ec000000-0000-0000-0000-000000000001')$$, 'P0001', 'Add at least one judging criterion before starting judging', 'empty rubric cannot start');
+select lives_ok($$select public.admin_save_judging_criterion('ec000000-0000-0000-0000-000000000001', 'Criterion A', '')$$, 'owner adds a criterion');
 select lives_ok($$select public.admin_start_judging('ec000000-0000-0000-0000-000000000001')$$, 'owner starts judging after closing');
 select ok((select judging_started_at is not null from public.event_competition_settings where event_id = 'ec000000-0000-0000-0000-000000000001'), 'start timestamp persisted');
 select set_config('test.started_at', (select judging_started_at::text from public.event_competition_settings where event_id = 'ec000000-0000-0000-0000-000000000001'), true);
@@ -135,10 +137,13 @@ select throws_ok($$delete from public.project_tracks where project_id = 'ac00000
 insert into public.judging_assignments (event_id, judge_id, project_id) values
   ('ec000000-0000-0000-0000-000000000001', 'bc000000-0000-0000-0000-000000000001', 'ac000000-0000-0000-0000-000000000001');
 select throws_ok($$insert into public.judging_assignments (event_id, judge_id, project_id) values ('ec000000-0000-0000-0000-000000000001', 'bc000000-0000-0000-0000-000000000001', 'ac000000-0000-0000-0000-000000000001')$$, '23505', null, 'NULL general context cannot duplicate');
-select throws_ok($$update public.judging_assignments set creativity_score = 6$$, '23514', null, 'out of range score rejected');
-select throws_ok($$update public.judging_assignments set submitted_at = now()$$, '23514', null, 'incomplete scorecard cannot be submitted');
-update public.judging_assignments set creativity_score = 2, technical_score = 3, impact_score = 4, presentation_score = 5, submitted_at = now();
-select is((select total_score::integer from public.judging_assignments where project_id = 'ac000000-0000-0000-0000-000000000001'), 14, 'database calculates score total');
+select set_config('test.assignment', (select id::text from public.judging_assignments where project_id = 'ac000000-0000-0000-0000-000000000001'), true);
+select set_config('test.criterion', (select id::text from public.judging_criteria where event_id = 'ec000000-0000-0000-0000-000000000001'), true);
+select throws_ok($$insert into public.judging_scores values (current_setting('test.assignment')::uuid, current_setting('test.criterion')::uuid, 'ec000000-0000-0000-0000-000000000001', 5.1)$$, '23514', null, 'out of range score rejected');
+select throws_ok($$insert into public.judging_scores values (current_setting('test.assignment')::uuid, current_setting('test.criterion')::uuid, 'ec000000-0000-0000-0000-000000000002', 3)$$, '23503', null, 'score cannot cross events');
+insert into public.judging_scores values (current_setting('test.assignment')::uuid, current_setting('test.criterion')::uuid, 'ec000000-0000-0000-0000-000000000001', 3.5);
+select is((select score from public.judging_scores where assignment_id = current_setting('test.assignment')::uuid), 3.5::numeric, 'tenth-step score stored');
+select throws_ok($$delete from public.judging_criteria$$, '23503', null, 'scored criterion cannot be deleted');
 select throws_ok($$insert into public.judging_assignments (event_id, judge_id, project_id, track_id) values ('ec000000-0000-0000-0000-000000000001', 'bc000000-0000-0000-0000-000000000001', 'ac000000-0000-0000-0000-000000000002', current_setting('test.competition_track')::uuid)$$, '23503', null, 'sponsor assignment requires project track opt-in');
 
 select * from finish(true);

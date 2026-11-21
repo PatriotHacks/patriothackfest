@@ -1,20 +1,27 @@
 import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
+import { BriefingReader } from "@/components/judge/briefing-reader"
 import { JudgeEventDetails } from "@/components/judge/event-details"
 import { JudgeQueueList } from "@/components/judge/queue"
+import { JudgeScenario } from "@/components/judge/scenario"
 import {
   getJudgeEvent,
   getJudgeEvents,
   getProjectSubmissionsCloseAt,
 } from "@/lib/judge-access"
 import { getJudgeQueue } from "@/lib/judge-review-data"
+import { judgeBriefingHref, judgeContinuation } from "@/lib/judge-reviews"
 import {
   formatSubmissionDeadline,
+  judgeWindowStatus,
   submissionsStillOpen,
 } from "@/lib/judge-status"
 
-export default async function JudgeDashboardPage() {
+export default async function JudgeDashboardPage({
+  searchParams,
+}: PageProps<"/judge">) {
+  const { briefing } = await searchParams
   const events = await getJudgeEvents()
   if (events.length === 0)
     return (
@@ -28,11 +35,21 @@ export default async function JudgeDashboardPage() {
       </section>
     )
   return events.map((event) => (
-    <JudgeEventSection key={event.event_id} slug={event.slug} />
+    <JudgeEventSection
+      key={event.event_id}
+      slug={event.slug}
+      briefing={briefing === event.slug}
+    />
   ))
 }
 
-async function JudgeEventSection({ slug }: { slug: string }) {
+async function JudgeEventSection({
+  slug,
+  briefing,
+}: {
+  slug: string
+  briefing: boolean
+}) {
   const event = await getJudgeEvent(slug)
   if (!event)
     return (
@@ -55,12 +72,27 @@ async function JudgeEventSection({ slug }: { slug: string }) {
           {formatSubmissionDeadline(closeAt)}
         </p>
       ) : queue ? (
-        <JudgeQueueList eventSlug={slug} queue={queue} />
+        <JudgeQueueList
+          eventSlug={slug}
+          queue={queue}
+          startHref={
+            judgeWindowStatus(event) !== "started"
+              ? null
+              : event.briefing_acknowledged_at
+                ? judgeContinuation(slug, queue)
+                : judgeBriefingHref(slug)
+          }
+        />
       ) : (
         <p>
           Judge access unavailable. Your roster may have changed; contact an
           organizer.
         </p>
+      )}
+      {briefing && (
+        <BriefingReader eventSlug={slug}>
+          <JudgeScenario />
+        </BriefingReader>
       )}
     </section>
   )

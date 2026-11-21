@@ -131,7 +131,7 @@ New tests:
 
 - `apps/admin/lib/judging.test.ts`: date conversion, final included minute, repeated-save round trip, missing dates, invalid/nonexistent local times, review targets, track input.
 - `apps/admin/app/(admin)/judging/actions.test.ts` and `apps/admin/app/(admin)/submission-forms/actions.test.ts`: organizer checks, input rejection, scoped mutations, date payloads merged with stored settings, database errors, revalidation.
-- `supabase/tests/28_competition_foundation_test.sql`: 64 assertions for RLS/default-deny access, roles/auth methods, independent events, dates, tracks, Start judging, permanent content locks, post-expiry extensions, contextual uniqueness, foreign keys, and generated scores.
+- `supabase/tests/28_competition_foundation_test.sql`: 68 assertions for RLS/default-deny access, roles/auth methods, independent events, dates, tracks, Start judging, permanent content locks, post-expiry extensions, contextual uniqueness, foreign keys, the rubric requirement, and criterion score constraints.
 
 The database suite was run on an isolated PostgreSQL 17 instance with pgTAP and lightweight Supabase auth/storage SQL fixtures. That verifies real PostgreSQL migrations/RLS/RPCs; it does not replace the browser rehearsal against actual Supabase OTP/OAuth/PostgREST. No hosted auth/browser flow was exercised automatically.
 
@@ -146,7 +146,7 @@ Do not create alternate copies of these tables/settings:
 | `project_collaborators(project_id, event_id, user_id)`                                                                                                             | B owns lookup, eligibility, duplicates/owner exclusion, and access policies         |
 | `project_tracks(project_id, track_id, event_id)`; active `competition_tracks`                                                                                      | B implements explicit opt-ins and active-track checks                               |
 | `event_judges`: `kind=general/sponsor`, `email`, nullable `user_id`, `active`, `capacity=20`; `judge_track_scopes`                                                 | C owns verified-email binding and event-scoped access                               |
-| `judging_assignments`: nullable `track_id` means general; four `*_score` columns, generated `total_score`, notes, `submitted_at`, `cancelled`                      | C owns draft/final saves and submitted-review locking; A owns assignment generation |
+| `judging_assignments`: nullable `track_id` means general; per-criterion scores in `judging_scores`, notes, `submitted_at`, `cancelled`                             | C owns draft/final saves and submitted-review locking; A owns assignment generation |
 
 Same-event composite foreign keys are already present. General-context uniqueness handles `NULL` correctly. Cancelled rows retain their uniqueness slot so generation must not automatically recreate cancelled pairs.
 

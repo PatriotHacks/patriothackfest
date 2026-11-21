@@ -7,12 +7,14 @@ values('ec400000-0000-0000-0000-000000000001',true,now()-interval '3 days',now()
 insert into public.projects(id,event_id,owner_user_id,status,submitted_at) values('ac400000-0000-0000-0000-000000000001','ec400000-0000-0000-0000-000000000001','dc400000-0000-0000-0000-000000000001','submitted',now());
 insert into public.event_judges(id,event_id,email,user_id) values('bc400000-0000-0000-0000-000000000001','ec400000-0000-0000-0000-000000000001','c3-2@example.test','dc400000-0000-0000-0000-000000000002');
 insert into public.judging_assignments(id,event_id,judge_id,project_id) values('fc400000-0000-0000-0000-000000000001','ec400000-0000-0000-0000-000000000001','bc400000-0000-0000-0000-000000000001','ac400000-0000-0000-0000-000000000001');
+insert into public.judging_criteria(id,event_id,position,name) values('9c400000-0000-0000-0000-000000000001','ec400000-0000-0000-0000-000000000001',1,'Criterion A');
+update public.event_judges set briefing_acknowledged_at=now() where id='bc400000-0000-0000-0000-000000000001';
 create function pg_temp.login() returns void language sql as $$
  select set_config('request.jwt.claims','{"sub":"dc400000-0000-0000-0000-000000000002","email":"c3-2@example.test","amr":[{"method":"otp"}]}',true);
  select set_config('role','authenticated',true);
 $$;
 create function pg_temp.save(submit boolean default false) returns jsonb language sql as $$
- select public.judge_save_review('c3-deadlines','fc400000-0000-0000-0000-000000000001','{"creativity_score":3,"technical_score":3,"impact_score":3,"presentation_score":3}','retained draft',submit);
+ select public.judge_save_review('c3-deadlines','fc400000-0000-0000-0000-000000000001','{"9c400000-0000-0000-0000-000000000001":3}','retained draft',submit);
 $$;
 select no_plan();
 select pg_temp.login();
@@ -43,7 +45,12 @@ select lives_ok($$select pg_temp.save(true)$$,'pre-expiry extension permits subm
 reset role;
 update public.event_competition_settings set judging_close_at=clock_timestamp()+interval '3 days' where event_id='ec400000-0000-0000-0000-000000000001';
 set local role authenticated;
-select throws_ok($$select pg_temp.save()$$,'PT409','Submitted reviews are read-only','extension never reopens submitted');
+select lives_ok($$select pg_temp.save()$$,'submitted review stays editable while open');
+select isnt(public.judge_assignment('c3-deadlines','fc400000-0000-0000-0000-000000000001')->'assignment'->>'submitted_at',null::text,'edit keeps review submitted');
+reset role;
+update public.event_competition_settings set judging_close_at=clock_timestamp() where event_id='ec400000-0000-0000-0000-000000000001';
+set local role authenticated;
+select throws_ok($$select pg_temp.save(true)$$,'PT410',null,'submitted review locked at cutoff');
 reset role;
 select throws_ok($$update public.projects set name='unfreeze' where id='ac400000-0000-0000-0000-000000000001'$$,'P0001','Project content and tracks are locked after judging starts','extension does not reopen project content');
 select * from finish(true);

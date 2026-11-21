@@ -23,6 +23,7 @@ insert into public.judge_track_scopes(judge_id,track_id,event_id) values
  ('ba300000-0000-0000-0000-000000000003','ca300000-0000-0000-0000-000000000002','ea300000-0000-0000-0000-000000000001'),
  ('ba300000-0000-0000-0000-000000000004','ca300000-0000-0000-0000-000000000001','ea300000-0000-0000-0000-000000000001');
 create function pg_temp.generate() returns jsonb language sql as $$select public.admin_generate_assignments('ea300000-0000-0000-0000-000000000001')$$;
+insert into public.judging_criteria(event_id,position,name) values('ea300000-0000-0000-0000-000000000001',1,'Criterion A');
 select plan(15);
 select set_config('request.jwt.claims','{"sub":"da300000-0000-0000-0000-000000000001","email":"a2-gen-admin@example.test","amr":[{"method":"oauth"}]}',true);
 set local role authenticated;
@@ -36,7 +37,7 @@ select is((select judge_id from public.judging_assignments where track_id='ca300
 select is((select count(*) from public.judging_assignments where project_id in ('aa300000-0000-0000-0000-000000000003','aa300000-0000-0000-0000-000000000004')),0::bigint,'drafts and withdrawn excluded');
 select is((select count(*) from public.judging_assignments where judge_id='ba300000-0000-0000-0000-000000000005'),0::bigint,'unbound self-review excluded');
 select is((select count(*) from public.judging_assignments where judge_id='ba300000-0000-0000-0000-000000000001'),2::bigint,'least load and ID tie-break fill general capacity');
-update public.judging_assignments set creativity_score=1,technical_score=2,impact_score=3,presentation_score=4,submitted_at=now() where judge_id='ba300000-0000-0000-0000-000000000002';
+update public.judging_assignments set submitted_at=now() where judge_id='ba300000-0000-0000-0000-000000000002';
 update public.event_judges set capacity=2 where id='ba300000-0000-0000-0000-000000000002';
 set local role authenticated;
 select is(pg_temp.generate(),'{"created":1,"missing":0}'::jsonb,'capacity increase fills only missing work');

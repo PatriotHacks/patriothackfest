@@ -99,15 +99,15 @@ export function JudgingSettingsForm({
       {started ? (
         <p className="text-sm">
           Judging started {formatInZone(settings!.judging_started_at!)}. Project
-          content, collaborators, tracks, questions, and submission settings are
-          permanently locked. You can still extend judging.
+          content, collaborators, tracks, questions, the rubric, and submission
+          settings are permanently locked. You can still extend judging.
         </p>
       ) : (
         <div className="flex flex-col items-start gap-2 border-t pt-4">
           <p className="text-sm text-muted-foreground">
-            Save settings first. Start judging only after submissions close.
-            This permanently locks project content, collaborators, tracks, and
-            questions.
+            Save settings and add rubric criteria first. Start judging only
+            after submissions close. This permanently locks project content,
+            collaborators, tracks, questions, and the rubric.
           </p>
           <Button
             type="button"
@@ -121,7 +121,7 @@ export function JudgingSettingsForm({
             onClick={() => {
               if (
                 !window.confirm(
-                  "Start judging? Project content, collaborators, tracks, questions, and submission settings will be permanently locked. This cannot be undone."
+                  "Start judging? Project content, collaborators, tracks, questions, the rubric, and submission settings will be permanently locked. This cannot be undone."
                 )
               )
                 return

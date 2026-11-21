@@ -2,76 +2,113 @@ import { describe, expect, it } from "vitest"
 import {
   judgeAssignmentSchema,
   judgeContinuation,
+  queuePosition,
+  reviewAverage,
+  reviewComplete,
   reviewContext,
   reviewSaveSchema,
+  stepScore,
+  type JudgeQueue,
 } from "./judge-reviews"
 
 const id = "a0000000-0000-4000-8000-000000000001"
+const other = "a0000000-0000-4000-8000-000000000002"
 const draft = {
   eventSlug: "fall-2026",
   assignmentId: id,
-  scores: {
-    creativity_score: null,
-    technical_score: 3,
-    impact_score: null,
-    presentation_score: 5,
-  },
+  scores: { [id]: null, [other]: 3.7 },
   notes: "private",
   submit: false,
 }
+const queue = (submitted: (string | null)[]): JudgeQueue => ({
+  total: submitted.length,
+  completed: submitted.filter(Boolean).length,
+  assignments: submitted.map((submitted_at, index) => ({
+    id: `a0000000-0000-4000-8000-00000000000${index + 1}`,
+    project_name: `Project ${index + 1}`,
+    track_id: null,
+    track_name: null,
+    submitted_at,
+    in_progress: false,
+  })),
+})
 describe("judge scorecard contracts", () => {
-  it("permits incomplete drafts but requires all four final scores", () => {
+  it("permits partial drafts and final submissions of criterion scores", () => {
     expect(reviewSaveSchema.safeParse(draft).success).toBe(true)
     expect(reviewSaveSchema.safeParse({ ...draft, submit: true }).success).toBe(
-      false
+      true
     )
   })
-  it.each([0, 6, 2.5, "3", NaN])("rejects invalid score %s", (score) => {
+  it.each([1, 1.1, 3.7, 4.9, 5])("accepts score %s", (score) => {
     expect(
-      reviewSaveSchema.safeParse({
-        ...draft,
-        scores: { ...draft.scores, creativity_score: score },
-      }).success
-    ).toBe(false)
+      reviewSaveSchema.safeParse({ ...draft, scores: { [id]: score } }).success
+    ).toBe(true)
   })
-  it("bounds notes and rejects trusted totals", () => {
+  it.each([0, 0.9, 5.1, 2.55, "3", NaN])(
+    "rejects invalid score %s",
+    (score) => {
+      expect(
+        reviewSaveSchema.safeParse({ ...draft, scores: { [id]: score } })
+          .success
+      ).toBe(false)
+    }
+  )
+  it("bounds notes and rejects non-criterion keys and extra fields", () => {
     expect(
       reviewSaveSchema.safeParse({ ...draft, notes: "n".repeat(5001) }).success
     ).toBe(false)
-    expect(reviewSaveSchema.safeParse({ ...draft, total: 20 }).success).toBe(
+    expect(
+      reviewSaveSchema.safeParse({ ...draft, scores: { creativity: 3 } })
+        .success
+    ).toBe(false)
+    expect(reviewSaveSchema.safeParse({ ...draft, total: 5 }).success).toBe(
       false
     )
   })
-  it("keeps sponsor contexts distinct and selects first unfinished review", () => {
+  it("averages only complete scorecards", () => {
+    expect(reviewComplete({})).toBe(false)
+    expect(reviewComplete({ [id]: 3, [other]: null })).toBe(false)
+    expect(reviewAverage({ [id]: 3, [other]: null })).toBeNull()
+    expect(reviewAverage({ [id]: 3.5, [other]: 4 })).toBe(3.75)
+  })
+  it("steps scores by 0.1 from the midpoint within bounds", () => {
+    expect(stepScore(null, 1)).toBe(3.1)
+    expect(stepScore(null, -1)).toBe(2.9)
+    expect(stepScore(3.7, 1)).toBe(3.8)
+    expect(stepScore(5, 1)).toBe(5)
+    expect(stepScore(1, -1)).toBe(1)
+  })
+  it("keeps sponsor contexts distinct", () => {
     expect(reviewContext({ track_id: null, track_name: null })).toBe(
       "General judging"
     )
     expect(reviewContext({ track_id: id, track_name: "Track A" })).toBe(
       "Sponsor track: Track A"
     )
-    expect(
-      judgeContinuation("fall-2026", {
-        total: 0,
-        completed: 0,
-        assignments: [],
-      })
-    ).toBe("/judge")
-    expect(
-      judgeContinuation("fall-2026", {
-        total: 1,
-        completed: 0,
-        assignments: [
-          {
-            id,
-            project_name: "Project",
-            track_id: id,
-            track_name: "Track A",
-            submitted_at: null,
-            in_progress: false,
-          },
-        ],
-      })
-    ).toBe(`/judge/fall-2026/${id}`)
+  })
+  it("continues in fixed order, wrapping to earlier skipped reviews", () => {
+    expect(judgeContinuation("fall-2026", queue([]))).toBe("/judge")
+    expect(judgeContinuation("fall-2026", queue([null, null]))).toBe(
+      `/judge/fall-2026/${id}`
+    )
+    expect(judgeContinuation("fall-2026", queue([null, null]), id)).toBe(
+      `/judge/fall-2026/${other}`
+    )
+    expect(judgeContinuation("fall-2026", queue([null, "done"]), id)).toBe(
+      `/judge/fall-2026/${id}`
+    )
+    expect(judgeContinuation("fall-2026", queue(["done", "done"]), id)).toBe(
+      "/judge"
+    )
+  })
+  it("locates an assignment with previous and next links", () => {
+    expect(queuePosition("fall-2026", queue([null, null]), other)).toEqual({
+      number: 2,
+      total: 2,
+      previous: `/judge/fall-2026/${id}`,
+      next: null,
+    })
+    expect(queuePosition("fall-2026", queue([null]), other)).toBeNull()
   })
 })
 
@@ -81,15 +118,12 @@ describe("judge assignment payload", () => {
       id,
       track_id: null,
       track_name: null,
-      creativity_score: null,
-      technical_score: null,
-      impact_score: null,
-      presentation_score: null,
-      total_score: null,
+      scores: { [other]: 4.5 },
       submitted_at: null,
       notes: "",
     },
     project: { name: "Project" },
+    criteria: [{ id: other, name: "Criterion A", description: "" }],
     answers: [
       {
         question_id: "b0000000-0000-4000-8000-000000000001",
@@ -130,6 +164,10 @@ describe("judge assignment payload", () => {
       judgeAssignmentSchema.parse({ ...payload, team: ["Ada", null] }).team
     ).toEqual(["Ada", null])
     const { team: _team, ...rest } = payload
+    expect(judgeAssignmentSchema.safeParse(rest).success).toBe(false)
+  })
+  it("requires the event criteria", () => {
+    const { criteria: _criteria, ...rest } = payload
     expect(judgeAssignmentSchema.safeParse(rest).success).toBe(false)
   })
   it("rejects payloads without the answers list", () => {

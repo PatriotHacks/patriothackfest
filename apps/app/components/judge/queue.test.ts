@@ -8,6 +8,7 @@ describe("judge queue", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeQueueList, {
         eventSlug: "fall-2026",
+        startHref: "/judge?briefing=fall-2026",
         queue: {
           total: 2,
           completed: 1,
@@ -35,16 +36,42 @@ describe("judge queue", () => {
     expect(html).toContain("1 / 2 reviews completed")
     expect(html).toContain("Track A")
     expect(html).toContain("Track B")
-    expect(html).toContain("Submitted — read-only")
+    expect(html).toContain("Submitted")
     expect(html).toContain("Draft saved")
     expect(html).toContain("Continue judging")
+    expect(html).toContain('href="/judge?briefing=fall-2026"')
     expect(html).toContain("mailto:hello@patriothackfest.com")
+  })
+  it("hides the start link when judging is not open", () => {
+    const html = renderToStaticMarkup(
+      createElement(JudgeQueueList, {
+        eventSlug: "fall-2026",
+        startHref: null,
+        queue: {
+          total: 1,
+          completed: 0,
+          assignments: [
+            {
+              id,
+              project_name: "Project",
+              track_id: null,
+              track_name: null,
+              submitted_at: null,
+              in_progress: false,
+            },
+          ],
+        },
+      })
+    )
+    expect(html).not.toContain("Start judging")
+    expect(html).toContain("Not started")
   })
   it("shows honest empty state instead of fake completed work", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeQueueList, {
         eventSlug: "fall-2026",
         queue: { total: 0, completed: 0, assignments: [] },
+        startHref: null,
       })
     )
     expect(html).toContain("No reviews assigned")

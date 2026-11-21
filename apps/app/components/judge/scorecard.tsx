@@ -5,8 +5,17 @@ import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useReducer, useRef, useTransition } from "react"
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useReducer,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 
 import {
   checkJudgeReview,
@@ -20,32 +29,59 @@ import {
   reviewIsDirty,
 } from "@/lib/judge-review-form"
 import {
+  reviewAverage,
+  reviewComplete,
   reviewContext,
-  reviewCriteria,
+  type JudgeCriterion,
   type JudgeScorecard,
+  type queuePosition,
 } from "@/lib/judge-reviews"
 import { judgeWindowStatus } from "@/lib/judge-status"
 import { JudgeDeadline } from "./deadline"
+import { ScoreSlider } from "./score-slider"
 
 export function JudgeScorecardForm({
   assignment,
+  criteria,
   event,
+  position,
 }: {
   assignment: JudgeScorecard
+  criteria: JudgeCriterion[]
   event: JudgeEvent
+  position: ReturnType<typeof queuePosition>
 }) {
   const [state, dispatch] = useReducer(
     reviewFormReducer,
-    { assignment, event },
+    { assignment, criteria, event },
     initialReviewFormState
+  )
+  const [status, setStatus] = useState<{ error: boolean; text: string } | null>(
+    null
   )
   const [pending, startTransition] = useTransition()
   const busy = useRef(false)
+  const latest = useRef(state)
+  const inflight = useRef<Promise<boolean> | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const id = useId()
   const router = useRouter()
   const submitted = Boolean(state.assignment.submitted_at)
   const dirty = reviewIsDirty(state)
-  const phase = judgeWindowStatus(state.event)
+  const open = judgeWindowStatus(state.event) === "started"
+  const complete = reviewComplete(state.scores)
+  const average = reviewAverage(state.scores)
+
+  useEffect(() => {
+    latest.current = state
+  })
+
+  const autosave = useEffectEvent(() => void persist(false))
+  useEffect(() => {
+    if (!dirty || !open) return
+    timer.current = setTimeout(autosave, 800)
+    return () => clearTimeout(timer.current)
+  }, [dirty, open, state.scores, state.notes])
 
   useEffect(() => {
     if (!dirty) return
@@ -74,198 +110,247 @@ export function JudgeScorecardForm({
       }
     })
   }
-  async function continueNext() {
-    try {
-      const result = await continueJudgeQueue(state.event.slug)
-      if (result.error || !result.href) {
-        dispatch({
-          type: "failure",
-          message:
-            result.error ??
-            "Review submitted. Could not load the next review; try Continue again.",
-        })
-        return
-      }
-      router.push(result.href)
-    } catch {
-      dispatch({
-        type: "failure",
-        message:
-          "Review submitted. Could not load the next review; try Continue again.",
+  async function persist(submit: boolean): Promise<boolean> {
+    clearTimeout(timer.current)
+    while (inflight.current) await inflight.current
+    const current = latest.current
+    if (!submit && !reviewIsDirty(current)) return true
+    setStatus({ error: false, text: "Saving…" })
+    const request = saveJudgeReview({
+      eventSlug: current.event.slug,
+      assignmentId: current.assignment.id,
+      scores: current.scores,
+      notes: current.notes,
+      submit,
+    })
+      .then(
+        (result) => {
+          if (result.error || !result.assignment) {
+            setStatus({
+              error: true,
+              text: result.error ?? "Could not save your review",
+            })
+            return false
+          }
+          latest.current = { ...latest.current, assignment: result.assignment }
+          dispatch({
+            type: "saved",
+            assignment: result.assignment,
+            message: submit ? "Review submitted" : null,
+          })
+          setStatus({ error: false, text: "Saved" })
+          return true
+        },
+        () => {
+          setStatus({
+            error: true,
+            text: "Could not save. Retry, or sign in again if your session expired.",
+          })
+          return false
+        }
+      )
+      .then((ok) => {
+        inflight.current = null
+        return ok
       })
-    }
+    inflight.current = request
+    return request
   }
-  function save(submit: boolean) {
-    if (submitted) return
+  function submit() {
     run(async () => {
-      const result = await saveJudgeReview({
-        eventSlug: state.event.slug,
-        assignmentId: state.assignment.id,
-        scores: state.scores,
-        notes: state.notes,
-        submit,
-      })
-      if (result.error || !result.assignment) {
+      if (!(await persist(true))) return
+      const next = await continueJudgeQueue(
+        state.event.slug,
+        state.assignment.id
+      )
+      if (next.error || !next.href) {
         dispatch({
           type: "failure",
-          message: result.error ?? "Could not save your review",
-          fieldErrors: result.fieldErrors,
+          message: `Review submitted. ${next.error ?? "Could not load the next review."}`,
         })
         return
       }
-      dispatch({ type: "saved", assignment: result.assignment })
-      if (result.assignment.submitted_at && submit) await continueNext()
+      router.push(next.href)
     })
   }
   function checkDeadline() {
     run(async () => {
-      const result = await checkJudgeReview({
-        eventSlug: state.event.slug,
-        assignmentId: state.assignment.id,
-      })
-      if (result.error || !result.event || !result.assignment) {
+      const result = await checkJudgeReview(state.event.slug)
+      if (result.error || !result.event) {
         dispatch({
           type: "failure",
-          message: result.error ?? "Could not check this review",
+          message: result.error ?? "Could not check the deadline",
         })
         return
       }
-      dispatch({
-        type: "checked",
-        event: result.event,
-        assignment: result.assignment,
-      })
+      dispatch({ type: "checked", event: result.event })
     })
   }
+  function leave(event: React.MouseEvent, href: string) {
+    if (!dirty) return
+    event.preventDefault()
+    run(async () => {
+      if (
+        (await persist(false)) ||
+        window.confirm("Leave without saving your changes?")
+      )
+        router.push(href)
+    })
+  }
+
   return (
     <section
-      className={cn(PAPER, "flex flex-col gap-4 p-6")}
-      aria-label="Your scorecard"
+      className={cn(PAPER, "flex flex-col gap-5 p-6")}
+      aria-label="Your scores"
     >
-      <h2 className="text-xl font-semibold">
-        Your scorecard · {reviewContext(state.assignment)}
-      </h2>
-      <JudgeDeadline closeAt={state.event.judging_close_at} />
-      {!submitted && phase !== "started" && (
-        <p role="status">
-          Judging is not open. Saved drafts are retained. You can check for an
-          extension or retry saving without losing these inputs.
-        </p>
-      )}
-      <p className="text-sm">
-        Four fixed criteria, each from 1 to 5. Anchors: 1 = limited evidence, 3
-        = solid, 5 = exceptional. Notes are private to your scorecard.
-      </p>
-      <form
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault()
-          save(false)
-        }}
-        className="flex flex-col gap-4"
-      >
-        <fieldset
-          disabled={pending || submitted}
-          className="grid gap-4 sm:grid-cols-2"
+      {position && (
+        <nav
+          aria-label="Assignments"
+          className="flex items-center justify-between gap-3 text-sm"
         >
-          <legend className="sr-only">Review scores</legend>
-          {reviewCriteria.map(({ key, label }) => (
-            <div key={key} className="flex flex-col gap-1">
-              <Label htmlFor={`${id}-${key}`}>{label}</Label>
-              <select
-                id={`${id}-${key}`}
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                value={state.scores[key] ?? ""}
-                onChange={(event) =>
-                  dispatch({
-                    type: "score",
-                    key,
-                    value:
-                      event.target.value === ""
-                        ? null
-                        : Number(event.target.value),
-                  })
-                }
-                aria-invalid={Boolean(state.fieldErrors[`scores.${key}`])}
-                aria-describedby={
-                  state.fieldErrors[`scores.${key}`]
-                    ? `${id}-${key}-error`
-                    : undefined
-                }
-              >
-                <option value="">Not scored</option>
-                {[1, 2, 3, 4, 5].map((score) => (
-                  <option key={score} value={score}>
-                    {score}
-                  </option>
-                ))}
-              </select>
-              {state.fieldErrors[`scores.${key}`] && (
-                <p id={`${id}-${key}-error`} className="text-sm text-red-700">
-                  {state.fieldErrors[`scores.${key}`]}
-                </p>
+          {position.previous ? (
+            <Link
+              href={position.previous}
+              onClick={(event) => leave(event, position.previous!)}
+              className="underline"
+            >
+              Previous
+            </Link>
+          ) : (
+            <span aria-hidden className="text-[#6E6E68]">
+              Previous
+            </span>
+          )}
+          <span className="font-semibold">
+            Project {position.number} of {position.total}
+          </span>
+          {position.next ? (
+            <Link
+              href={position.next}
+              onClick={(event) => leave(event, position.next!)}
+              className="underline"
+            >
+              Next
+            </Link>
+          ) : (
+            <span aria-hidden className="text-[#6E6E68]">
+              Next
+            </span>
+          )}
+        </nav>
+      )}
+      <div className="flex flex-col gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">Your scores</h2>
+          {open && criteria.length > 0 && (
+            <div className="flex items-center gap-3">
+              {status && (
+                <span
+                  role={status.error ? "alert" : undefined}
+                  className={cn(
+                    "text-sm",
+                    status.error ? "text-red-700" : "text-[#6E6E68]"
+                  )}
+                >
+                  {status.text}
+                </span>
+              )}
+              {!submitted && (
+                <Button
+                  type="submit"
+                  form={`${id}-form`}
+                  disabled={pending || !complete}
+                >
+                  Submit & next
+                </Button>
               )}
             </div>
-          ))}
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <Label htmlFor={`${id}-notes`}>Private notes (optional)</Label>
-            <Textarea
-              id={`${id}-notes`}
-              rows={5}
-              maxLength={5000}
-              value={state.notes}
-              onChange={(event) =>
-                dispatch({ type: "notes", value: event.target.value })
-              }
-              aria-invalid={Boolean(state.fieldErrors.notes)}
-            />
-            {state.fieldErrors.notes && (
-              <p className="text-sm text-red-700">{state.fieldErrors.notes}</p>
-            )}
-          </div>
-        </fieldset>
-        {submitted ? (
-          <>
-            <p className="font-semibold">
-              Submitted — read-only · Total: {state.assignment.total_score} / 20
-            </p>
-            <Button
-              type="button"
-              disabled={pending}
-              onClick={() => run(continueNext)}
-            >
-              Continue to next review / dashboard
-            </Button>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-3">
-              <Button type="submit" variant="outline" disabled={pending}>
-                {pending ? "Saving…" : "Save draft"}
-              </Button>
+          )}
+        </div>
+        <p className="text-sm">
+          {reviewContext(state.assignment)}
+          {submitted && " · Submitted"}
+        </p>
+        <JudgeDeadline closeAt={state.event.judging_close_at} />
+      </div>
+      {criteria.length === 0 ? (
+        <p role="status">
+          Scoring criteria have not been set up for this event yet. Contact an
+          organizer before scoring.
+        </p>
+      ) : (
+        <form
+          id={`${id}-form`}
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!submitted && complete) submit()
+          }}
+          className="flex flex-col gap-5"
+        >
+          {!open && (
+            <div className="flex flex-col gap-2" role="status">
+              <p>
+                Judging is not open, so scores cannot be changed. Saved scores
+                are kept.
+              </p>
               <Button
                 type="button"
-                disabled={pending}
-                onClick={() => save(true)}
-              >
-                Submit &amp; next
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
+                variant="outline"
+                className="w-fit"
                 disabled={pending}
                 onClick={checkDeadline}
               >
-                Check deadline / extension
+                Check for an extension
               </Button>
             </div>
-            <p className="text-sm">
-              {dirty ? "Unsaved changes — save before leaving." : "Draft saved"}{" "}
-              Submitted reviews cannot be edited.
+          )}
+          <fieldset disabled={pending || !open} className="flex flex-col gap-6">
+            <legend className="sr-only">Criterion scores</legend>
+            {criteria.map((criterion) => (
+              <ScoreSlider
+                key={criterion.id}
+                criterion={criterion}
+                value={state.scores[criterion.id] ?? null}
+                disabled={pending || !open}
+                onChange={(value) =>
+                  dispatch({ type: "score", id: criterion.id, value })
+                }
+              />
+            ))}
+            <p className="flex justify-between border-t border-[#E7E4D9] pt-4 font-semibold">
+              <span>Your average</span>
+              <span className="tabular-nums">
+                {average === null
+                  ? "Score every criterion"
+                  : average.toFixed(2)}
+              </span>
             </p>
-          </>
-        )}
-      </form>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor={`${id}-notes`}>Private notes (optional)</Label>
+              <p className="text-sm text-[#6E6E68]">
+                Only organizers see this.
+              </p>
+              <Textarea
+                id={`${id}-notes`}
+                rows={4}
+                maxLength={5000}
+                value={state.notes}
+                onChange={(event) =>
+                  dispatch({ type: "notes", value: event.target.value })
+                }
+              />
+            </div>
+          </fieldset>
+          {open && (
+            <p className="text-sm text-[#6E6E68]">
+              {submitted
+                ? "You can edit this review until judging closes. Changes save automatically."
+                : "Your draft saves automatically. Score every criterion to submit."}
+            </p>
+          )}
+        </form>
+      )}
       <p role="status" aria-live="polite" className="text-sm">
         {state.message}
       </p>

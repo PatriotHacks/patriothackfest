@@ -22,15 +22,11 @@ const event = randomUUID(),
   owner = randomUUID(),
   user = randomUUID(),
   judge = randomUUID(),
-  replacement = randomUUID()
+  replacement = randomUUID(),
+  criterion = randomUUID()
 const slug = `c2-race-${event}`,
   email = `${user}@example.test`
-const scores = {
-  creativity_score: 2,
-  technical_score: 3,
-  impact_score: 4,
-  presentation_score: 5,
-}
+const scores = { [criterion]: 3.5 }
 const judgeClaims = { sub: user, email, amr: [{ method: "otp" }] }
 const organizerClaims = {
   sub: owner,
@@ -72,17 +68,25 @@ function outcome(promise) {
     (error) => ({ error })
   )
 }
+const projectOwners = []
 async function assignment() {
   const project = randomUUID(),
-    id = randomUUID()
+    id = randomUUID(),
+    projectOwner = randomUUID()
+  projectOwners.push(projectOwner)
   // Make fixtures before the event's permanent content freeze.
   await admin.query(
     "update public.event_competition_settings set judging_started_at=null where event_id=$1",
     [event]
   )
+  // One team per participant: each project gets its own owner.
+  await admin.query("insert into auth.users(id,email) values($1,$2)", [
+    projectOwner,
+    `${projectOwner}@example.test`,
+  ])
   await admin.query(
     "insert into public.projects(id,event_id,owner_user_id,status,submitted_at) values($1,$2,$3,'submitted',now())",
-    [project, event, owner]
+    [project, event, projectOwner]
   )
   await admin.query(
     "insert into public.judging_assignments(id,event_id,project_id,judge_id) values($1,$2,$3,$4)",
@@ -113,7 +117,11 @@ try {
     [event]
   )
   await admin.query(
-    "insert into public.event_judges(id,event_id,email,user_id) values($1,$2,$3,$4)",
+    "insert into public.judging_criteria(id,event_id,position,name) values($1,$2,1,'Criterion A')",
+    [criterion, event]
+  )
+  await admin.query(
+    "insert into public.event_judges(id,event_id,email,user_id,briefing_acknowledged_at) values($1,$2,$3,$4,now())",
     [judge, event, email, user]
   )
   await admin.query(
@@ -212,13 +220,15 @@ try {
   await login(first, judgeClaims)
   const original = (await save(first, id, true)).rows[0].result
   await login(second, judgeClaims)
-  pending = outcome(save(second, id, true, { creativity_score: 5 }))
+  pending = outcome(save(second, id, true, { [criterion]: 5 }))
   await waitForBlock(second)
   await first.query("commit")
-  assert.deepEqual((await pending).value?.rows[0].result, original)
+  const edited = (await pending).value?.rows[0].result
+  assert.deepEqual(edited?.scores, { [criterion]: 5 })
+  assert.equal(edited?.submitted_at, original.submitted_at)
   await second.query("commit")
   console.log(
-    "ok concurrent repeated submit returns immutable original scorecard"
+    "ok concurrent edits of a submitted review apply in order and keep the first submission time"
   )
 } finally {
   await Promise.allSettled([first.query("rollback"), second.query("rollback")])
@@ -243,10 +253,10 @@ try {
     `${owner}@example.test`,
   ])
   await admin.query("delete from public.profiles where id=any($1::uuid[])", [
-    [owner, user],
+    [owner, user, ...projectOwners],
   ])
   await admin.query("delete from auth.users where id=any($1::uuid[])", [
-    [owner, user],
+    [owner, user, ...projectOwners],
   ])
   await Promise.all(clients.map((client) => client.end()))
 }

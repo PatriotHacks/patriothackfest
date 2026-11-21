@@ -26,6 +26,7 @@ insert into public.judge_track_scopes(judge_id,track_id,event_id) values
 create function pg_temp.candidates(n integer default null) returns jsonb language sql as $$select public.admin_assignment_candidates('ea500000-0000-0000-0000-000000000001','aa500000-0000-0000-0000-000000000001',case when n is not null then ('ca500000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid end)$$;
 create function pg_temp.add(j integer,t integer default null) returns uuid language sql as $$select public.admin_add_assignment('ea500000-0000-0000-0000-000000000001','aa500000-0000-0000-0000-000000000001',('ba500000-0000-0000-0000-'||lpad(j::text,12,'0'))::uuid,case when t is not null then ('ca500000-0000-0000-0000-'||lpad(t::text,12,'0'))::uuid end)$$;
 create function pg_temp.reassign(j integer) returns uuid language sql as $$select public.admin_reassign_assignment('ea500000-0000-0000-0000-000000000001',current_setting('test.source')::uuid,('ba500000-0000-0000-0000-'||lpad(j::text,12,'0'))::uuid)$$;
+insert into public.judging_criteria(event_id,position,name) values('ea500000-0000-0000-0000-000000000001',1,'Criterion A');
 select plan(24);
 select set_config('request.jwt.claims','{"sub":"da500000-0000-0000-0000-000000000001","email":"a2-edge-1@example.test","amr":[{"method":"oauth"}]}',true);
 set local role authenticated;

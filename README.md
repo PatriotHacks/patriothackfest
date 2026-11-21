@@ -172,9 +172,9 @@ in the participant app. Organizers can also manage judges in `/judging`; rostere
 judges sign in through `/judge` without participant onboarding. After Start judging,
 organizers can generate missing assignments, inspect coverage/loads, and manually
 assign, cancel, or reassign untouched work. Judges can complete their assigned
-queue, save partial scorecards, and Submit & next. Current database deadlines
-enforce scoring; extensions restore unfinished work without reopening completed
-reviews or participant content. Organizer-only results show separate general/track
+queue after reading the briefing, score each rubric criterion, and Submit & next;
+submitted reviews stay editable until judging closes. Current database deadlines
+enforce scoring; extensions never reopen participant content. Organizer-only results show separate general/track
 averages, completed-review counts versus targets, insufficient coverage, and ties;
 winner decisions remain manual.
 

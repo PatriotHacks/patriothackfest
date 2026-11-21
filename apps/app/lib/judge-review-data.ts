@@ -1,7 +1,11 @@
 import "server-only"
 
 import { getApplicant } from "./applicant"
-import { judgeAssignmentSchema, judgeQueueSchema } from "./judge-reviews"
+import {
+  judgeAssignmentSchema,
+  judgeCriteriaSchema,
+  judgeQueueSchema,
+} from "./judge-reviews"
 
 export async function getJudgeQueue(eventSlug: string) {
   const { supabase } = await getApplicant()
@@ -23,4 +27,21 @@ export async function getJudgeAssignment(
   })
   if (error) throw new Error(error.message)
   return data === null ? null : judgeAssignmentSchema.parse(data)
+}
+
+export async function getJudgeCriteria(eventSlug: string) {
+  const { supabase } = await getApplicant()
+  const { data, error } = await supabase.rpc("judge_criteria", {
+    p_event_slug: eventSlug,
+  })
+  if (error) throw new Error(error.message)
+  return data === null ? null : judgeCriteriaSchema.parse(data)
+}
+
+export async function acknowledgeJudgeBriefing(eventSlug: string) {
+  const { supabase } = await getApplicant()
+  const { error } = await supabase.rpc("judge_acknowledge_briefing", {
+    p_event_slug: eventSlug,
+  })
+  if (error) throw new Error(error.message)
 }

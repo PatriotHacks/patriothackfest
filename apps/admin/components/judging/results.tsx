@@ -100,6 +100,8 @@ export function ResultsSection({
                 : `Sponsor: ${data.track_name}`}
             </h3>
             <p className="text-sm text-muted-foreground">
+              Each judge&apos;s score is the average of their criterion scores;
+              a project&apos;s average is the mean of its judges&apos; scores.
               Highest average first; averages display two decimals. Tie flags
               use unrounded averages across the entire context, including other
               pages. Row order within a tie is for display only, not a
@@ -122,7 +124,7 @@ export function ResultsSection({
                     <TableRow>
                       <TableHead>Project</TableHead>
                       <TableHead>Completed reviews / target</TableHead>
-                      <TableHead>Average total / 20</TableHead>
+                      <TableHead>Average score / 5</TableHead>
                       <TableHead>Flags</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -147,7 +149,7 @@ export function ResultsSection({
                           )}
                         </TableCell>
                         <TableCell>
-                          {formatResultAverage(project.average_total)}
+                          {formatResultAverage(project.average_score)}
                         </TableCell>
                         <TableCell className="whitespace-normal">
                           {project.insufficient_coverage && (

@@ -1,10 +1,9 @@
-import { PAPER } from "@workspace/ui/lib/brand"
+import { OUTLINE_PILL, PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 
 import {
   judgeAssignmentHref,
-  judgeContinuation,
   reviewContext,
   type JudgeQueue,
 } from "@/lib/judge-reviews"
@@ -12,9 +11,11 @@ import {
 export function JudgeQueueList({
   eventSlug,
   queue,
+  startHref,
 }: {
   eventSlug: string
   queue: JudgeQueue
+  startHref: string | null
 }) {
   const unfinished = queue.completed < queue.total
   return (
@@ -26,12 +27,12 @@ export function JudgeQueueList({
       <p>
         {queue.completed} / {queue.total} reviews completed
       </p>
-      {unfinished && (
+      {unfinished && startHref && (
         <Link
-          className="font-semibold underline"
-          href={judgeContinuation(eventSlug, queue)}
+          className={cn(OUTLINE_PILL, "inline-flex items-center")}
+          href={startHref}
         >
-          Continue judging
+          {queue.completed > 0 ? "Continue judging" : "Start judging"}
         </Link>
       )}
       {queue.total === 0 ? (
@@ -56,7 +57,7 @@ export function JudgeQueueList({
                 <p className="text-sm">
                   {reviewContext(assignment)} ·{" "}
                   {assignment.submitted_at
-                    ? "Submitted — read-only"
+                    ? "Submitted"
                     : assignment.in_progress
                       ? "Draft saved"
                       : "Not started"}
