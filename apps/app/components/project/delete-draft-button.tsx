@@ -27,6 +27,7 @@ export function DeleteDraftButton({
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const { name, answered, teammates, tracks } = losses
+  const hasLosses = hasDraftLosses(losses)
 
   function remove() {
     setError(null)
@@ -49,7 +50,7 @@ export function DeleteDraftButton({
         size="sm"
         className="self-start"
         disabled={pending}
-        onClick={() => (hasDraftLosses(losses) ? setOpen(true) : remove())}
+        onClick={() => setOpen(true)}
       >
         Delete project
       </Button>
@@ -61,35 +62,43 @@ export function DeleteDraftButton({
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This permanently deletes the draft. It cannot be undone. You will
-              lose:
-            </AlertDialogDescription>
+            <AlertDialogTitle>
+              Are you sure you want to delete this project?
+            </AlertDialogTitle>
+            {hasLosses && (
+              <AlertDialogDescription>
+                This can&apos;t be undone. You will lose:
+              </AlertDialogDescription>
+            )}
           </AlertDialogHeader>
-          <ul className="list-disc pl-5 text-sm">
-            {name && <li>The project name “{name}”</li>}
-            {answered > 0 && (
-              <li>
-                {answered} answered {answered === 1 ? "question" : "questions"}
-              </li>
-            )}
-            {teammates.length > 0 && (
-              <li>
-                {teammates.length}{" "}
-                {teammates.length === 1 ? "teammate" : "teammates"}:{" "}
-                {teammates.join(", ")} (they can join other teams)
-              </li>
-            )}
-            {tracks.length > 0 && <li>Tracks: {tracks.join(", ")}</li>}
-          </ul>
+          {hasLosses && (
+            <ul className="list-disc pl-5 text-sm">
+              {name && <li>The project name “{name}”</li>}
+              {answered > 0 && (
+                <li>
+                  {answered} answered{" "}
+                  {answered === 1 ? "question" : "questions"}
+                </li>
+              )}
+              {teammates.length > 0 && (
+                <li>
+                  {teammates.length}{" "}
+                  {teammates.length === 1 ? "teammate" : "teammates"}:{" "}
+                  {teammates.join(", ")} (they can join other teams)
+                </li>
+              )}
+              {tracks.length > 0 && <li>Tracks: {tracks.join(", ")}</li>}
+            </ul>
+          )}
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}
             </p>
           )}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel variant="default" disabled={pending}>
+              No
+            </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={pending}
@@ -98,7 +107,7 @@ export function DeleteDraftButton({
                 remove()
               }}
             >
-              Delete project
+              {pending ? "Deleting…" : "Yes"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
