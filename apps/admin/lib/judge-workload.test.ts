@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { judgeWorkload } from "./judge-workload"
+import { judgeWorkload, workloadCapacities } from "./judge-workload"
 
 describe("judge workload", () => {
   it("splits reviews evenly with floor and ceil", () => {
@@ -44,5 +44,19 @@ describe("judge workload", () => {
       shortBy: 0,
       tooFewJudges: false,
     })
+  })
+})
+describe("workload capacities", () => {
+  it("counts only active, non-guest general judges", () => {
+    const judge = { active: true, guest: false, kind: "general", capacity: 5 }
+    expect(
+      workloadCapacities([
+        judge,
+        { ...judge, capacity: 6 },
+        { ...judge, active: false },
+        { ...judge, guest: true },
+        { ...judge, kind: "sponsor" },
+      ])
+    ).toEqual([5, 6])
   })
 })

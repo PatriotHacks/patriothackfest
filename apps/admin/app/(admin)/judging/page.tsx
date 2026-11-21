@@ -13,6 +13,7 @@ import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
 import { judgeRosterSchema } from "@/lib/judges"
+import { workloadCapacities } from "@/lib/judge-workload"
 import { judgingCriteriaSchema } from "@/lib/judging-criteria"
 import { parseProjectsPage } from "@/lib/organizer-projects"
 import { getEventProjects } from "@/lib/organizer-project-data"
@@ -126,9 +127,7 @@ export default async function JudgingPage({
               key={event.id}
               projects={projects.counts.submitted}
               reviewsPerProject={settings.data.general_reviews_per_project}
-              capacities={judges
-                .filter((judge) => judge.active && judge.kind === "general")
-                .map((judge) => judge.capacity)}
+              capacities={workloadCapacities(judges)}
             />
           </CardContent>
         </Card>

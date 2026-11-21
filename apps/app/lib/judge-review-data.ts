@@ -2,8 +2,10 @@ import "server-only"
 
 import { getApplicant } from "./applicant"
 import {
+  guestProjectsSchema,
   judgeAssignmentSchema,
   judgeCriteriaSchema,
+  judgeProjectViewSchema,
   judgeQueueSchema,
 } from "./judge-reviews"
 
@@ -44,4 +46,23 @@ export async function acknowledgeJudgeBriefing(eventSlug: string) {
     p_event_slug: eventSlug,
   })
   if (error) throw new Error(error.message)
+}
+
+export async function getGuestProjects(eventSlug: string) {
+  const { supabase } = await getApplicant()
+  const { data, error } = await supabase.rpc("judge_guest_projects", {
+    p_event_slug: eventSlug,
+  })
+  if (error) throw new Error(error.message)
+  return data === null ? null : guestProjectsSchema.parse(data)
+}
+
+export async function getGuestProject(eventSlug: string, projectId: string) {
+  const { supabase } = await getApplicant()
+  const { data, error } = await supabase.rpc("judge_guest_project", {
+    p_event_slug: eventSlug,
+    p_project_id: projectId,
+  })
+  if (error) throw new Error(error.message)
+  return data === null ? null : judgeProjectViewSchema.parse(data)
 }

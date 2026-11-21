@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
+  guestProjectHref,
+  guestProjectRouteSchema,
   judgeAssignmentSchema,
   judgeContinuation,
   queuePosition,
@@ -173,5 +175,22 @@ describe("judge assignment payload", () => {
   it("rejects payloads without the answers list", () => {
     const { answers: _answers, ...rest } = payload
     expect(judgeAssignmentSchema.safeParse(rest).success).toBe(false)
+  })
+})
+describe("guest project routes", () => {
+  it("builds encoded links and validates params", () => {
+    expect(guestProjectHref("fall-2026", id)).toBe(
+      `/judge/fall-2026/projects/${id}`
+    )
+    expect(
+      guestProjectRouteSchema.safeParse({
+        eventSlug: "fall-2026",
+        projectId: id,
+      }).success
+    ).toBe(true)
+    expect(
+      guestProjectRouteSchema.safeParse({ eventSlug: "a/b", projectId: id })
+        .success
+    ).toBe(false)
   })
 })

@@ -13,17 +13,9 @@ describe("judge project rendering", () => {
   it("escapes answers and rejects unsafe links without fetching URLs", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeProjectDetails, {
+        context: "General judging",
         detail: {
           project: { name: "Project" },
-          criteria: [],
-          assignment: {
-            id: "a0000000-0000-4000-8000-000000000001",
-            track_id: null,
-            track_name: null,
-            scores: {},
-            submitted_at: null,
-            notes: "",
-          },
           answers: [
             {
               question_id: q(1),
@@ -100,20 +92,24 @@ describe("judge project rendering", () => {
     expect(html).toContain("View deck.pdf")
     expect(html).not.toContain("p/q/f.pdf")
   })
+  it("shows guests a read-only view without scoring context", () => {
+    const html = renderToStaticMarkup(
+      createElement(JudgeProjectDetails, {
+        context: null,
+        detail: { project: { name: "Project" }, answers: [], team: ["Ada"] },
+      })
+    )
+    expect(html).toContain("Guest judges do not score")
+    expect(html).toContain("<li>Ada</li>")
+    expect(html).not.toContain("scorecard")
+    expect(html).not.toContain("Contact an organizer")
+  })
   it("omits the team section when names are hidden", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeProjectDetails, {
+        context: "General judging",
         detail: {
           project: { name: "Project" },
-          criteria: [],
-          assignment: {
-            id: "a0000000-0000-4000-8000-000000000001",
-            track_id: null,
-            track_name: null,
-            scores: {},
-            submitted_at: null,
-            notes: "",
-          },
           answers: [],
           team: [],
         },

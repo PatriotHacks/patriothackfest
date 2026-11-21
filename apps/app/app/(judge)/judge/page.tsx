@@ -3,6 +3,10 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { BriefingReader } from "@/components/judge/briefing-reader"
 import { JudgeEventDetails } from "@/components/judge/event-details"
+import {
+  GuestJudgeDetails,
+  GuestProjectList,
+} from "@/components/judge/guest-projects"
 import { JudgeQueueList } from "@/components/judge/queue"
 import { JudgeScenario } from "@/components/judge/scenario"
 import {
@@ -10,7 +14,7 @@ import {
   getJudgeEvents,
   getProjectSubmissionsCloseAt,
 } from "@/lib/judge-access"
-import { getJudgeQueue } from "@/lib/judge-review-data"
+import { getGuestProjects, getJudgeQueue } from "@/lib/judge-review-data"
 import { judgeBriefingHref, judgeContinuation } from "@/lib/judge-reviews"
 import {
   formatSubmissionDeadline,
@@ -58,19 +62,26 @@ async function JudgeEventSection({
         organizer.
       </p>
     )
-  const [queue, closeAt] = await Promise.all([
-    getJudgeQueue(slug),
+  const [closeAt, queue, projects] = await Promise.all([
     getProjectSubmissionsCloseAt(event.event_id),
+    event.guest ? null : getJudgeQueue(slug),
+    event.guest ? getGuestProjects(slug) : null,
   ])
   return (
     <section className="flex flex-col gap-5">
       <h1 className={cn(SERIF, "text-4xl")}>{event.name}</h1>
-      <JudgeEventDetails event={event} />
+      {event.guest ? (
+        <GuestJudgeDetails />
+      ) : (
+        <JudgeEventDetails event={event} />
+      )}
       {closeAt && submissionsStillOpen(closeAt) ? (
         <p className="text-sm text-[#6E6E68]">
           This is available after the submission period is completed on{" "}
           {formatSubmissionDeadline(closeAt)}
         </p>
+      ) : projects ? (
+        <GuestProjectList eventSlug={slug} projects={projects} />
       ) : queue ? (
         <JudgeQueueList
           eventSlug={slug}

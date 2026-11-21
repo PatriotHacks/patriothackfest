@@ -12,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog"
 import { formatInZone } from "@workspace/forms"
+import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -27,10 +28,17 @@ import { Fragment, useId, useState, useTransition } from "react"
 
 import {
   deleteEventJudge,
+  previewJudgeTransfer,
   saveEventJudge,
+  setEventJudgeGuest,
 } from "@/app/(admin)/judging/judges-actions"
 import { TableCard } from "@/components/table-card"
-import type { JudgeRosterEntry } from "@/lib/judges"
+import {
+  transferPreviewMessage,
+  transferResultMessage,
+  type JudgeRosterEntry,
+  type JudgeTransferPreview,
+} from "@/lib/judges"
 
 type Track = { id: string; name: string; active: boolean }
 type Kind = "general" | "sponsor"
@@ -208,11 +216,13 @@ export function EventJudgeForm({
   eventId,
   tracks,
   judge,
+  started,
   onClose,
 }: {
   eventId: string
   tracks: Track[]
   judge: JudgeRosterEntry
+  started: boolean
   onClose?: () => void
 }) {
   const id = useId()
@@ -224,7 +234,37 @@ export function EventJudgeForm({
     judge.scopes.map((scope) => scope.id)
   )
   const [message, setMessage] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<JudgeTransferPreview | null>(
+    null
+  )
   const [pending, startTransition] = useTransition()
+  const deactivating = judge.active && !active
+
+  function save() {
+    setMessage(null)
+    startTransition(async () => {
+      try {
+        const result = await saveEventJudge({
+          eventId,
+          judgeId: judge.id,
+          email,
+          kind,
+          active,
+          capacity,
+          trackIds,
+        })
+        setMessage(
+          result.error ??
+            (deactivating && result.transfer
+              ? `Judge saved. ${transferResultMessage(result.transfer)}`
+              : "Judge saved")
+        )
+        if (!result.error) setEmail(email.trim().toLowerCase())
+      } catch {
+        setMessage("Could not save judge. Try again.")
+      }
+    })
+  }
 
   return (
     <form
@@ -232,22 +272,18 @@ export function EventJudgeForm({
       className="flex flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault()
+        if (!(started && deactivating)) return save()
         setMessage(null)
         startTransition(async () => {
           try {
-            const result = await saveEventJudge({
+            const result = await previewJudgeTransfer({
               eventId,
               judgeId: judge.id,
-              email,
-              kind,
-              active,
-              capacity,
-              trackIds,
             })
-            setMessage(result.error ?? "Judge saved")
-            if (!result.error) setEmail(email.trim().toLowerCase())
+            setMessage(result.error)
+            if (result.preview) setConfirming(result.preview)
           } catch {
-            setMessage("Could not save judge. Try again.")
+            setMessage("Could not check assignments. Try again.")
           }
         })
       }}
@@ -343,7 +379,144 @@ export function EventJudgeForm({
           )}
         </div>
       </fieldset>
+      <AlertDialog
+        open={confirming !== null}
+        onOpenChange={(next) => {
+          if (!next) setConfirming(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate judge</AlertDialogTitle>
+            <AlertDialogDescription>
+              {judge.email} loses judge access. Submitted reviews stay and still
+              count. {confirming && transferPreviewMessage(confirming)}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                setConfirming(null)
+                save()
+              }}
+            >
+              Deactivate judge
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
+  )
+}
+
+function GuestJudgeDialog({
+  eventId,
+  judge,
+  started,
+  onResult,
+}: {
+  eventId: string
+  judge: JudgeRosterEntry
+  started: boolean
+  onResult: (message: string) => void
+}) {
+  const making = !judge.guest
+  const needsPreview = making && started
+  const [open, setOpen] = useState(false)
+  const [preview, setPreview] = useState<JudgeTransferPreview | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        setError(null)
+        setPreview(null)
+        if (!next || !needsPreview) return
+        startTransition(async () => {
+          try {
+            const result = await previewJudgeTransfer({
+              eventId,
+              judgeId: judge.id,
+            })
+            setError(result.error)
+            if (result.preview) setPreview(result.preview)
+          } catch {
+            setError("Could not check assignments. Try again.")
+          }
+        })
+      }}
+    >
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label={`${making ? "Make guest" : "Remove guest"} ${judge.email}`}
+        >
+          {making ? "Make guest" : "Remove guest"}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {making ? "Make guest judge" : "Remove guest status"}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {making
+              ? `${judge.email} keeps portal access and can read every submitted project, but gets no assignments. Submitted reviews stay and still count.`
+              : `${judge.email} becomes eligible for assignments again. Click Generate missing assignments to give them work.`}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        {needsPreview && (
+          <p className="text-sm">
+            {preview
+              ? transferPreviewMessage(preview)
+              : !error && "Checking assignments…"}
+          </p>
+        )}
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={pending || (needsPreview && !preview)}
+            onClick={(event) => {
+              event.preventDefault()
+              setError(null)
+              startTransition(async () => {
+                try {
+                  const result = await setEventJudgeGuest({
+                    eventId,
+                    judgeId: judge.id,
+                    guest: making,
+                  })
+                  setError(result.error)
+                  if (!result.transfer) return
+                  setOpen(false)
+                  onResult(
+                    making
+                      ? `${judge.email} is now a guest judge.${started ? ` ${transferResultMessage(result.transfer)}` : ""}`
+                      : `${judge.email} is no longer a guest judge.`
+                  )
+                } catch {
+                  setError("Could not update guest status. Try again.")
+                }
+              })
+            }}
+          >
+            {pending ? "Saving…" : making ? "Make guest" : "Remove guest"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 
@@ -431,6 +604,7 @@ export function JudgeRoster({
   started: boolean
 }) {
   const [editing, setEditing] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="judges-heading">
@@ -443,6 +617,11 @@ export function JudgeRoster({
         participants. Adding a judge sends no email and grants no admin access.
       </p>
       <AddJudgeForm key={`new-${eventId}`} eventId={eventId} tracks={tracks} />
+      {notice && (
+        <p role="status" aria-live="polite" className="text-sm">
+          {notice}
+        </p>
+      )}
       {judges.length === 0 ? (
         <p className="text-sm">No judges for this event yet.</p>
       ) : (
@@ -484,6 +663,11 @@ export function JudgeRoster({
                       <TableCell>
                         {judge.active ? "Active" : "Inactive"} ·{" "}
                         {judge.bound ? "Linked" : "Not linked yet"}
+                        {judge.guest && (
+                          <Badge variant="secondary" className="ml-2">
+                            Guest
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="whitespace-normal">
                         {judge.briefing_acknowledged_at
@@ -498,6 +682,12 @@ export function JudgeRoster({
                               judge={judge}
                             />
                           )}
+                          <GuestJudgeDialog
+                            eventId={eventId}
+                            judge={judge}
+                            started={started}
+                            onResult={setNotice}
+                          />
                           <Button
                             type="button"
                             variant="outline"
@@ -518,6 +708,7 @@ export function JudgeRoster({
                             eventId={eventId}
                             tracks={tracks}
                             judge={judge}
+                            started={started}
                             onClose={() => setEditing(null)}
                           />
                         </TableCell>

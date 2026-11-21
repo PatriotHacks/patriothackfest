@@ -5,7 +5,12 @@ const { getApplicant, rpc } = vi.hoisted(() => ({
 }))
 vi.mock("server-only", () => ({}))
 vi.mock("@/lib/applicant", () => ({ getApplicant }))
-import { getJudgeAssignment, getJudgeQueue } from "./judge-review-data"
+import {
+  getGuestProject,
+  getGuestProjects,
+  getJudgeAssignment,
+  getJudgeQueue,
+} from "./judge-review-data"
 beforeEach(() => {
   vi.clearAllMocks()
   getApplicant.mockResolvedValue({ supabase: { rpc } })
@@ -32,5 +37,25 @@ describe("private judge reads", () => {
     await expect(getJudgeQueue("fall-2026")).rejects.toThrow("Missing RPC")
     rpc.mockResolvedValue({ data: {}, error: null })
     await expect(getJudgeQueue("fall-2026")).rejects.toThrow()
+  })
+  it("reads guest projects through guest-only RPCs", async () => {
+    const id = "a0000000-0000-4000-8000-000000000001"
+    rpc.mockResolvedValue({ data: [{ id, name: "Project" }], error: null })
+    expect(await getGuestProjects("fall-2026")).toEqual([
+      { id, name: "Project" },
+    ])
+    expect(rpc).toHaveBeenCalledWith("judge_guest_projects", {
+      p_event_slug: "fall-2026",
+    })
+    const detail = { project: { name: "Project" }, answers: [], team: [] }
+    rpc.mockResolvedValue({ data: detail, error: null })
+    expect(await getGuestProject("fall-2026", id)).toEqual(detail)
+    expect(rpc).toHaveBeenCalledWith("judge_guest_project", {
+      p_event_slug: "fall-2026",
+      p_project_id: id,
+    })
+    rpc.mockResolvedValue({ data: null, error: null })
+    expect(await getGuestProjects("fall-2026")).toBeNull()
+    expect(await getGuestProject("fall-2026", id)).toBeNull()
   })
 })

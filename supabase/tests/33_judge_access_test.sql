@@ -10,7 +10,7 @@ create function pg_temp.owner() returns void language sql as $$
   select set_config('role','authenticated',true);
 $$;
 create function pg_temp.save(p_email text default 'judge-1@example.test',p_active boolean default true) returns uuid language sql as $$
-  select public.admin_save_event_judge('ef200000-0000-0000-0000-000000000001',p_email,'general',p_active,20,'{}',current_setting('test.judge')::uuid);
+  select (public.admin_save_event_judge('ef200000-0000-0000-0000-000000000001',p_email,'general',p_active,20,'{}',current_setting('test.judge')::uuid)->>'id')::uuid;
 $$;
 insert into auth.users(id,email,email_confirmed_at)
 select ('df200000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'judge-'||n||'@example.test',
@@ -22,7 +22,7 @@ insert into public.events(id,slug,name) values
  ('ef200000-0000-0000-0000-000000000002','judge-access-two','Judge access two');
 insert into public.event_competition_settings(event_id) select id from public.events where slug like 'judge-access-%';
 select pg_temp.owner();
-select set_config('test.judge',public.admin_save_event_judge('ef200000-0000-0000-0000-000000000001','JUDGE-1@example.test','general',true,20)::text,true);
+select set_config('test.judge',public.admin_save_event_judge('ef200000-0000-0000-0000-000000000001','JUDGE-1@example.test','general',true,20)->>'id',true);
 select public.admin_save_event_judge('ef200000-0000-0000-0000-000000000002','judge-1@example.test','general',true,20);
 select public.admin_save_event_judge('ef200000-0000-0000-0000-000000000001','judge-2@example.test','general',true,20);
 select public.admin_save_event_judge('ef200000-0000-0000-0000-000000000001','judge-3@example.test','general',true,20);

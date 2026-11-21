@@ -9,6 +9,7 @@ const event: JudgeEvent = {
   slug: "fall-2026",
   name: "Fall",
   kind: "sponsor",
+  guest: false,
   capacity: 20,
   enabled: false,
   judging_started_at: null,

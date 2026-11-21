@@ -6,7 +6,12 @@ const { rpc, requireAdmin, revalidatePath } = vi.hoisted(() => ({
 }))
 vi.mock("@/lib/admin", () => ({ requireAdmin }))
 vi.mock("next/cache", () => ({ revalidatePath }))
-import { deleteEventJudge, saveEventJudge } from "./judges-actions"
+import {
+  deleteEventJudge,
+  previewJudgeTransfer,
+  saveEventJudge,
+  setEventJudgeGuest,
+} from "./judges-actions"
 const id = "a0000000-0000-4000-8000-000000000001"
 const input = {
   eventId: id,
@@ -19,11 +24,11 @@ const input = {
 beforeEach(() => {
   vi.clearAllMocks()
   requireAdmin.mockResolvedValue({ supabase: { rpc } })
-  rpc.mockResolvedValue({ error: null })
+  rpc.mockResolvedValue({ data: { id, transfer: null }, error: null })
 })
 describe("judge admin action", () => {
   it("requires organizer access and scopes writes to the event", async () => {
-    expect(await saveEventJudge(input)).toEqual({ error: null })
+    expect(await saveEventJudge(input)).toEqual({ error: null, transfer: null })
     expect(requireAdmin).toHaveBeenCalledWith("organizer")
     expect(rpc).toHaveBeenCalledWith("admin_save_event_judge", {
       p_event_id: id,
@@ -35,6 +40,14 @@ describe("judge admin action", () => {
       p_track_ids: [],
     })
     expect(revalidatePath).toHaveBeenCalledWith("/judging")
+  })
+  it("returns the transfer made when a judge is deactivated", async () => {
+    const transfer = { moved: 3, dropped_drafts: 1, missing: 1 }
+    rpc.mockResolvedValue({ data: { id, transfer }, error: null })
+    expect(await saveEventJudge({ ...input, active: false })).toEqual({
+      error: null,
+      transfer,
+    })
   })
   it("never writes when authorization or validation fails", async () => {
     expect((await saveEventJudge({ ...input, capacity: 0 })).error).toBeTruthy()
@@ -86,6 +99,47 @@ describe("delete judge action", () => {
     rpc.mockResolvedValue({ error: { message } })
     expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({
       error: message,
+    })
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+})
+describe("guest judge actions", () => {
+  const judgeId = "a0000000-0000-4000-8000-000000000002"
+  it("sets guest status and returns the transfer", async () => {
+    const transfer = { moved: 2, dropped_drafts: 0, missing: 0 }
+    rpc.mockResolvedValue({ data: transfer, error: null })
+    expect(
+      await setEventJudgeGuest({ eventId: id, judgeId, guest: true })
+    ).toEqual({ error: null, transfer })
+    expect(requireAdmin).toHaveBeenCalledWith("organizer")
+    expect(rpc).toHaveBeenCalledWith("admin_set_event_judge_guest", {
+      p_event_id: id,
+      p_judge_id: judgeId,
+      p_guest: true,
+    })
+    expect(revalidatePath).toHaveBeenCalledWith("/judging")
+  })
+  it("never writes for invalid input and surfaces errors", async () => {
+    expect(
+      (await setEventJudgeGuest({ eventId: id, judgeId, guest: "yes" })).error
+    ).toBeTruthy()
+    expect(rpc).not.toHaveBeenCalled()
+    rpc.mockResolvedValue({ data: null, error: { message: "Not authorized" } })
+    expect(
+      await setEventJudgeGuest({ eventId: id, judgeId, guest: false })
+    ).toEqual({ error: "Not authorized" })
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+  it("previews the transfer without writing", async () => {
+    const preview = { unsubmitted: 4, drafts: 1 }
+    rpc.mockResolvedValue({ data: preview, error: null })
+    expect(await previewJudgeTransfer({ eventId: id, judgeId })).toEqual({
+      error: null,
+      preview,
+    })
+    expect(rpc).toHaveBeenCalledWith("admin_judge_transfer_preview", {
+      p_event_id: id,
+      p_judge_id: judgeId,
     })
     expect(revalidatePath).not.toHaveBeenCalled()
   })

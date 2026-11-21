@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { eventJudgeInput } from "./judges"
+import {
+  eventJudgeInput,
+  transferPreviewMessage,
+  transferResultMessage,
+} from "./judges"
 const id = "a0000000-0000-4000-8000-000000000001"
 const general = {
   eventId: id,
@@ -42,6 +46,29 @@ describe("judge form validation", () => {
   it("does not accept user bindings from the browser", () => {
     expect(eventJudgeInput.safeParse({ ...general, user_id: id }).success).toBe(
       false
+    )
+  })
+})
+describe("judge transfer messages", () => {
+  it("describes the preview", () => {
+    expect(transferPreviewMessage({ unsubmitted: 4, drafts: 1 })).toBe(
+      "4 assignments will move to other judges; 1 has draft scores that will be discarded."
+    )
+    expect(transferPreviewMessage({ unsubmitted: 1, drafts: 0 })).toBe(
+      "1 assignment will move to other judges; 0 have draft scores that will be discarded."
+    )
+    expect(transferPreviewMessage({ unsubmitted: 0, drafts: 0 })).toBe(
+      "No unsubmitted assignments to move."
+    )
+  })
+  it("describes the result and what to do about missing judges", () => {
+    expect(
+      transferResultMessage({ moved: 3, dropped_drafts: 1, missing: 0 })
+    ).toBe("Moved 3 assignments.")
+    expect(
+      transferResultMessage({ moved: 1, dropped_drafts: 0, missing: 2 })
+    ).toBe(
+      "Moved 1 assignment. 2 projects still need a judge (raise judge limits and click Generate missing assignments)."
     )
   })
 })

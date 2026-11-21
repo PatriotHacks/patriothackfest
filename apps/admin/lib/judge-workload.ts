@@ -32,3 +32,11 @@ export function judgeWorkload(
     tooFewJudges: projects > 0 && reviewsPerProject > judges,
   }
 }
+
+export function workloadCapacities(
+  judges: { active: boolean; guest: boolean; kind: string; capacity: number }[]
+) {
+  return judges
+    .filter((judge) => judge.active && !judge.guest && judge.kind === "general")
+    .map((judge) => judge.capacity)
+}
