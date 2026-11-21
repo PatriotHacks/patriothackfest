@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog"
+import { formatInZone } from "@workspace/forms"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -455,6 +456,7 @@ export function JudgeRoster({
                 <TableHead>Capacity</TableHead>
                 <TableHead>Load</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Briefing</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -483,6 +485,11 @@ export function JudgeRoster({
                         {judge.active ? "Active" : "Inactive"} ·{" "}
                         {judge.bound ? "Linked" : "Not linked yet"}
                       </TableCell>
+                      <TableCell className="whitespace-normal">
+                        {judge.briefing_acknowledged_at
+                          ? `Read ${formatInZone(judge.briefing_acknowledged_at)}`
+                          : "Not yet"}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="inline-flex gap-2">
                           {!started && (
@@ -506,7 +513,7 @@ export function JudgeRoster({
                     </TableRow>
                     {open && (
                       <TableRow className="hover:bg-transparent">
-                        <TableCell colSpan={7} className="whitespace-normal">
+                        <TableCell colSpan={8} className="whitespace-normal">
                           <EventJudgeForm
                             eventId={eventId}
                             tracks={tracks}

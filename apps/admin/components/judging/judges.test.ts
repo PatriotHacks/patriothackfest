@@ -16,6 +16,7 @@ const judge: JudgeRosterEntry = {
   active: false,
   capacity: 20,
   bound: true,
+  briefing_acknowledged_at: "2026-11-21T15:04:00Z",
   has_assignments: true,
   workload: 1,
   scopes: [{ id, name: "Sponsor A", active: false, referenced: true }],
@@ -41,6 +42,7 @@ describe("judge admin form", () => {
       kind: "general",
       active: true,
       bound: false,
+      briefing_acknowledged_at: null,
       workload: 0,
       scopes: [],
     }
@@ -58,6 +60,9 @@ describe("judge admin form", () => {
     expect(html).toContain("—")
     expect(html).toContain("Inactive · Linked")
     expect(html).toContain("Active · Not linked yet")
+    expect(html).toContain("Briefing")
+    expect(html).toMatch(/Read Nov 21, 2026/)
+    expect(html).toContain("Not yet")
     expect(html).toContain('aria-label="Edit person@example.com"')
     expect(html).toContain('aria-expanded="false"')
     expect(html).not.toContain("Save judge")
