@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 import {
   canManageProject,
   completeProjectContentSchema,
+  draftLosses,
+  hasDraftLosses,
   memberName,
   normalizedProjectAnswers,
   projectAnswers,
@@ -240,5 +242,60 @@ describe("team members", () => {
     expect(projectDetailSchema.shape.max_team_size.safeParse(0).success).toBe(
       false
     )
+  })
+})
+
+describe("draft losses", () => {
+  const questionId = "b0000000-0000-4000-8000-000000000001"
+  const question = {
+    id: questionId,
+    label: "About",
+    help_text: null,
+    required: false,
+    type: "long_text" as const,
+    max_length: null,
+    length_unit: "characters" as const,
+    options: null,
+    validation: null,
+  }
+  const draft = (
+    project: Partial<ProjectDetail["project"]>,
+    rest: Partial<ProjectDetail> = {}
+  ) =>
+    ({
+      project: { name: "", answers: {}, ...project },
+      owner: { user_id: id, full_name: "Owner" },
+      collaborators: [],
+      selected_tracks: [],
+      questions: [question],
+      ...rest,
+    }) as unknown as ProjectDetail
+
+  it("treats a blank or default draft as empty", () => {
+    for (const name of ["", "  ", "Untitled project"])
+      expect(
+        hasDraftLosses(
+          draftLosses(draft({ name, answers: { [questionId]: " " } }))
+        )
+      ).toBe(false)
+  })
+
+  it("collects answers, name, teammates, and tracks", () => {
+    const losses = draftLosses(
+      draft(
+        { name: " Rover ", answers: { [questionId]: "Hi", other: "ignored" } },
+        {
+          collaborators: [{ user_id: id, full_name: null }],
+          selected_tracks: [{ id, name: "Health", active: true }],
+        }
+      )
+    )
+    expect(losses).toEqual({
+      name: "Rover",
+      answered: 1,
+      teammates: ["Unnamed participant"],
+      tracks: ["Health"],
+    })
+    expect(hasDraftLosses(losses)).toBe(true)
   })
 })
