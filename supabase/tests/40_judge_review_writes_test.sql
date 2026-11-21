@@ -7,29 +7,41 @@ values('ec300000-0000-0000-0000-000000000001',true,now()-interval '3 days',now()
 insert into public.projects(id,event_id,owner_user_id,name,status,submitted_at) values('ac300000-0000-0000-0000-000000000001','ec300000-0000-0000-0000-000000000001','dc300000-0000-0000-0000-000000000001','Project','submitted',now());
 insert into public.event_judges(id,event_id,email,user_id) select ('bc300000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'ec300000-0000-0000-0000-000000000001','c2-write-'||n||'@example.test',('dc300000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid from generate_series(2,3)n;
 insert into public.judging_assignments(id,event_id,judge_id,project_id) values('fc300000-0000-0000-0000-000000000001','ec300000-0000-0000-0000-000000000001','bc300000-0000-0000-0000-000000000002','ac300000-0000-0000-0000-000000000001');
+insert into public.judging_criteria(id,event_id,position,name) values
+ ('9c300000-0000-0000-0000-000000000001','ec300000-0000-0000-0000-000000000001',1,'Criterion A'),
+ ('9c300000-0000-0000-0000-000000000002','ec300000-0000-0000-0000-000000000001',2,'Criterion B');
+update public.event_judges set briefing_acknowledged_at=now() where id='bc300000-0000-0000-0000-000000000002';
 update public.event_competition_settings set judging_started_at=now() where event_id='ec300000-0000-0000-0000-000000000001';
 create function pg_temp.login(n integer default 2) returns void language sql as $$
  select set_config('request.jwt.claims',json_build_object('sub','dc300000-0000-0000-0000-'||lpad(n::text,12,'0'),'email','c2-write-'||n||'@example.test','amr',json_build_array(json_build_object('method','otp')))::text,true);
  select set_config('role','authenticated',true);
 $$;
-create function pg_temp.save(scores jsonb default '{"creativity_score":1,"technical_score":3,"impact_score":4,"presentation_score":5}',submit boolean default false,notes text default 'private') returns jsonb language sql as $$
+create function pg_temp.save(scores jsonb default '{"9c300000-0000-0000-0000-000000000001":2.5,"9c300000-0000-0000-0000-000000000002":4}',submit boolean default false,notes text default 'private') returns jsonb language sql as $$
  select public.judge_save_review('c2-writes','fc300000-0000-0000-0000-000000000001',scores,notes,submit);
+$$;
+create function pg_temp.a(score text) returns jsonb language sql as $$
+ select ('{"9c300000-0000-0000-0000-000000000001":'||score||'}')::jsonb;
 $$;
 select no_plan();
 select pg_temp.login();
-select is(pg_temp.save('{"creativity_score":2}')->>'creativity_score','2','partial draft saves');
-select is(pg_temp.save('{"creativity_score":null}')->>'creativity_score',null::text,'draft score can be cleared');
-select is(pg_temp.save('{}')->>'total_score',null::text,'incomplete total remains null');
-select is(pg_temp.save()->>'total_score','13','total computed by database');
+select is(pg_temp.save(pg_temp.a('2'))->'scores','{"9c300000-0000-0000-0000-000000000001":2.0}'::jsonb,'partial draft saves');
+select is(pg_temp.save(pg_temp.a('null'))->'scores','{}'::jsonb,'draft score can be cleared');
+select is(pg_temp.save(pg_temp.a('3.7'))->'scores'->>'9c300000-0000-0000-0000-000000000001','3.7','tenth steps accepted');
+select is(pg_temp.save(pg_temp.a('1.0'))->'scores'->>'9c300000-0000-0000-0000-000000000001','1.0','lower bound accepted');
+select is(pg_temp.save(pg_temp.a('5.0'))->'scores'->>'9c300000-0000-0000-0000-000000000001','5.0','upper bound accepted');
+select is(pg_temp.save()->'scores','{"9c300000-0000-0000-0000-000000000001":2.5,"9c300000-0000-0000-0000-000000000002":4.0}'::jsonb,'full draft saved');
 select is(pg_temp.save()->>'submitted_at',null::text,'draft not final');
-select throws_ok($$select pg_temp.save('{"creativity_score":0}')$$,'22023','Scores must be integers from 1 to 5','zero invalid');
-select throws_ok($$select pg_temp.save('{"creativity_score":6}')$$,'22023','Scores must be integers from 1 to 5','six invalid');
-select throws_ok($$select pg_temp.save('{"creativity_score":2.5}')$$,'22023','Scores must be integers from 1 to 5','fractional not coerced to integer');
-select throws_ok($$select pg_temp.save('{"creativity_score":"2"}')$$,'22023','Scores must be integers from 1 to 5','string score invalid');
-select throws_ok($$select pg_temp.save('{"total_score":20}')$$,'22023','Scores must be integers from 1 to 5','cannot send calculated total');
+select throws_ok($$select pg_temp.save(pg_temp.a('0.9'))$$,'22023','Scores must be from 1.0 to 5.0 in steps of 0.1','below range invalid');
+select throws_ok($$select pg_temp.save(pg_temp.a('5.1'))$$,'22023','Scores must be from 1.0 to 5.0 in steps of 0.1','above range invalid');
+select throws_ok($$select pg_temp.save(pg_temp.a('2.55'))$$,'22023','Scores must be from 1.0 to 5.0 in steps of 0.1','hundredths not rounded');
+select throws_ok($$select pg_temp.save(pg_temp.a('"2"'))$$,'22023','Scores must be from 1.0 to 5.0 in steps of 0.1','string score invalid');
+select is(pg_temp.save(pg_temp.a('2.50'))->'scores'->>'9c300000-0000-0000-0000-000000000001','2.5','equivalent notation stored as one decimal');
+select throws_ok($$select pg_temp.save('{"creativity_score":3}')$$,'22023','Unknown judging criterion','unknown key rejected');
+select throws_ok($$select pg_temp.save('{"9C300000-0000-0000-0000-000000000001":3}')$$,'22023','Unknown judging criterion','criterion keys are canonical ids');
 select throws_ok($$select pg_temp.save('[]')$$,'22023','Provide a score object','array invalid');
 select throws_ok($$select pg_temp.save(notes=>repeat('n',5001))$$,'22023','Notes must be 5000 characters or fewer','notes bounded');
-select throws_ok($$select pg_temp.save('{}',true,'replace')$$,'22023','All four scores are required to submit','incomplete submit rejected atomically');
+select throws_ok($$select pg_temp.save(pg_temp.a('3'),true,'replace')$$,'22023','Score every criterion to submit','incomplete submit rejected atomically');
+select throws_ok($$select pg_temp.save('{"9c300000-0000-0000-0000-000000000001":3,"9c300000-0000-0000-0000-000000000002":null}',true)$$,'22023','Score every criterion to submit','null score blocks submit');
 select is(public.judge_assignment('c2-writes','fc300000-0000-0000-0000-000000000001')->'assignment'->>'notes','private','failed submission retains saved content');
 reset role;
 select pg_temp.login(3);
@@ -41,18 +53,24 @@ select throws_ok($$select pg_temp.save()$$,'42501','Assignment unavailable','can
 reset role;
 update public.judging_assignments set cancelled=false where id='fc300000-0000-0000-0000-000000000001';
 select pg_temp.login();
-select isnt(pg_temp.save(submit=>true)->>'submitted_at',null::text,'complete final has database timestamp');
+select set_config('test.submitted_at',pg_temp.save(submit=>true)->>'submitted_at',true);
+select isnt(current_setting('test.submitted_at'),'','complete final has database timestamp');
 select is(public.judge_queue('c2-writes')->>'completed','1','submitted review counted');
-select is(pg_temp.save('{"creativity_score":5}',true,'overwrite')->>'total_score','13','repeat submit acknowledges without applying payload');
-select throws_ok($$select pg_temp.save()$$,'PT409','Submitted reviews are read-only','cannot draft-edit submitted');
+select is(pg_temp.save('{"9c300000-0000-0000-0000-000000000001":5,"9c300000-0000-0000-0000-000000000002":4.5}',true,'edited')->'scores','{"9c300000-0000-0000-0000-000000000001":5.0,"9c300000-0000-0000-0000-000000000002":4.5}'::jsonb,'submitted review can be edited before close');
+select is(public.judge_assignment('c2-writes','fc300000-0000-0000-0000-000000000001')->'assignment'->>'submitted_at',current_setting('test.submitted_at'),'edit keeps first submission time');
+select is(pg_temp.save(submit=>false)->>'submitted_at',current_setting('test.submitted_at'),'draft save cannot unsubmit');
+select throws_ok($$select pg_temp.save(pg_temp.a('3'))$$,'22023','Score every criterion to submit','submitted review cannot lose scores');
+select is(public.judge_queue('c2-writes')->>'completed','1','still counted once');
 reset role;
 update public.event_competition_settings set judging_close_at=now()-interval '1 hour' where event_id='ec300000-0000-0000-0000-000000000001';
 select pg_temp.login();
-select is(pg_temp.save('{}',true,'changed')->>'notes','private','lost-response retry works after expiry without editing');
+select throws_ok($$select pg_temp.save(submit=>true)$$,'PT410',null,'submitted review read-only after close');
+select is(public.judge_assignment('c2-writes','fc300000-0000-0000-0000-000000000001')->'assignment'->>'notes','private','closed edit changes nothing');
 reset role;
+update public.event_competition_settings set judging_close_at=now()+interval '1 hour' where event_id='ec300000-0000-0000-0000-000000000001';
 update public.event_judges set active=false where id='bc300000-0000-0000-0000-000000000002';
 select pg_temp.login();
-select throws_ok($$select pg_temp.save(submit=>true)$$,'42501','Judge access unavailable','revoked repeated submit still denied');
+select throws_ok($$select pg_temp.save(submit=>true)$$,'42501','Judge access unavailable','revoked judge denied');
 reset role;
 set local role anon;
 select throws_ok($$select pg_temp.save()$$,'42501',null,'anonymous write denied');

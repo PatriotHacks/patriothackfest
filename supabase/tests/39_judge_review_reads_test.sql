@@ -32,6 +32,7 @@ create function pg_temp.login(n integer,p_method text default 'otp') returns voi
  select set_config('request.jwt.claims',json_build_object('sub','dc200000-0000-0000-0000-'||lpad(n::text,12,'0'),'email','c2-read-'||n||'@example.test','amr',json_build_array(json_build_object('method',p_method)))::text,true);
  select set_config('role','authenticated',true);
 $$;
+insert into public.judging_criteria(event_id,position,name,description) values('ec200000-0000-0000-0000-000000000001',1,'Criterion A','Description A');
 create function pg_temp.detail() returns jsonb language sql as $$select public.judge_assignment('c2-reads','fc200000-0000-0000-0000-000000000001')$$;
 select no_plan();
 select pg_temp.login(2);
@@ -44,6 +45,8 @@ select is(public.judge_queue('c2-reads')->>'total','1','only own noncancelled su
 select is(public.judge_queue('c2-reads')->>'completed','0','real unfinished count');
 select is(pg_temp.detail()->'project'->>'name','Project 1','assigned content visible');
 select is(pg_temp.detail()->'assignment'->>'notes','','own scorecard visible');
+select is(pg_temp.detail()->'assignment'->'scores','{}'::jsonb,'unscored scorecard has no scores');
+select is(pg_temp.detail()->'criteria'->0->>'name','Criterion A','assignment includes event criteria');
 select ok(not ((pg_temp.detail()->'project') ? 'owner_user_id'),'no profile identifiers in project response');
 select throws_ok($$select * from public.judging_assignments$$,'42501',null,'no raw scorecard directory');
 select is(public.judge_queue('c2-other'),null::jsonb,'cross-event denied');
