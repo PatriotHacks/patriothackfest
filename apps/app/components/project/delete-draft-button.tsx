@@ -62,7 +62,9 @@ export function DeleteDraftButton({
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete project?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Are you sure you want to delete this project?
+            </AlertDialogTitle>
             {hasLosses && (
               <AlertDialogDescription>
                 This can&apos;t be undone. You will lose:
@@ -94,7 +96,9 @@ export function DeleteDraftButton({
             </p>
           )}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel variant="default" disabled={pending}>
+              No
+            </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={pending}
@@ -103,7 +107,7 @@ export function DeleteDraftButton({
                 remove()
               }}
             >
-              Delete project
+              {pending ? "Deleting…" : "Yes"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
