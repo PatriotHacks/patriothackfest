@@ -489,6 +489,7 @@ export type Database = {
       event_judges: {
         Row: {
           active: boolean
+          briefing_acknowledged_at: string | null
           capacity: number
           created_at: string
           email: string
@@ -501,6 +502,7 @@ export type Database = {
         ComputedFields: never
         Insert: {
           active?: boolean
+          briefing_acknowledged_at?: string | null
           capacity?: number
           created_at?: string
           email: string
@@ -512,6 +514,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          briefing_acknowledged_at?: string | null
           capacity?: number
           created_at?: string
           email?: string
@@ -724,17 +727,12 @@ export type Database = {
         Row: {
           cancelled: boolean
           created_at: string
-          creativity_score: number | null
           event_id: string
           id: string
-          impact_score: number | null
           judge_id: string
           notes: string
-          presentation_score: number | null
           project_id: string
           submitted_at: string | null
-          technical_score: number | null
-          total_score: number | null
           track_id: string | null
           updated_at: string
           judge_scorecard: Json | null
@@ -743,34 +741,24 @@ export type Database = {
         Insert: {
           cancelled?: boolean
           created_at?: string
-          creativity_score?: number | null
           event_id: string
           id?: string
-          impact_score?: number | null
           judge_id: string
           notes?: string
-          presentation_score?: number | null
           project_id: string
           submitted_at?: string | null
-          technical_score?: number | null
-          total_score?: never
           track_id?: string | null
           updated_at?: string
         }
         Update: {
           cancelled?: boolean
           created_at?: string
-          creativity_score?: number | null
           event_id?: string
           id?: string
-          impact_score?: number | null
           judge_id?: string
           notes?: string
-          presentation_score?: number | null
           project_id?: string
           submitted_at?: string | null
-          technical_score?: number | null
-          total_score?: never
           track_id?: string | null
           updated_at?: string
         }
@@ -802,6 +790,82 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "project_tracks"
             referencedColumns: ["project_id", "track_id", "event_id"]
+          },
+        ]
+      }
+      judging_criteria: {
+        Row: {
+          created_at: string
+          description: string
+          event_id: string
+          id: string
+          name: string
+          position: number
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          description?: string
+          event_id: string
+          id?: string
+          name: string
+          position: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          event_id?: string
+          id?: string
+          name?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "judging_criteria_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      judging_scores: {
+        Row: {
+          assignment_id: string
+          criterion_id: string
+          event_id: string
+          score: number
+        }
+        ComputedFields: never
+        Insert: {
+          assignment_id: string
+          criterion_id: string
+          event_id: string
+          score: number
+        }
+        Update: {
+          assignment_id?: string
+          criterion_id?: string
+          event_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "judging_scores_assignment_id_event_id_fkey"
+            columns: ["assignment_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "judging_assignments"
+            referencedColumns: ["id", "event_id"]
+          },
+          {
+            foreignKeyName: "judging_scores_criterion_id_event_id_fkey"
+            columns: ["criterion_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "judging_criteria"
+            referencedColumns: ["id", "event_id"]
           },
         ]
       }
@@ -1139,6 +1203,10 @@ export type Database = {
         Args: { p_event_id: string; p_judge_id: string }
         Returns: undefined
       }
+      admin_delete_judging_criterion: {
+        Args: { p_criterion_id: string; p_event_id: string }
+        Returns: undefined
+      }
       admin_event_projects: {
         Args: { p_event_id: string; p_page?: number; p_status?: string }
         Returns: Json
@@ -1157,6 +1225,7 @@ export type Database = {
         Returns: Json
       }
       admin_judge_roster: { Args: { p_event_id: string }; Returns: Json }
+      admin_judging_criteria: { Args: { p_event_id: string }; Returns: Json }
       admin_judging_results: {
         Args: { p_event_id: string; p_page?: number; p_track_id?: string }
         Returns: Json
@@ -1217,6 +1286,10 @@ export type Database = {
         Args: { p_field_ids: string[]; p_form_id: string }
         Returns: undefined
       }
+      admin_reorder_judging_criteria: {
+        Args: { p_criterion_ids: string[]; p_event_id: string }
+        Returns: undefined
+      }
       admin_reorder_project_questions: {
         Args: { p_event_id: string; p_question_ids: string[] }
         Returns: undefined
@@ -1265,6 +1338,15 @@ export type Database = {
           p_judge_id?: string
           p_kind: string
           p_track_ids?: string[]
+        }
+        Returns: string
+      }
+      admin_save_judging_criterion: {
+        Args: {
+          p_criterion_id?: string
+          p_description: string
+          p_event_id: string
+          p_name: string
         }
         Returns: string
       }
@@ -1361,17 +1443,12 @@ export type Database = {
         Returns: {
           cancelled: boolean
           created_at: string
-          creativity_score: number | null
           event_id: string
           id: string
-          impact_score: number | null
           judge_id: string
           notes: string
-          presentation_score: number | null
           project_id: string
           submitted_at: string | null
-          technical_score: number | null
-          total_score: number | null
           track_id: string | null
           updated_at: string
         }[]
@@ -1394,6 +1471,7 @@ export type Database = {
         Args: { p_ends_at: string; p_starts_at: string }
         Returns: boolean
       }
+      event_judging_criteria: { Args: { p_event_id: string }; Returns: Json }
       form_answered_field_ids: {
         Args: { p_form_id: string }
         Returns: string[]
@@ -1421,10 +1499,15 @@ export type Database = {
         Returns: boolean
       }
       js_trim: { Args: { p_value: string }; Returns: string }
+      judge_acknowledge_briefing: {
+        Args: { p_event_slug: string }
+        Returns: Json
+      }
       judge_assignment: {
         Args: { p_assignment_id: string; p_event_slug: string }
         Returns: Json
       }
+      judge_criteria: { Args: { p_event_slug: string }; Returns: Json }
       judge_event_access: { Args: { p_event_slug: string }; Returns: Json }
       judge_event_summary: { Args: { p_judge_id: string }; Returns: Json }
       judge_events: { Args: Record<PropertyKey, never>; Returns: Json }
@@ -1449,6 +1532,10 @@ export type Database = {
         Returns: Json
       }
       lock_assignment_event: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
+      lock_judging_criteria: {
         Args: { p_event_id: string }
         Returns: undefined
       }
