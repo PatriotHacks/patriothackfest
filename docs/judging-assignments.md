@@ -39,7 +39,7 @@ Do not reset/reseed your existing participant/judge rehearsal event. No new depe
 
 **Judge loads** shows current non-cancelled loads, capacity, and unfinished counts. **Manage assignments** is paginated (50 rows), filterable by status and by project using coverage-row links. Pagination retains event, filters, and submitted-project page context. Eligible judge choices load on demand; mutation RPCs recheck every rule even if a selection has gone stale.
 
-Untouched means **all four scores are NULL, notes are exactly empty, and no submission timestamp exists**. Saving only notes or only one score protects that row. In-progress/submitted work cannot be cancelled or reassigned in A2.
+Untouched means **no criterion scores, notes are exactly empty, and no submission timestamp exists**. Saving only notes or only one score protects that row. In-progress/submitted work cannot be cancelled or reassigned in A2.
 
 - **Cancel untouched assignment** requires confirmation. It retains the cancelled row and creates no replacement. You can leave it cancelled. A later generation may fill the missing slot with a different eligible judge, never the cancelled pair.
 - **Reassign untouched review** requires confirmation and atomically cancels the old row and creates a new blank row for another eligible judge. Failure rolls back both changes; scores/notes are never copied. Reassignment preserves the context/count even when a lowered target leaves existing coverage over target.
