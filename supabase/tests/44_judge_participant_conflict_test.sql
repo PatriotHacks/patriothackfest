@@ -5,7 +5,7 @@ create function pg_temp.organizer() returns void language sql as $$
   select set_config('role','authenticated',true);
 $$;
 create function pg_temp.save(p_email text,p_judge uuid default null,p_event uuid default 'ef400000-0000-0000-0000-000000000001') returns uuid language sql as $$
-  select public.admin_save_event_judge(p_event,p_email,'general',true,20,'{}',p_judge);
+  select (public.admin_save_event_judge(p_event,p_email,'general',true,20,'{}',p_judge)->>'id')::uuid;
 $$;
 insert into auth.users(id,email,email_confirmed_at)
 select ('df400000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'user-'||n||'@example.test',

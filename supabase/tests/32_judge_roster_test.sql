@@ -6,7 +6,7 @@ create function pg_temp.login(p_email text,p_method text default 'oauth') return
 $$;
 create function pg_temp.save_judge(p_kind text default 'sponsor',p_tracks uuid[] default array['cf100000-0000-0000-0000-000000000001'::uuid],p_active boolean default true,p_capacity integer default 20,p_email text default 'guest@example.test')
 returns uuid language sql as $$
-  select public.admin_save_event_judge('ef100000-0000-0000-0000-000000000001',p_email,p_kind,p_active,p_capacity,p_tracks,nullif(current_setting('test.judge',true),'')::uuid);
+  select (public.admin_save_event_judge('ef100000-0000-0000-0000-000000000001',p_email,p_kind,p_active,p_capacity,p_tracks,nullif(current_setting('test.judge',true),'')::uuid)->>'id')::uuid;
 $$;
 insert into auth.users(id,email) values
  ('df100000-0000-0000-0000-000000000001','roster-owner@example.test'),
@@ -37,7 +37,7 @@ select throws_ok($$select pg_temp.save_judge()$$,'42501','Not authorized','owner
 reset role;
 select pg_temp.login('roster-organizer@example.test');
 select is(public.admin_judge_roster('ef100000-0000-0000-0000-000000000001'),'[]'::jsonb,'empty roster readable to organizer');
-select set_config('test.judge',public.admin_save_event_judge('ef100000-0000-0000-0000-000000000001',' Guest@Example.Test ','sponsor',true,20,array['cf100000-0000-0000-0000-000000000001'::uuid])::text,true);
+select set_config('test.judge',public.admin_save_event_judge('ef100000-0000-0000-0000-000000000001',' Guest@Example.Test ','sponsor',true,20,array['cf100000-0000-0000-0000-000000000001'::uuid])->>'id',true);
 select is(public.admin_judge_roster('ef100000-0000-0000-0000-000000000001')->0->>'email','guest@example.test','email normalized without requiring registered account');
 select is(public.admin_judge_roster('ef100000-0000-0000-0000-000000000001')->0->>'bound','false','new judge is not bound to an arbitrary user');
 select throws_ok($$select public.admin_save_event_judge('ef100000-0000-0000-0000-000000000001','GUEST@example.test','general',true,20)$$,'P0001','This email or account is already on the event judge roster','duplicate emails rejected case-insensitively');
