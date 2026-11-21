@@ -11,6 +11,7 @@ import {
   judgeBriefingHref,
   judgeRouteSchema,
   queuePosition,
+  reviewContext,
 } from "@/lib/judge-reviews"
 
 export default async function JudgeAssignmentPage({
@@ -48,7 +49,10 @@ export default async function JudgeAssignmentPage({
             <h1 className={cn(SERIF, "text-4xl break-words")}>
               {detail.project.name}
             </h1>
-            <JudgeProjectDetails detail={detail} />
+            <JudgeProjectDetails
+              detail={detail}
+              context={reviewContext(detail.assignment)}
+            />
           </div>
           <aside className="lg:sticky lg:top-6 lg:max-h-[calc(100svh-3rem)] lg:overflow-y-auto">
             <JudgeScorecardForm

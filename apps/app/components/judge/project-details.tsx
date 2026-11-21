@@ -1,19 +1,33 @@
 import { PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
-import { reviewContext, type JudgeAssignment } from "@/lib/judge-reviews"
+import type { JudgeProjectView } from "@/lib/judge-reviews"
 import { memberName } from "@/lib/projects"
 import { JudgeAnswers } from "./answers"
 import { OrganizerContact } from "./queue"
 
-export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
+export function JudgeProjectDetails({
+  detail,
+  context,
+}: {
+  detail: JudgeProjectView
+  context: string | null
+}) {
   return (
     <article className={cn(PAPER, "flex flex-col gap-4 p-6")}>
-      <p className="font-semibold">{reviewContext(detail.assignment)}</p>
-      <p className="text-sm">
-        Read-only submitted project. This scorecard applies only to the context
-        above.
-      </p>
+      {context ? (
+        <>
+          <p className="font-semibold">{context}</p>
+          <p className="text-sm">
+            Read-only submitted project. This scorecard applies only to the
+            context above.
+          </p>
+        </>
+      ) : (
+        <p className="text-sm">
+          Read-only submitted project. Guest judges do not score.
+        </p>
+      )}
       {detail.team.length > 0 && (
         <>
           <h2 className="text-lg font-semibold">Team</h2>
@@ -25,7 +39,7 @@ export function JudgeProjectDetails({ detail }: { detail: JudgeAssignment }) {
         </>
       )}
       <JudgeAnswers answers={detail.answers} />
-      <OrganizerContact />
+      {context && <OrganizerContact />}
     </article>
   )
 }
