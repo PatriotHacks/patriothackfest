@@ -28,9 +28,41 @@ export const eventJudgeInput = z
     }
   })
 
-export const deleteEventJudgeInput = z
+export const eventJudgeRefInput = z
   .object({ eventId: z.guid(), judgeId: z.guid() })
   .strict()
+
+export const judgeGuestInput = eventJudgeRefInput
+  .extend({ guest: z.boolean() })
+  .strict()
+
+const count = z.number().int().nonnegative()
+export const judgeTransferSchema = z.object({
+  moved: count,
+  dropped_drafts: count,
+  missing: count,
+})
+export const judgeTransferPreviewSchema = z.object({
+  unsubmitted: count,
+  drafts: count,
+})
+export const savedJudgeSchema = z.object({
+  id: z.guid(),
+  transfer: judgeTransferSchema.nullable(),
+})
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
+
+export function transferPreviewMessage(preview: JudgeTransferPreview) {
+  if (preview.unsubmitted === 0) return "No unsubmitted assignments to move."
+  return `${plural(preview.unsubmitted, "assignment")} will move to other judges; ${preview.drafts} ${preview.drafts === 1 ? "has" : "have"} draft scores that will be discarded.`
+}
+
+export function transferResultMessage(transfer: JudgeTransfer) {
+  const moved = `Moved ${plural(transfer.moved, "assignment")}`
+  if (transfer.missing === 0) return `${moved}.`
+  return `${moved}. ${plural(transfer.missing, "project")} still ${transfer.missing === 1 ? "needs" : "need"} a judge (raise judge limits and click Generate missing assignments).`
+}
 
 export const judgeRosterSchema = z.array(
   z.object({
@@ -39,6 +71,7 @@ export const judgeRosterSchema = z.array(
     email: z.string(),
     kind: z.enum(["general", "sponsor"]),
     active: z.boolean(),
+    guest: z.boolean(),
     capacity: z.number().int(),
     bound: z.boolean(),
     briefing_acknowledged_at: z.string().nullable(),
@@ -56,4 +89,6 @@ export const judgeRosterSchema = z.array(
 )
 
 export type EventJudgeInput = z.input<typeof eventJudgeInput>
+export type JudgeTransfer = z.infer<typeof judgeTransferSchema>
+export type JudgeTransferPreview = z.infer<typeof judgeTransferPreviewSchema>
 export type JudgeRosterEntry = z.infer<typeof judgeRosterSchema>[number]

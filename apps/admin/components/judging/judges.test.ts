@@ -14,6 +14,7 @@ const judge: JudgeRosterEntry = {
   email: "person@example.com",
   kind: "sponsor",
   active: false,
+  guest: false,
   capacity: 20,
   bound: true,
   briefing_acknowledged_at: "2026-11-21T15:04:00Z",
