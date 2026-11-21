@@ -16,6 +16,7 @@ const event = {
   enabled: false,
   judging_started_at: null,
   judging_close_at: null,
+  briefing_acknowledged_at: null,
   tracks: [],
 }
 beforeEach(() => {

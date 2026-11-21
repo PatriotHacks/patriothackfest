@@ -13,6 +13,7 @@ const event: JudgeEvent = {
   enabled: false,
   judging_started_at: null,
   judging_close_at: "2026-11-21T05:00:00Z",
+  briefing_acknowledged_at: null,
   tracks: [{ id, name: "Track A", active: true }],
 }
 describe("judge event landing", () => {

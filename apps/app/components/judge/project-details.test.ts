@@ -15,15 +15,12 @@ describe("judge project rendering", () => {
       createElement(JudgeProjectDetails, {
         detail: {
           project: { name: "Project" },
+          criteria: [],
           assignment: {
             id: "a0000000-0000-4000-8000-000000000001",
             track_id: null,
             track_name: null,
-            creativity_score: null,
-            technical_score: null,
-            impact_score: null,
-            presentation_score: null,
-            total_score: null,
+            scores: {},
             submitted_at: null,
             notes: "",
           },
@@ -108,15 +105,12 @@ describe("judge project rendering", () => {
       createElement(JudgeProjectDetails, {
         detail: {
           project: { name: "Project" },
+          criteria: [],
           assignment: {
             id: "a0000000-0000-4000-8000-000000000001",
             track_id: null,
             track_name: null,
-            creativity_score: null,
-            technical_score: null,
-            impact_score: null,
-            presentation_score: null,
-            total_score: null,
+            scores: {},
             submitted_at: null,
             notes: "",
           },

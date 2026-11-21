@@ -1,14 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-const { getJudgeEvent, getJudgeAssignment, notFound } = vi.hoisted(() => ({
-  getJudgeEvent: vi.fn(),
-  getJudgeAssignment: vi.fn(),
-  notFound: vi.fn(() => {
-    throw new Error("Not found")
-  }),
-}))
+const { getJudgeEvent, getJudgeAssignment, getJudgeQueue, notFound, redirect } =
+  vi.hoisted(() => ({
+    getJudgeEvent: vi.fn(),
+    getJudgeAssignment: vi.fn(),
+    getJudgeQueue: vi.fn(),
+    redirect: vi.fn(() => {
+      throw new Error("Redirect")
+    }),
+    notFound: vi.fn(() => {
+      throw new Error("Not found")
+    }),
+  }))
 vi.mock("@/lib/judge-access", () => ({ getJudgeEvent }))
-vi.mock("@/lib/judge-review-data", () => ({ getJudgeAssignment }))
-vi.mock("next/navigation", () => ({ notFound }))
+vi.mock("@/lib/judge-review-data", () => ({
+  getJudgeAssignment,
+  getJudgeQueue,
+}))
+vi.mock("next/navigation", () => ({ notFound, redirect }))
 vi.mock("@/lib/project-file-actions", () => ({ projectFileUrl: vi.fn() }))
 vi.mock("@/components/judge/scorecard", () => ({
   JudgeScorecardForm: () => null,
@@ -27,10 +35,25 @@ describe("judge assignment route", () => {
     expect(getJudgeAssignment).not.toHaveBeenCalled()
   })
   it("uses both exact event and assignment identities", async () => {
-    getJudgeEvent.mockResolvedValue({ name: "Fall" })
+    getJudgeEvent.mockResolvedValue({
+      name: "Fall",
+      briefing_acknowledged_at: "2026-11-21T00:00:00Z",
+    })
     getJudgeAssignment.mockResolvedValue(null)
     await JudgeAssignmentPage(props)
     expect(getJudgeAssignment).toHaveBeenCalledWith("fall-2026", id)
+  })
+  it("sends judges who have not read the briefing to it first", async () => {
+    redirect.mockImplementation(() => {
+      throw new Error("Redirect")
+    })
+    getJudgeEvent.mockResolvedValue({
+      name: "Fall",
+      briefing_acknowledged_at: null,
+    })
+    await expect(JudgeAssignmentPage(props)).rejects.toThrow("Redirect")
+    expect(redirect).toHaveBeenCalledWith("/judge/fall-2026/briefing")
+    expect(getJudgeAssignment).not.toHaveBeenCalled()
   })
   it("rejects malformed assignment IDs before any data reads", async () => {
     notFound.mockImplementation(() => {

@@ -5,8 +5,10 @@ import {
   reviewIsDirty,
 } from "./judge-review-form"
 import type { JudgeEvent } from "./judge-access"
-import type { JudgeScorecard } from "./judge-reviews"
+import type { JudgeCriterion, JudgeScorecard } from "./judge-reviews"
 const id = "a0000000-0000-4000-8000-000000000001"
+const a = "c0000000-0000-4000-8000-000000000001"
+const b = "c0000000-0000-4000-8000-000000000002"
 export const event: JudgeEvent = {
   event_id: id,
   slug: "fall-2026",
@@ -16,74 +18,63 @@ export const event: JudgeEvent = {
   enabled: true,
   judging_started_at: "2026-11-18T00:00:00Z",
   judging_close_at: "2099-11-21T05:00:00Z",
+  briefing_acknowledged_at: "2026-11-18T00:00:00Z",
   tracks: [],
 }
+export const criteria: JudgeCriterion[] = [
+  { id: a, name: "Criterion A", description: "" },
+  { id: b, name: "Criterion B", description: "" },
+]
 export const assignment: JudgeScorecard = {
   id,
   track_id: null,
   track_name: null,
-  creativity_score: null,
-  technical_score: null,
-  impact_score: null,
-  presentation_score: null,
+  scores: { [a]: 2.5 },
   notes: "saved",
   submitted_at: null,
-  total_score: null,
 }
 describe("controlled scorecard state", () => {
+  it("starts every criterion from the saved scores or unset", () => {
+    const state = initialReviewFormState({ event, criteria, assignment })
+    expect(state.scores).toEqual({ [a]: 2.5, [b]: null })
+    expect(reviewIsDirty(state)).toBe(false)
+  })
   it("preserves unsaved values on validation, deadline, revocation and transport errors", () => {
-    let state = initialReviewFormState({ event, assignment })
+    let state = initialReviewFormState({ event, criteria, assignment })
     state = reviewFormReducer(state, { type: "notes", value: "unsaved" })
-    state = reviewFormReducer(state, {
-      type: "score",
-      key: "creativity_score",
-      value: 4,
-    })
-    for (const message of [
-      "Invalid score",
-      "Judging expired",
-      "Revoked",
-      "Network unavailable",
-    ])
+    state = reviewFormReducer(state, { type: "score", id: b, value: 4.2 })
+    for (const message of ["Invalid score", "Judging expired", "Revoked"])
       state = reviewFormReducer(state, { type: "failure", message })
     expect(state.notes).toBe("unsaved")
-    expect(state.scores.creativity_score).toBe(4)
+    expect(state.scores[b]).toBe(4.2)
     expect(reviewIsDirty(state)).toBe(true)
-    expect(state.assignment.submitted_at).toBeNull()
   })
-  it("updates extended deadline without resetting dirty fields to the saved draft", () => {
-    let state = initialReviewFormState({ event, assignment })
+  it("updates extended deadline without resetting dirty fields", () => {
+    let state = initialReviewFormState({ event, criteria, assignment })
     state = reviewFormReducer(state, { type: "notes", value: "keep me" })
     state = reviewFormReducer(state, {
       type: "checked",
       event: { ...event, judging_close_at: "2099-11-22T05:00:00Z" },
-      assignment,
     })
     expect(state.notes).toBe("keep me")
     expect(state.event.judging_close_at).toContain("11-22")
     expect(state.message).toContain("Judging is open")
   })
-  it("locks successful/repeated submission even when queue refresh fails", () => {
-    let state = initialReviewFormState({ event, assignment })
+  it("keeps submitted reviews editable after saving", () => {
+    let state = initialReviewFormState({ event, criteria, assignment })
     const submitted = {
       ...assignment,
-      creativity_score: 3,
-      technical_score: 3,
-      impact_score: 3,
-      presentation_score: 3,
+      scores: { [a]: 3, [b]: 4 },
       submitted_at: "date",
-      total_score: 12,
     }
-    state = reviewFormReducer(state, { type: "saved", assignment: submitted })
     state = reviewFormReducer(state, {
-      type: "failure",
-      message: "Queue unavailable",
+      type: "saved",
+      assignment: submitted,
+      message: "Review submitted",
     })
-    state = reviewFormReducer(state, { type: "notes", value: "overwrite" })
-    expect(state.assignment.submitted_at).toBe("date")
-    expect(state.notes).toBe("saved")
     expect(reviewIsDirty(state)).toBe(false)
-    state = reviewFormReducer(state, { type: "checked", event, assignment })
-    expect(state.assignment.submitted_at).toBe("date")
+    state = reviewFormReducer(state, { type: "score", id: a, value: 3.1 })
+    expect(state.scores[a]).toBe(3.1)
+    expect(reviewIsDirty(state)).toBe(true)
   })
 })

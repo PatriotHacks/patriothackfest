@@ -26,7 +26,7 @@ export default async function JudgeLayout({
           <SidebarTrigger />
           <LogoLockup view="judging" imageClassName="h-[32px]" />
         </header>
-        <main className="flex w-full max-w-4xl flex-1 flex-col gap-5 p-4 sm:p-8 lg:px-12">
+        <main className="flex w-full max-w-4xl flex-1 flex-col gap-5 p-4 has-data-wide:max-w-none sm:p-8 lg:px-12">
           {children}
         </main>
       </SidebarInset>

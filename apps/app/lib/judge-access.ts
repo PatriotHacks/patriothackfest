@@ -14,6 +14,7 @@ export const judgeEventSchema = z.object({
   enabled: z.boolean(),
   judging_started_at: z.string().nullable(),
   judging_close_at: z.string().nullable(),
+  briefing_acknowledged_at: z.string().nullable(),
   tracks: z.array(
     z.object({ id: z.guid(), name: z.string(), active: z.boolean() })
   ),
