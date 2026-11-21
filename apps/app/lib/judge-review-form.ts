@@ -19,7 +19,7 @@ type ReviewFormAction =
   | { type: "score"; id: string; value: number }
   | { type: "notes"; value: string }
   | { type: "failure"; message: string }
-  | { type: "saved"; assignment: JudgeScorecard; message: string }
+  | { type: "saved"; assignment: JudgeScorecard; message: string | null }
   | { type: "checked"; event: JudgeEvent }
 
 export function initialReviewFormState(value: {
@@ -50,11 +50,10 @@ export function reviewFormReducer(
     case "failure":
       return { ...state, message: action.message }
     case "saved":
+      // Edits made while the save was in flight stay and remain dirty.
       return {
         ...state,
         assignment: action.assignment,
-        scores: reviewScores(action.assignment, state.criteria),
-        notes: action.assignment.notes,
         message: action.message,
       }
     case "checked":

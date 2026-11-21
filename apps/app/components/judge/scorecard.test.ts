@@ -33,9 +33,9 @@ describe("scorecard rendering", () => {
       "Criterion B",
       ">2.5</span>",
       "Not scored",
-      "Save draft",
       'aria-label="Raise Criterion B by 0.1"',
       "Submit &amp; next",
+      "Your draft saves automatically.",
       ">saved</textarea>",
       "Only organizers see this.",
       "Score every criterion",
@@ -44,6 +44,7 @@ describe("scorecard rendering", () => {
       "America/New_York",
     ])
       expect(html).toContain(text)
+    expect(html).not.toContain("Save draft")
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Submit &amp; next/)
   })
   it("enables submit and shows the average when every criterion is scored", () => {
@@ -53,7 +54,8 @@ describe("scorecard rendering", () => {
         scores: { ...assignment.scores, [criteria[1]!.id]: 4 },
       },
     })
-    expect(html).toContain("3.25 / 5")
+    expect(html).toContain(">3.25</span>")
+    expect(html).not.toContain(" / 5")
     expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>Submit &amp; next/)
   })
   it("keeps submitted reviews editable while judging is open", () => {
@@ -64,8 +66,8 @@ describe("scorecard rendering", () => {
         submitted_at: "date",
       },
     })
-    expect(html).toContain("Save changes")
-    expect(html).not.toContain("Save draft")
+    expect(html).toContain("Changes save automatically.")
+    expect(html).not.toContain("Submit &amp; next")
     expect(html).not.toContain("<fieldset disabled")
   })
   it("locks scoring after judging closes", () => {

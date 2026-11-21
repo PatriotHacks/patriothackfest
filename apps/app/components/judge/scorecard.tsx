@@ -7,7 +7,15 @@ import { PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useReducer, useRef, useTransition } from "react"
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useReducer,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 
 import {
   checkJudgeReview,
@@ -24,7 +32,6 @@ import {
   reviewAverage,
   reviewComplete,
   reviewContext,
-  SCORE_MAX,
   type JudgeCriterion,
   type JudgeScorecard,
   type queuePosition,
@@ -49,8 +56,14 @@ export function JudgeScorecardForm({
     { assignment, criteria, event },
     initialReviewFormState
   )
+  const [status, setStatus] = useState<{ error: boolean; text: string } | null>(
+    null
+  )
   const [pending, startTransition] = useTransition()
   const busy = useRef(false)
+  const latest = useRef(state)
+  const inflight = useRef<Promise<boolean> | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const id = useId()
   const router = useRouter()
   const submitted = Boolean(state.assignment.submitted_at)
@@ -58,6 +71,17 @@ export function JudgeScorecardForm({
   const open = judgeWindowStatus(state.event) === "started"
   const complete = reviewComplete(state.scores)
   const average = reviewAverage(state.scores)
+
+  useEffect(() => {
+    latest.current = state
+  })
+
+  const autosave = useEffectEvent(() => void persist(false))
+  useEffect(() => {
+    if (!dirty || !open) return
+    timer.current = setTimeout(autosave, 800)
+    return () => clearTimeout(timer.current)
+  }, [dirty, open, state.scores, state.notes])
 
   useEffect(() => {
     if (!dirty) return
@@ -86,32 +110,55 @@ export function JudgeScorecardForm({
       }
     })
   }
-  function save(submit: boolean) {
+  async function persist(submit: boolean): Promise<boolean> {
+    clearTimeout(timer.current)
+    while (inflight.current) await inflight.current
+    const current = latest.current
+    if (!submit && !reviewIsDirty(current)) return true
+    setStatus({ error: false, text: "Saving…" })
+    const request = saveJudgeReview({
+      eventSlug: current.event.slug,
+      assignmentId: current.assignment.id,
+      scores: current.scores,
+      notes: current.notes,
+      submit,
+    })
+      .then(
+        (result) => {
+          if (result.error || !result.assignment) {
+            setStatus({
+              error: true,
+              text: result.error ?? "Could not save your review",
+            })
+            return false
+          }
+          latest.current = { ...latest.current, assignment: result.assignment }
+          dispatch({
+            type: "saved",
+            assignment: result.assignment,
+            message: submit ? "Review submitted" : null,
+          })
+          setStatus({ error: false, text: "Saved" })
+          return true
+        },
+        () => {
+          setStatus({
+            error: true,
+            text: "Could not save. Retry, or sign in again if your session expired.",
+          })
+          return false
+        }
+      )
+      .then((ok) => {
+        inflight.current = null
+        return ok
+      })
+    inflight.current = request
+    return request
+  }
+  function submit() {
     run(async () => {
-      const result = await saveJudgeReview({
-        eventSlug: state.event.slug,
-        assignmentId: state.assignment.id,
-        scores: state.scores,
-        notes: state.notes,
-        submit,
-      })
-      if (result.error || !result.assignment) {
-        dispatch({
-          type: "failure",
-          message: result.error ?? "Could not save your review",
-        })
-        return
-      }
-      dispatch({
-        type: "saved",
-        assignment: result.assignment,
-        message: submitted
-          ? "Changes saved"
-          : submit
-            ? "Review submitted"
-            : "Draft saved",
-      })
-      if (submitted || !submit) return
+      if (!(await persist(true))) return
       const next = await continueJudgeQueue(
         state.event.slug,
         state.assignment.id
@@ -139,9 +186,16 @@ export function JudgeScorecardForm({
       dispatch({ type: "checked", event: result.event })
     })
   }
-  function confirmLeave(event: React.MouseEvent) {
-    if (dirty && !window.confirm("Leave without saving your changes?"))
-      event.preventDefault()
+  function leave(event: React.MouseEvent, href: string) {
+    if (!dirty) return
+    event.preventDefault()
+    run(async () => {
+      if (
+        (await persist(false)) ||
+        window.confirm("Leave without saving your changes?")
+      )
+        router.push(href)
+    })
   }
 
   return (
@@ -157,7 +211,7 @@ export function JudgeScorecardForm({
           {position.previous ? (
             <Link
               href={position.previous}
-              onClick={confirmLeave}
+              onClick={(event) => leave(event, position.previous!)}
               className="underline"
             >
               Previous
@@ -173,7 +227,7 @@ export function JudgeScorecardForm({
           {position.next ? (
             <Link
               href={position.next}
-              onClick={confirmLeave}
+              onClick={(event) => leave(event, position.next!)}
               className="underline"
             >
               Next
@@ -186,7 +240,33 @@ export function JudgeScorecardForm({
         </nav>
       )}
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-semibold">Your scores</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">Your scores</h2>
+          {open && criteria.length > 0 && (
+            <div className="flex items-center gap-3">
+              {status && (
+                <span
+                  role={status.error ? "alert" : undefined}
+                  className={cn(
+                    "text-sm",
+                    status.error ? "text-red-700" : "text-[#6E6E68]"
+                  )}
+                >
+                  {status.text}
+                </span>
+              )}
+              {!submitted && (
+                <Button
+                  type="submit"
+                  form={`${id}-form`}
+                  disabled={pending || !complete}
+                >
+                  Submit & next
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
         <p className="text-sm">
           {reviewContext(state.assignment)}
           {submitted && " · Submitted"}
@@ -200,10 +280,11 @@ export function JudgeScorecardForm({
         </p>
       ) : (
         <form
+          id={`${id}-form`}
           noValidate
           onSubmit={(event) => {
             event.preventDefault()
-            save(true)
+            if (!submitted && complete) submit()
           }}
           className="flex flex-col gap-5"
         >
@@ -242,7 +323,7 @@ export function JudgeScorecardForm({
               <span className="tabular-nums">
                 {average === null
                   ? "Score every criterion"
-                  : `${average.toFixed(2)} / ${SCORE_MAX}`}
+                  : average.toFixed(2)}
               </span>
             </p>
             <div className="flex flex-col gap-1">
@@ -262,29 +343,10 @@ export function JudgeScorecardForm({
             </div>
           </fieldset>
           {open && (
-            <div className="flex flex-wrap gap-3">
-              <Button type="submit" disabled={pending || !complete}>
-                {submitted ? "Save changes" : "Submit & next"}
-              </Button>
-              {!submitted && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={pending}
-                  onClick={() => save(false)}
-                >
-                  Save draft
-                </Button>
-              )}
-            </div>
-          )}
-          {open && (
             <p className="text-sm text-[#6E6E68]">
-              {dirty
-                ? "Unsaved changes."
-                : submitted
-                  ? "You can edit this review until judging closes."
-                  : "Score every criterion to submit."}
+              {submitted
+                ? "You can edit this review until judging closes. Changes save automatically."
+                : "Your draft saves automatically. Score every criterion to submit."}
             </p>
           )}
         </form>

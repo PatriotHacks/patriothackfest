@@ -62,6 +62,8 @@ describe("controlled scorecard state", () => {
   })
   it("keeps submitted reviews editable after saving", () => {
     let state = initialReviewFormState({ event, criteria, assignment })
+    state = reviewFormReducer(state, { type: "score", id: a, value: 3 })
+    state = reviewFormReducer(state, { type: "score", id: b, value: 4 })
     const submitted = {
       ...assignment,
       scores: { [a]: 3, [b]: 4 },
@@ -75,6 +77,19 @@ describe("controlled scorecard state", () => {
     expect(reviewIsDirty(state)).toBe(false)
     state = reviewFormReducer(state, { type: "score", id: a, value: 3.1 })
     expect(state.scores[a]).toBe(3.1)
+    expect(reviewIsDirty(state)).toBe(true)
+  })
+  it("keeps edits made while a save was in flight", () => {
+    let state = initialReviewFormState({ event, criteria, assignment })
+    state = reviewFormReducer(state, { type: "notes", value: "first" })
+    const saved = { ...assignment, notes: "first" }
+    state = reviewFormReducer(state, { type: "notes", value: "second" })
+    state = reviewFormReducer(state, {
+      type: "saved",
+      assignment: saved,
+      message: null,
+    })
+    expect(state.notes).toBe("second")
     expect(reviewIsDirty(state)).toBe(true)
   })
 })
