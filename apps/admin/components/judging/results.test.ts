@@ -16,7 +16,7 @@ const data: JudgingResults = {
       project_id: id,
       project_name: "<Project>",
       completed: 1,
-      average_total: 16.125,
+      average_score: 4.125,
       insufficient_coverage: true,
       tied: true,
     },
@@ -24,7 +24,7 @@ const data: JudgingResults = {
       project_id: `${id.slice(0, -1)}2`,
       project_name: "Unscored",
       completed: 0,
-      average_total: null,
+      average_score: null,
       insufficient_coverage: true,
       tied: false,
     },
@@ -32,7 +32,7 @@ const data: JudgingResults = {
       project_id: `${id.slice(0, -1)}3`,
       project_name: "Complete",
       completed: 4,
-      average_total: 12,
+      average_score: 3,
       insufficient_coverage: false,
       tied: false,
     },
@@ -69,7 +69,7 @@ describe("organizer results section", () => {
       "1 / 3",
       "0 / 3",
       "4 / 3",
-      "16.13 / 20",
+      "4.13 / 5",
       "No reviews",
       "Insufficient coverage",
       "Tied average",
@@ -79,7 +79,7 @@ describe("organizer results section", () => {
       "including other pages",
     ])
       expect(html).toContain(text)
-    expect(html).not.toContain("0.00 / 20")
+    expect(html).not.toContain("0.00 / 5")
     expect(html).toContain("&lt;Project&gt;")
     expect(html).not.toContain("<Project>")
     expect(html).toContain(

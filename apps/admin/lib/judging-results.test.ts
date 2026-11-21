@@ -12,7 +12,7 @@ const row = {
   project_id: id,
   project_name: "Project",
   completed: 1,
-  average_total: 16.125,
+  average_score: 4.125,
   insufficient_coverage: true,
   tied: false,
 }
@@ -64,13 +64,13 @@ describe("judging results contracts", () => {
     ).toBe(true)
     for (const bad of [
       { ...row, completed: 0 },
-      { ...row, average_total: null },
-      { ...row, average_total: 21 },
-      { ...row, average_total: 3 },
+      { ...row, average_score: null },
+      { ...row, average_score: 5.1 },
+      { ...row, average_score: 0.9 },
       { ...row, completed: -1 },
       { ...row, completed: 1.5 },
       { ...row, insufficient_coverage: false },
-      { ...row, completed: 0, average_total: null, tied: true },
+      { ...row, completed: 0, average_score: null, tied: true },
     ])
       expect(
         judgingResults.safeParse({ ...data, projects: [bad] }).success
@@ -89,9 +89,9 @@ describe("judging results contracts", () => {
   })
   it("keeps null distinct from zero and rounds display only", () => {
     expect(formatResultAverage(null)).toBe("No reviews")
-    expect(formatResultAverage(20)).toBe("20.00 / 20")
-    expect(formatResultAverage(16.125)).toBe("16.13 / 20")
-    expect(row.average_total).toBe(16.125)
+    expect(formatResultAverage(5)).toBe("5.00 / 5")
+    expect(formatResultAverage(4.125)).toBe("4.13 / 5")
+    expect(row.average_score).toBe(4.125)
   })
   it("encodes URLs and preserves other sections without overriding context", () => {
     const url = new URL(

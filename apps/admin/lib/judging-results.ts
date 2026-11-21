@@ -36,13 +36,13 @@ export const judgingResults = z
             project_id: z.guid(),
             project_name: z.string(),
             completed: z.number().int().nonnegative(),
-            average_total: z.number().min(4).max(20).nullable(),
+            average_score: z.number().min(1).max(5).nullable(),
             insufficient_coverage: z.boolean(),
             tied: z.boolean(),
           })
           .refine(
             (row) =>
-              (row.completed === 0) === (row.average_total === null) &&
+              (row.completed === 0) === (row.average_score === null) &&
               (row.completed > 0 || !row.tied),
             "Only completed reviews have averages or ties"
           )
@@ -85,5 +85,5 @@ export function resultsHref(
 }
 
 export function formatResultAverage(average: number | null) {
-  return average === null ? "No reviews" : `${average.toFixed(2)} / 20`
+  return average === null ? "No reviews" : `${average.toFixed(2)} / 5`
 }
