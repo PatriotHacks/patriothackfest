@@ -10,6 +10,7 @@ export const judgeEventSchema = z.object({
   slug: z.string(),
   name: z.string(),
   kind: z.enum(["general", "sponsor"]),
+  guest: z.boolean(),
   capacity: z.number().int(),
   enabled: z.boolean(),
   judging_started_at: z.string().nullable(),

@@ -14,6 +14,7 @@ export const event: JudgeEvent = {
   slug: "fall-2026",
   name: "Fall",
   kind: "general",
+  guest: false,
   capacity: 20,
   enabled: true,
   judging_started_at: "2026-11-18T00:00:00Z",

@@ -15,9 +15,14 @@ export const scoreSchema = z
     "Use steps of 0.1"
   )
 export const reviewScoresSchema = z.record(z.guid(), scoreSchema.nullable())
+const eventSlugSchema = z.string().regex(/^[A-Za-z0-9_-]+$/)
 export const judgeRouteSchema = z.object({
-  eventSlug: z.string().regex(/^[A-Za-z0-9_-]+$/),
+  eventSlug: eventSlugSchema,
   assignmentId: z.guid(),
+})
+export const guestProjectRouteSchema = z.object({
+  eventSlug: eventSlugSchema,
+  projectId: z.guid(),
 })
 export const reviewSaveSchema = judgeRouteSchema
   .extend({
@@ -54,18 +59,25 @@ export const judgeQueueSchema = z.object({
     })
   ),
 })
-export const judgeAssignmentSchema = z.object({
-  assignment: judgeScorecardSchema,
+export const judgeProjectViewSchema = z.object({
   project: z.object({ name: z.string() }),
-  criteria: judgeCriteriaSchema,
   answers: z.array(projectQuestionAnswerSchema),
   team: z.array(z.string().nullable()),
 })
+export const judgeAssignmentSchema = judgeProjectViewSchema.extend({
+  assignment: judgeScorecardSchema,
+  criteria: judgeCriteriaSchema,
+})
+export const guestProjectsSchema = z.array(
+  z.object({ id: z.guid(), name: z.string() })
+)
 export type ReviewScores = z.infer<typeof reviewScoresSchema>
 export type JudgeCriterion = z.infer<typeof judgeCriterionSchema>
 export type JudgeScorecard = z.infer<typeof judgeScorecardSchema>
 export type JudgeQueue = z.infer<typeof judgeQueueSchema>
 export type JudgeAssignment = z.infer<typeof judgeAssignmentSchema>
+export type JudgeProjectView = z.infer<typeof judgeProjectViewSchema>
+export type GuestProjects = z.infer<typeof guestProjectsSchema>
 
 export function reviewScores(
   assignment: JudgeScorecard,
@@ -93,6 +105,9 @@ export function formatScore(value: number) {
 }
 export function judgeAssignmentHref(eventSlug: string, id: string) {
   return `/judge/${encodeURIComponent(eventSlug)}/${encodeURIComponent(id)}`
+}
+export function guestProjectHref(eventSlug: string, projectId: string) {
+  return `/judge/${encodeURIComponent(eventSlug)}/projects/${encodeURIComponent(projectId)}`
 }
 export function judgeBriefingHref(eventSlug: string) {
   return `/judge?briefing=${encodeURIComponent(eventSlug)}`

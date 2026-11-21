@@ -12,6 +12,7 @@ const event = {
   slug: "fall-2026",
   name: "Fall",
   kind: "general",
+  guest: false,
   capacity: 20,
   enabled: false,
   judging_started_at: null,
