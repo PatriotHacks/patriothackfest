@@ -55,7 +55,7 @@ returns jsonb language sql stable security definer set search_path = '' as $$
   from public.events e cross join lateral public.current_judge_assignments(e.id) a
   join public.projects p on p.id=a.project_id
   join public.event_competition_settings s on s.event_id=e.id
-  where e.slug=p_event_slug and a.id=p_assignment_id;
+  where e.slug=p_event_slug and a.id=p_assignment_id and s.judging_started_at is not null;
 $$;
 
 -- Submitted reviews stay editable until the deadline. Once submitted, every save

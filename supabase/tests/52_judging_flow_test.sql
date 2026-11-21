@@ -58,7 +58,7 @@ select is(public.judge_criteria('flow'),null::jsonb,'participant gets no rubric'
 select throws_ok($$select public.admin_judging_criteria('e5200000-0000-0000-0000-000000000001')$$,'42501','Not authorized','participant cannot use admin read');
 reset role;
 select pg_temp.login(3);
-select is(jsonb_array_length(public.judge_criteria('flow')),3,'active judge reads rubric before judging starts');
+select is(public.judge_criteria('flow'),null::jsonb,'active judge gets no rubric before judging starts');
 select is(public.judge_criteria('flow-other'),null::jsonb,'judge cannot read another event rubric');
 select throws_ok($$select public.admin_judging_criteria('e5200000-0000-0000-0000-000000000001')$$,'42501','Not authorized','judge cannot use admin read');
 reset role;
@@ -81,6 +81,13 @@ select throws_ok($$select public.admin_delete_judging_criterion('e5200000-0000-0
 select throws_ok($$select public.admin_reorder_judging_criteria('e5200000-0000-0000-0000-000000000001',array[current_setting('test.a'),current_setting('test.b'),current_setting('test.c')]::uuid[])$$,'P0001','Criteria are locked because judging has started','reorder locked after start');
 select is(pg_temp.names(),'Criterion C,Criterion A2,Criterion B','locked rubric still readable');
 reset role;
+select pg_temp.login(3);
+select is((select string_agg(c->>'name',',') from jsonb_array_elements(public.judge_criteria('flow')) c),
+ 'Criterion C,Criterion A2,Criterion B','active judge reads rubric after judging starts');
+reset role;
+select pg_temp.login(5);
+select is(public.judge_criteria('flow'),null::jsonb,'participant gets no rubric after judging starts');
+reset role;
 
 -- Briefing gate.
 insert into public.judging_assignments(id,event_id,judge_id,project_id)
@@ -92,7 +99,13 @@ create function pg_temp.save(n integer,a numeric,b numeric,c numeric,submit bool
  select public.judge_save_review('flow',('f5200000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,
   jsonb_build_object(current_setting('test.a'),a,current_setting('test.b'),b,current_setting('test.c'),c),'',submit);
 $$;
+update public.event_competition_settings set judging_started_at=null where event_id='e5200000-0000-0000-0000-000000000001';
 select pg_temp.login(3);
+select is(public.judge_assignment('flow','f5200000-0000-0000-0000-000000000001'),null::jsonb,'no assignment rubric before judging starts');
+reset role;
+update public.event_competition_settings set judging_started_at=now() where event_id='e5200000-0000-0000-0000-000000000001';
+select pg_temp.login(3);
+select is(jsonb_array_length(public.judge_assignment('flow','f5200000-0000-0000-0000-000000000001')->'criteria'),3,'assignment carries rubric after start');
 select is(public.judge_event_access('flow')->>'briefing_acknowledged_at',null::text,'briefing starts unread');
 select throws_ok($$select pg_temp.save(1,3,3,4,false)$$,'PT409','Read the judging briefing before scoring','draft blocked before briefing');
 select set_config('test.ack',public.judge_acknowledge_briefing('flow')->>'briefing_acknowledged_at',true);

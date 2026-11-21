@@ -23,14 +23,14 @@ export default async function JudgeRubricPage() {
 
 async function EventCriteria({ slug }: { slug: string }) {
   const event = await getJudgeEvent(slug)
-  const criteria = event ? await getJudgeCriteria(slug) : null
-  if (!event || !criteria) return null
+  if (!event) return null
+  const criteria = event.judging_started_at
+    ? await getJudgeCriteria(slug)
+    : null
   return (
     <section className={cn(PAPER, "flex flex-col gap-4 p-6")}>
       <h2 className="text-xl font-semibold">{event.name} scoring criteria</h2>
-      {criteria.length === 0 ? (
-        <p>Scoring criteria have not been published yet.</p>
-      ) : (
+      {criteria ? (
         <>
           <p className="text-sm text-[#6E6E68]">
             Score each criterion from {formatScore(SCORE_MIN)} to{" "}
@@ -50,6 +50,8 @@ async function EventCriteria({ slug }: { slug: string }) {
             ))}
           </ol>
         </>
+      ) : (
+        <p>The rubric will appear here when judging starts.</p>
       )}
     </section>
   )

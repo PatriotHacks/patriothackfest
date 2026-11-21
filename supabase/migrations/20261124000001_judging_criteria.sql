@@ -1,5 +1,5 @@
 -- Organizer-defined scoring criteria. The rubric is private: no client grants,
--- reads only through organizer and active-judge RPCs.
+-- reads only through organizer RPCs, and active-judge RPCs once judging starts.
 create table public.judging_criteria (
   id uuid primary key default gen_random_uuid(),
   event_id uuid not null references public.events (id) on delete cascade,
@@ -51,7 +51,9 @@ create function public.judge_criteria(p_event_slug text)
 returns jsonb language plpgsql stable security definer set search_path = '' as $$
 declare v_event_id uuid;
 begin
-  select e.id into v_event_id from public.events e where e.slug = p_event_slug;
+  select e.id into v_event_id from public.events e
+  join public.event_competition_settings s on s.event_id = e.id
+  where e.slug = p_event_slug and s.judging_started_at is not null;
   if public.current_event_judge_id(v_event_id) is null then return null; end if;
   return public.event_judging_criteria(v_event_id);
 end;
