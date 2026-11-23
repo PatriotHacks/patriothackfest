@@ -158,11 +158,14 @@ update public.event_competition_settings set general_reviews_per_project=1,enabl
   project_submissions_open_at=now()-interval '3 days',project_submissions_close_at=now()-interval '2 days',
   judging_started_at=now()-interval '1 day',judging_close_at=now()-interval '1 hour'
 where event_id='e4300000-0000-0000-0000-000000000001';
-select pg_temp.login(2);
+select pg_temp.login(1);
 select is(pg_temp.results()->>'target','1','current changed target used');
 select is(pg_temp.project(1)->>'insufficient_coverage','false','coverage follows current target');
 select is(pg_temp.project(2)->>'completed','2','above-target count not capped');
-select is(jsonb_array_length(pg_temp.results()->'projects'),50,'organizer reads after expired deadline and start');
+select is(jsonb_array_length(pg_temp.results()->'projects'),50,'owner reads after expired deadline and start');
+reset role;
+select pg_temp.login(2);
+select throws_ok($$select pg_temp.results()$$,'42501','Not authorized','organizer denied');
 reset role;
 select pg_temp.login(3);
 select throws_ok($$select pg_temp.results()$$,'42501','Not authorized','reviewer denied');
@@ -201,7 +204,7 @@ reset role;
 select pg_temp.login(5,'otp');
 select lives_ok($$select pg_temp.save()$$,'judge saves full-score draft after extension');
 reset role;
-select pg_temp.login(2);
+select pg_temp.login(1);
 select is(pg_temp.project(4)->>'completed','0','real saved draft does not change results count');
 select is(pg_temp.project(4)->>'average_score',null::text,'real saved draft does not change mean');
 reset role;
@@ -209,7 +212,7 @@ select pg_temp.login(5,'otp');
 select lives_ok($$select pg_temp.save(true)$$,'judge submits real persisted scorecard');
 select lives_ok($$select pg_temp.save(true)$$,'repeat submit keeps one review');
 reset role;
-select pg_temp.login(2);
+select pg_temp.login(1);
 select is(pg_temp.project(4)->>'completed','1','real submission counts exactly once');
 select is((pg_temp.project(4)->>'average_score')::numeric,5::numeric,'real submitted scores appear in average');
 select is(pg_temp.project(4)->>'insufficient_coverage','false','real submission meets current target');
