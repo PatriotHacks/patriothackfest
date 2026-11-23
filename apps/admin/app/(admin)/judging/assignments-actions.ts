@@ -8,9 +8,7 @@ import {
   assignmentCandidates,
   assignmentContextInput,
   assignmentEventInput,
-  cancelAssignmentInput,
   generationSummary,
-  reassignAssignmentInput,
   rebalancePlan,
   type AssignmentCandidate,
   type GenerationSummary,
@@ -87,35 +85,6 @@ export async function addAssignment(input: unknown): Promise<ActionResult> {
     p_project_id: projectId,
     p_track_id: trackId ?? undefined,
     p_judge_id: judgeId,
-  })
-  if (error) return failure(error)
-  revalidatePath("/judging")
-  return ok
-}
-
-export async function cancelAssignment(input: unknown): Promise<ActionResult> {
-  const { supabase } = await requireAdmin("organizer")
-  const parsed = cancelAssignmentInput.safeParse(input)
-  if (!parsed.success) return failure({ message: "Invalid assignment" })
-  const { error } = await supabase.rpc("admin_cancel_assignment", {
-    p_event_id: parsed.data.eventId,
-    p_assignment_id: parsed.data.assignmentId,
-  })
-  if (error) return failure(error)
-  revalidatePath("/judging")
-  return ok
-}
-
-export async function reassignAssignment(
-  input: unknown
-): Promise<ActionResult> {
-  const { supabase } = await requireAdmin("organizer")
-  const parsed = reassignAssignmentInput.safeParse(input)
-  if (!parsed.success) return failure({ message: "Invalid assignment" })
-  const { error } = await supabase.rpc("admin_reassign_assignment", {
-    p_event_id: parsed.data.eventId,
-    p_assignment_id: parsed.data.assignmentId,
-    p_judge_id: parsed.data.judgeId,
   })
   if (error) return failure(error)
   revalidatePath("/judging")

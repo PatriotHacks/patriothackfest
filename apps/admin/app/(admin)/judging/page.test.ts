@@ -37,8 +37,6 @@ vi.mock("@/components/judging/judges", () => ({
 vi.mock("@/app/(admin)/judging/assignments-actions", () => ({
   generateAssignments: vi.fn(),
   addAssignment: vi.fn(),
-  cancelAssignment: vi.fn(),
-  reassignAssignment: vi.fn(),
   getAssignmentCandidates: vi.fn(),
 }))
 import JudgingPage from "./page"
@@ -113,9 +111,7 @@ beforeEach(() => {
   getAssignmentOverview.mockResolvedValue({
     missing: 0,
     coverage: [],
-    assignments: [],
     coverage_has_more: true,
-    assignments_has_more: true,
   })
   getJudgingResults.mockResolvedValue(results)
   getEventProjects.mockResolvedValue({
@@ -171,27 +167,20 @@ describe("organizer judging page results integration", () => {
         resultsTrack: trackId,
         resultsPage: "2",
         projectsPage: "3",
-        assignmentPage: "4",
         coveragePage: "5",
-        assignmentStatus: "submitted",
         assignmentProject: id,
       })
     )
     expect(getJudgingResults).toHaveBeenCalledWith(id, { trackId, page: 2 })
     expect(getAssignmentOverview).toHaveBeenCalledWith(id, {
       coveragePage: 5,
-      assignmentPage: 4,
-      status: "submitted",
       projectId: id,
     })
     expect(html).toContain(`resultsTrack=${trackId}&amp;resultsPage=2`)
-    expect(html).toContain(`name="resultsTrack" value="${trackId}"`)
-    expect(html).toContain('name="resultsPage" value="2"')
     expect(html).toContain(`resultsTrack=${trackId}&amp;resultsPage=3#results`)
     expect(html).toContain("projectsPage=3")
-    expect(html).toContain("assignmentPage=5")
     expect(html).toContain("coveragePage=6")
-    expect(html).toContain('name="assignmentProject"')
+    expect(html).toContain(`assignmentProject=${id}`)
   })
   it.each(["bad", [trackId, trackId], inactiveId, otherId])(
     "does not query or silently replace unavailable context %s",

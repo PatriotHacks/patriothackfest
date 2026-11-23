@@ -5,7 +5,6 @@ import {
   assignmentFilters,
   assignmentHref,
   assignmentOverview,
-  cancelAssignmentInput,
   generationSummary,
   parseAssignmentQuery,
   rebalancePlan,
@@ -18,11 +17,12 @@ describe("assignment contracts", () => {
   it("resets malformed page/project filters without breaking the judging page", () => {
     expect(
       parseAssignmentQuery({
-        assignmentPage: "999999999999",
-        coveragePage: "2",
-        assignmentStatus: "bad",
+        coveragePage: "999999999999",
       })
-    ).toEqual({ assignmentPage: 1, coveragePage: 2, status: "all" })
+    ).toEqual({ coveragePage: 1 })
+    expect(parseAssignmentQuery({ coveragePage: "2" })).toEqual({
+      coveragePage: 2,
+    })
     expect(
       parseAssignmentQuery({ assignmentProject: "bad" }).projectId
     ).toBeUndefined()
@@ -44,9 +44,11 @@ describe("assignment contracts", () => {
         .success
     ).toBe(false)
     expect(
-      cancelAssignmentInput.safeParse({
+      addAssignmentInput.safeParse({
         eventId: id,
-        assignmentId: id,
+        projectId: id,
+        trackId: null,
+        judgeId: id,
         untouched: true,
       }).success
     ).toBe(false)
@@ -54,15 +56,11 @@ describe("assignment contracts", () => {
     expect(assignmentContextLabel("General")).toBe("Sponsor: General")
   })
   it("validates bounded pages, filters and generated counts", () => {
-    expect(assignmentFilters.parse({})).toEqual({
-      coveragePage: 1,
-      assignmentPage: 1,
-      status: "all",
-    })
+    expect(assignmentFilters.parse({})).toEqual({ coveragePage: 1 })
     for (const value of [0, -1, 1.1, 2147483648])
-      expect(
-        assignmentFilters.safeParse({ assignmentPage: value }).success
-      ).toBe(false)
+      expect(assignmentFilters.safeParse({ coveragePage: value }).success).toBe(
+        false
+      )
     expect(assignmentFilters.safeParse({ projectId: "bad" }).success).toBe(
       false
     )
@@ -76,8 +74,6 @@ describe("assignment contracts", () => {
       "event & one",
       {
         coveragePage: 2,
-        assignmentPage: 3,
-        status: "cancelled",
         projectId: id,
       },
       4

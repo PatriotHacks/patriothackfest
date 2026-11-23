@@ -17,37 +17,30 @@ import {
 import { projectHref } from "@/lib/organizer-projects"
 import { GenerateAssignments } from "./generate-assignments"
 import { RebalanceAssignments } from "./rebalance-assignments"
-import { AssignmentControls, ManualAssignmentForm } from "./assignment-controls"
+import { ManualAssignmentForm } from "./assignment-controls"
 
 export function AssignmentPages({
   eventSlug,
   filters,
   projectsPage,
-  kind,
   hasMore,
   resultsQuery = {},
 }: {
   eventSlug: string
   filters: AssignmentFilters
   projectsPage: number
-  kind: "coveragePage" | "assignmentPage"
   hasMore: boolean
   resultsQuery?: Record<string, string>
 }) {
-  const page = filters[kind]
+  const page = filters.coveragePage
   return (
-    <nav
-      aria-label={
-        kind === "coveragePage" ? "Coverage pages" : "Assignment pages"
-      }
-      className="flex flex-wrap gap-4 text-sm"
-    >
+    <nav aria-label="Coverage pages" className="flex flex-wrap gap-4 text-sm">
       {page > 1 && (
         <Link
           className="underline"
           href={assignmentHref(
             eventSlug,
-            { ...filters, [kind]: page - 1 },
+            { ...filters, coveragePage: page - 1 },
             projectsPage,
             resultsQuery
           )}
@@ -61,7 +54,7 @@ export function AssignmentPages({
           className="underline"
           href={assignmentHref(
             eventSlug,
-            { ...filters, [kind]: page + 1 },
+            { ...filters, coveragePage: page + 1 },
             projectsPage,
             resultsQuery
           )}
@@ -102,8 +95,8 @@ export function AssignmentsSection({
       <p className="text-sm text-muted-foreground">
         Sponsor contexts with the fewest eligible judges are assigned first,
         then general judging. This greedy routine does not guarantee optimal
-        coverage. Increase capacity or manually manage untouched work if slots
-        remain missing.
+        coverage. Increase capacity or assign judges manually if slots remain
+        missing.
       </p>
       <div className="flex flex-wrap items-start gap-3">
         <GenerateAssignments eventId={eventId} started={started} />
@@ -129,7 +122,6 @@ export function AssignmentsSection({
                 ...filters,
                 projectId: undefined,
                 coveragePage: 1,
-                assignmentPage: 1,
               },
               projectsPage,
               resultsQuery
@@ -174,13 +166,12 @@ export function AssignmentsSection({
                           ...filters,
                           projectId: context.project_id,
                           coveragePage: 1,
-                          assignmentPage: 1,
                         },
                         projectsPage,
                         resultsQuery
                       )}
                     >
-                      Filter assignments to this project
+                      Filter coverage to this project
                     </Link>
                   </TableCell>
                   <TableCell>
@@ -211,111 +202,7 @@ export function AssignmentsSection({
         eventSlug={eventSlug}
         filters={filters}
         projectsPage={projectsPage}
-        kind="coveragePage"
         hasMore={data.coverage_has_more}
-        resultsQuery={resultsQuery}
-      />
-      <h3 className="font-semibold">Manage assignments</h3>
-      <p className="text-sm text-muted-foreground">
-        Only untouched reviews (no scores, saved notes, or submission) can be
-        cancelled or reassigned. Cancellation creates no replacement by itself.
-        Generate missing work or assign another eligible judge manually when
-        ready.
-      </p>
-      <form
-        action="/judging#assignments"
-        className="flex flex-wrap items-end gap-2"
-      >
-        <input type="hidden" name="event" value={eventSlug} />
-        <input type="hidden" name="projectsPage" value={projectsPage} />
-        <input type="hidden" name="coveragePage" value={filters.coveragePage} />
-        {Object.entries(resultsQuery).map(([name, value]) => (
-          <input key={name} type="hidden" name={name} value={value} />
-        ))}
-        {filters.projectId && (
-          <input
-            type="hidden"
-            name="assignmentProject"
-            value={filters.projectId}
-          />
-        )}
-        <label className="flex flex-col gap-1 text-sm">
-          Review status
-          <select
-            name="assignmentStatus"
-            defaultValue={filters.status}
-            className="h-9 rounded-md border bg-background px-2"
-          >
-            <option value="all">All assignments</option>
-            <option value="untouched">Untouched</option>
-            <option value="in_progress">In progress (protected)</option>
-            <option value="submitted">Submitted (protected)</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </label>
-        <button type="submit" className="h-9 rounded-md border px-3 text-sm">
-          Filter
-        </button>
-      </form>
-      {data.assignments.length === 0 ? (
-        <p className="text-sm">No assignments match this page and filter.</p>
-      ) : (
-        <TableCard>
-          <Table aria-label="Manage judging assignments">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Project / context</TableHead>
-                <TableHead>Judge / status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.assignments.map((assignment) => (
-                <TableRow key={assignment.id}>
-                  <TableCell className="whitespace-normal">
-                    <Link
-                      className="underline"
-                      href={projectHref(eventSlug, assignment.project_id, {
-                        status: null,
-                        page: projectsPage,
-                      })}
-                    >
-                      {assignment.project_name}
-                    </Link>
-                    <p>{assignmentContextLabel(assignment.track_name)}</p>
-                  </TableCell>
-                  <TableCell className="break-words whitespace-normal">
-                    {assignment.judge_email}
-                    <p>
-                      {assignment.status === "in_progress"
-                        ? "In progress"
-                        : assignment.status === "untouched"
-                          ? "Untouched"
-                          : assignment.status === "submitted"
-                            ? "Submitted"
-                            : "Cancelled"}
-                    </p>
-                    {!assignment.judge_active && <p>Inactive judge</p>}
-                  </TableCell>
-                  <TableCell className="whitespace-normal">
-                    <AssignmentControls
-                      eventId={eventId}
-                      assignment={assignment}
-                      started={started}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableCard>
-      )}
-      <AssignmentPages
-        eventSlug={eventSlug}
-        filters={filters}
-        projectsPage={projectsPage}
-        kind="assignmentPage"
-        hasMore={data.assignments_has_more}
         resultsQuery={resultsQuery}
       />
     </section>
