@@ -106,7 +106,7 @@ beforeEach(() => {
       },
     })
   })
-  getAdmin.mockResolvedValue({ level: "organizer", supabase: { from, rpc } })
+  getAdmin.mockResolvedValue({ level: "owner", supabase: { from, rpc } })
   rpc.mockResolvedValue({ data: [], error: null })
   getAssignmentOverview.mockResolvedValue({
     missing: 0,
@@ -126,6 +126,23 @@ describe("organizer judging page results integration", () => {
     expect(redirect).toHaveBeenCalledWith("/forms")
     expect(from).not.toHaveBeenCalled()
     expect(getJudgingResults).not.toHaveBeenCalled()
+  })
+  it("renders management sections for organizers without querying results", async () => {
+    getAdmin.mockResolvedValue({ level: "organizer", supabase: { from, rpc } })
+    const html = renderToStaticMarkup(
+      await page({ event: event.slug, resultsTrack: trackId })
+    )
+    expect(getJudgingResults).not.toHaveBeenCalled()
+    for (const text of [
+      "Existing settings",
+      "Existing judge roster",
+      "Existing rubric",
+      "Judge workload",
+      "Assignments",
+    ])
+      expect(html).toContain(text)
+    expect(html).not.toContain("General results")
+    expect(html).not.toContain("Results context unavailable")
   })
   it("renders General results alongside existing sections and resets event-tab filters", async () => {
     const html = renderToStaticMarkup(await page({ event: event.slug }))

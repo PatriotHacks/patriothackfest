@@ -27,6 +27,7 @@ export default async function JudgingPage({
 }: PageProps<"/judging">) {
   const { supabase, level } = await getAdmin()
   if (!hasLevel(level, "organizer")) redirect("/forms")
+  const isOwner = hasLevel(level, "owner")
   const query = await searchParams
   const { event: slug, projectsPage } = query
   const page = parseProjectsPage(projectsPage)
@@ -77,9 +78,10 @@ export default async function JudgingPage({
       !tracks.data.some(
         (track) => track.active && track.id === resultsQuery.filters.trackId
       ))
-  const results = invalidResultsContext
-    ? null
-    : await getJudgingResults(event.id, resultsQuery.filters)
+  const results =
+    !isOwner || invalidResultsContext
+      ? null
+      : await getJudgingResults(event.id, resultsQuery.filters)
   const resultParams = {
     ...resultsQueryParams(resultsQuery.filters),
     ...(resultsQuery.invalidContext ? { resultsTrack: "unavailable" } : {}),
@@ -141,19 +143,20 @@ export default async function JudgingPage({
         projectsPage={page}
         resultsQuery={resultParams}
       />
-      <ResultsSection
-        eventSlug={event.slug}
-        tracks={tracks.data}
-        filters={resultsQuery.filters}
-        data={results}
-        invalidContext={invalidResultsContext}
-        projectsPage={page}
-        otherQuery={assignmentParams}
-      />
+      {isOwner && (
+        <ResultsSection
+          eventSlug={event.slug}
+          tracks={tracks.data}
+          filters={resultsQuery.filters}
+          data={results}
+          invalidContext={invalidResultsContext}
+          projectsPage={page}
+          otherQuery={assignmentParams}
+        />
+      )}
       <p className="text-sm text-muted-foreground">
         Participants use /projects and rostered judges use /judge in the
-        participant portal. Results are organizer-only; winner decisions are
-        manual.
+        participant portal. Results are owner-only; winner decisions are manual.
       </p>
     </div>
   )
