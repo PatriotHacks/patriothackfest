@@ -74,7 +74,6 @@ export const judgeRosterSchema = z.array(
     guest: z.boolean(),
     capacity: z.number().int(),
     bound: z.boolean(),
-    briefing_acknowledged_at: z.string().nullable(),
     has_assignments: z.boolean(),
     workload: z.number().int(),
     scopes: z.array(

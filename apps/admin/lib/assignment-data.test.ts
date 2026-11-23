@@ -10,9 +10,7 @@ const id = "a0000000-0000-4000-8000-000000000001"
 const data = {
   missing: 0,
   coverage: [],
-  assignments: [],
   coverage_has_more: false,
-  assignments_has_more: false,
 }
 beforeEach(() => {
   vi.clearAllMocks()
@@ -21,16 +19,12 @@ beforeEach(() => {
 })
 describe("assignment reads", () => {
   it("requires organizer and passes exact event/pages/filters", async () => {
-    expect(
-      await getAssignmentOverview(id, { projectId: id, status: "submitted" })
-    ).toEqual(data)
+    expect(await getAssignmentOverview(id, { projectId: id })).toEqual(data)
     expect(requireAdmin).toHaveBeenCalledWith("organizer")
     expect(rpc).toHaveBeenCalledWith("admin_assignment_overview", {
       p_event_id: id,
       p_coverage_page: 1,
-      p_assignment_page: 1,
       p_project_id: id,
-      p_status: "submitted",
     })
   })
   it("never queries malformed IDs and propagates auth/query/shape failures", async () => {

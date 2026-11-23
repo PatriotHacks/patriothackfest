@@ -8,11 +8,9 @@ vi.mock("@/lib/admin", () => ({ requireAdmin }))
 vi.mock("next/cache", () => ({ revalidatePath }))
 import {
   addAssignment,
-  cancelAssignment,
   generateAssignments,
   getAssignmentCandidates,
   previewRebalanceAssignments,
-  reassignAssignment,
   rebalanceAssignments,
 } from "./assignments-actions"
 const id = "a0000000-0000-4000-8000-000000000001"
@@ -58,23 +56,10 @@ describe("assignment server actions", () => {
       p_judge_id: id,
       p_track_id: id,
     })
-    await cancelAssignment({ eventId: id, assignmentId: id })
-    expect(rpc).toHaveBeenLastCalledWith("admin_cancel_assignment", {
-      p_event_id: id,
-      p_assignment_id: id,
-    })
-    await reassignAssignment({ eventId: id, assignmentId: id, judgeId: id })
-    expect(rpc).toHaveBeenLastCalledWith("admin_reassign_assignment", {
-      p_event_id: id,
-      p_assignment_id: id,
-      p_judge_id: id,
-    })
   })
   it("does not mutate malformed input or bypass authorization", async () => {
     for (const action of [
       addAssignment,
-      cancelAssignment,
-      reassignAssignment,
       generateAssignments,
       getAssignmentCandidates,
       previewRebalanceAssignments,
@@ -90,13 +75,18 @@ describe("assignment server actions", () => {
   })
   it("reports database errors and does not revalidate on failure", async () => {
     rpc.mockResolvedValue({
-      error: {
-        message: "Only untouched assignments can be cancelled or reassigned",
-      },
+      error: { message: "Judge has no remaining capacity" },
     })
     expect(
-      (await cancelAssignment({ eventId: id, assignmentId: id })).error
-    ).toContain("Only untouched")
+      (
+        await addAssignment({
+          eventId: id,
+          projectId: id,
+          judgeId: id,
+          trackId: null,
+        })
+      ).error
+    ).toContain("no remaining capacity")
     expect(revalidatePath).not.toHaveBeenCalled()
   })
   it("returns parsed eligible candidates without revalidating", async () => {

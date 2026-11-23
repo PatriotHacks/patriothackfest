@@ -6,8 +6,6 @@ vi.mock("@/app/(admin)/judging/assignments-actions", () => ({
   previewRebalanceAssignments: vi.fn(),
   rebalanceAssignments: vi.fn(),
   addAssignment: vi.fn(),
-  cancelAssignment: vi.fn(),
-  reassignAssignment: vi.fn(),
   getAssignmentCandidates: vi.fn(),
 }))
 import { AssignmentsSection } from "./assignments"
@@ -16,8 +14,6 @@ const id = "a0000000-0000-4000-8000-000000000001"
 const data: AssignmentOverview = {
   missing: 2,
   coverage_has_more: true,
-  assignments_has_more: false,
-  assignments: [],
   coverage: [
     {
       project_id: id,
@@ -37,7 +33,7 @@ const render = (started = false, overview = data) =>
       eventSlug: "event",
       started,
       data: overview,
-      filters: { coveragePage: 1, assignmentPage: 1, status: "all" },
+      filters: { coveragePage: 1 },
       projectsPage: 2,
     })
   )
@@ -77,12 +73,11 @@ describe("organizer assignment coverage", () => {
     expect(html).toContain("No submitted project contexts")
     expect(html).toContain("0 missing review slots")
   })
-  it("renders assignment status filters and bounded management navigation", () => {
-    const html = render(true, { ...data, assignments_has_more: true })
-    expect(html).toContain('name="assignmentStatus"')
-    expect(html).toContain("assignmentPage=2")
-    expect(html).toContain("No assignments match this page and filter")
+  it("offers manual assignment for missing slots without a per-assignment table", () => {
+    const html = render(true)
     expect(html).toContain("Assign manually")
+    expect(html).not.toContain("Manage assignments")
+    expect(html).not.toContain('name="assignmentStatus"')
   })
   it("retains result context/pages through assignment links and status forms", () => {
     const html = renderToStaticMarkup(
@@ -93,8 +88,6 @@ describe("organizer assignment coverage", () => {
         data,
         filters: {
           coveragePage: 2,
-          assignmentPage: 2,
-          status: "all",
           projectId: id,
         },
         projectsPage: 3,
@@ -102,8 +95,6 @@ describe("organizer assignment coverage", () => {
       })
     )
     expect(html).toContain(`resultsTrack=${id}&amp;resultsPage=4`)
-    expect(html).toContain(`name="resultsTrack" value="${id}"`)
-    expect(html).toContain('name="resultsPage" value="4"')
     expect(html).toContain("Show all projects")
   })
 })
