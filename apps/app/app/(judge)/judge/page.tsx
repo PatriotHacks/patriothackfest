@@ -67,6 +67,7 @@ async function JudgeEventSection({
     event.guest ? null : getJudgeQueue(slug),
     event.guest ? getGuestProjects(slug) : null,
   ])
+  const started = judgeWindowStatus(event) === "started"
   return (
     <section className="flex flex-col gap-5">
       <h1 className={cn(SERIF, "text-4xl")}>{event.name}</h1>
@@ -87,11 +88,14 @@ async function JudgeEventSection({
           eventSlug={slug}
           queue={queue}
           startHref={
-            judgeWindowStatus(event) !== "started"
-              ? null
-              : event.briefing_acknowledged_at
-                ? judgeContinuation(slug, queue)
-                : judgeBriefingHref(slug)
+            started && event.briefing_acknowledged_at
+              ? judgeContinuation(slug, queue)
+              : null
+          }
+          briefingHref={
+            started && !event.briefing_acknowledged_at
+              ? judgeBriefingHref(slug)
+              : null
           }
         />
       ) : (

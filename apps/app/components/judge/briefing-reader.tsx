@@ -34,6 +34,8 @@ export function BriefingReader({
     >
       <DialogContent
         aria-describedby={undefined}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
         className="flex max-h-[85svh] flex-col gap-0 overflow-hidden rounded-sm bg-white p-0 text-base text-[#3A4A2B] sm:max-w-3xl"
       >
         <DialogTitle className="sr-only">Build scenario</DialogTitle>

@@ -8,7 +8,8 @@ describe("judge queue", () => {
     const html = renderToStaticMarkup(
       createElement(JudgeQueueList, {
         eventSlug: "fall-2026",
-        startHref: "/judge?briefing=fall-2026",
+        startHref: "/judge/fall-2026/a0000000-0000-4000-8000-000000000002",
+        briefingHref: null,
         queue: {
           total: 2,
           completed: 1,
@@ -39,7 +40,8 @@ describe("judge queue", () => {
     expect(html).toContain("Submitted")
     expect(html).toContain("Draft saved")
     expect(html).toContain("Continue judging")
-    expect(html).toContain('href="/judge?briefing=fall-2026"')
+    expect(html).toContain(`href="/judge/fall-2026/${id}"`)
+    expect(html).not.toContain("Read the briefing")
     expect(html).toContain("mailto:hello@patriothackfest.com")
   })
   it("hides the start link when judging is not open", () => {
@@ -47,6 +49,7 @@ describe("judge queue", () => {
       createElement(JudgeQueueList, {
         eventSlug: "fall-2026",
         startHref: null,
+        briefingHref: null,
         queue: {
           total: 1,
           completed: 0,
@@ -72,9 +75,37 @@ describe("judge queue", () => {
         eventSlug: "fall-2026",
         queue: { total: 0, completed: 0, assignments: [] },
         startHref: null,
+        briefingHref: null,
       })
     )
     expect(html).toContain("No reviews assigned")
     expect(html).not.toContain("All assigned reviews are complete")
+  })
+  it("routes every project to the briefing until it is acknowledged", () => {
+    const html = renderToStaticMarkup(
+      createElement(JudgeQueueList, {
+        eventSlug: "fall-2026",
+        startHref: null,
+        briefingHref: "/judge?briefing=fall-2026",
+        queue: {
+          total: 1,
+          completed: 0,
+          assignments: [
+            {
+              id,
+              project_name: "Project",
+              track_id: null,
+              track_name: null,
+              submitted_at: null,
+              in_progress: false,
+            },
+          ],
+        },
+      })
+    )
+    expect(html).toContain("Read the briefing to unlock your projects")
+    expect(html).not.toContain("Start judging")
+    expect(html).not.toContain(`/judge/fall-2026/${id}`)
+    expect(html.match(/href="\/judge\?briefing=fall-2026"/g)).toHaveLength(2)
   })
 })
