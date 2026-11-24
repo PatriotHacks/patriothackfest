@@ -50,7 +50,7 @@ async function sidebar() {
     children: null,
     params: Promise.resolve({}),
   } as never)) as ReactElement<{ children: ReactElement[] }>
-  return tree.props.children[0]
+  return tree.props.children[0]!
 }
 
 beforeEach(() => {
