@@ -18,6 +18,8 @@ import { projectHref } from "@/lib/organizer-projects"
 import { GenerateAssignments } from "./generate-assignments"
 import { RebalanceAssignments } from "./rebalance-assignments"
 import { ManualAssignmentForm } from "./assignment-controls"
+import { JudgeProgressTable } from "./judge-progress"
+import type { JudgeProgress } from "@/lib/judge-progress"
 
 export function AssignmentPages({
   eventSlug,
@@ -71,6 +73,7 @@ export function AssignmentsSection({
   eventSlug,
   started,
   data,
+  progress,
   filters,
   projectsPage,
   resultsQuery = {},
@@ -79,6 +82,7 @@ export function AssignmentsSection({
   eventSlug: string
   started: boolean
   data: AssignmentOverview
+  progress: JudgeProgress[]
   filters: AssignmentFilters
   projectsPage: number
   resultsQuery?: Record<string, string>
@@ -205,6 +209,7 @@ export function AssignmentsSection({
         hasMore={data.coverage_has_more}
         resultsQuery={resultsQuery}
       />
+      <JudgeProgressTable judges={progress} />
     </section>
   )
 }

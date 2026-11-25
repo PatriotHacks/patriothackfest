@@ -1227,6 +1227,7 @@ export type Database = {
         Args: { p_event_id: string }
         Returns: Json
       }
+      admin_judge_progress: { Args: { p_event_id: string }; Returns: Json }
       admin_judge_roster: { Args: { p_event_id: string }; Returns: Json }
       admin_judge_transfer_preview: {
         Args: { p_event_id: string; p_judge_id: string }

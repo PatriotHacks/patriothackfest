@@ -139,8 +139,12 @@ describe("organizer judging page results integration", () => {
       "Existing rubric",
       "Judge workload",
       "Assignments",
+      "Judge progress",
     ])
       expect(html).toContain(text)
+    expect(rpc).toHaveBeenCalledWith("admin_judge_progress", {
+      p_event_id: id,
+    })
     expect(html).not.toContain("General results")
     expect(html).not.toContain("Results context unavailable")
   })
