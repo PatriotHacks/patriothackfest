@@ -7,21 +7,29 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { ApplicantSidebar } from "@/components/applicant-sidebar"
+import { JudgeSidebar } from "@/components/judge-sidebar"
 import { LogoLockup } from "@/components/logo-lockup"
 import { getNamedApplicant, getSubmittedApplications } from "@/lib/applicant"
+import { getJudgeEvents } from "@/lib/judge-access"
 import { participantView } from "@/lib/participant-view"
 
+// Judging takes priority: judges keep the judge shell while viewing their application.
 export default async function MainLayout({ children }: LayoutProps<"/">) {
+  const judging = (await getJudgeEvents()).length > 0
   const applications = await getSubmittedApplications()
   const latest = applications[0]
-  if (!latest) redirect("/start")
+  if (!latest) redirect(judging ? "/judge" : "/start")
   const { email } = await getNamedApplicant()
-  const view = participantView(applications, Date.now())
+  const view = judging ? "judging" : participantView(applications, Date.now())
 
   const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false"
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
-      <ApplicantSidebar applicationId={latest.id} email={email} view={view} />
+      {view === "judging" ? (
+        <JudgeSidebar applicationId={latest.id} email={email} />
+      ) : (
+        <ApplicantSidebar applicationId={latest.id} email={email} view={view} />
+      )}
       <SidebarInset className="bg-white">
         <header className="flex items-center gap-3 border-b border-[#E7E4D9] px-4 py-2 md:hidden">
           <SidebarTrigger />
