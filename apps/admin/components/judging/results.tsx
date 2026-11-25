@@ -24,7 +24,6 @@ export function ResultsSection({
   data,
   invalidContext = false,
   projectsPage,
-  otherQuery = {},
 }: {
   eventSlug: string
   tracks: { id: string; name: string; active: boolean }[]
@@ -32,7 +31,6 @@ export function ResultsSection({
   data: JudgingResults | null
   invalidContext?: boolean
   projectsPage: number
-  otherQuery?: Record<string, string>
 }) {
   return (
     <section
@@ -55,9 +53,6 @@ export function ResultsSection({
       >
         <input type="hidden" name="event" value={eventSlug} />
         <input type="hidden" name="projectsPage" value={projectsPage} />
-        {Object.entries(otherQuery).map(([name, value]) => (
-          <input key={name} type="hidden" name={name} value={value} />
-        ))}
         <label className="flex flex-col gap-1 text-sm">
           Results context
           <select
@@ -178,7 +173,7 @@ export function ResultsSection({
                       href={resultsHref(
                         eventSlug,
                         { ...filters, page: 1 },
-                        { ...otherQuery, projectsPage: String(projectsPage) }
+                        { projectsPage: String(projectsPage) }
                       )}
                     >
                       First page
@@ -188,7 +183,7 @@ export function ResultsSection({
                       href={resultsHref(
                         eventSlug,
                         { ...filters, page: filters.page - 1 },
-                        { ...otherQuery, projectsPage: String(projectsPage) }
+                        { projectsPage: String(projectsPage) }
                       )}
                     >
                       Previous
@@ -202,7 +197,7 @@ export function ResultsSection({
                     href={resultsHref(
                       eventSlug,
                       { ...filters, page: filters.page + 1 },
-                      { ...otherQuery, projectsPage: String(projectsPage) }
+                      { projectsPage: String(projectsPage) }
                     )}
                   >
                     Next

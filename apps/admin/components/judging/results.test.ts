@@ -47,7 +47,6 @@ const props = {
   filters: { trackId: null, page: 1 },
   data,
   projectsPage: 4,
-  otherQuery: { assignmentStatus: "submitted", assignmentPage: "2" },
 }
 const render = (
   overrides: Partial<Parameters<typeof ResultsSection>[0]> = {}
@@ -95,7 +94,6 @@ describe("organizer results section", () => {
     expect(html).toContain("Sponsor: General")
     expect(html).not.toContain("Inactive")
     expect(html).toContain('action="/judging#results"')
-    expect(html).toContain('name="assignmentStatus" value="submitted"')
     expect(html).not.toContain('name="resultsPage"')
     expect(html).toContain('name="projectsPage" value="4"')
   })
@@ -109,9 +107,7 @@ describe("organizer results section", () => {
     expect(html).toContain("Previous")
     expect(html).toContain("Next")
     expect(html).toContain(`resultsTrack=${trackId}&amp;resultsPage=3#results`)
-    expect(html).toContain(
-      "assignmentStatus=submitted&amp;assignmentPage=2&amp;projectsPage=4"
-    )
+    expect(html).toContain("projectsPage=4")
   })
   it("shows honest first/later-page and unconfigured empty states", () => {
     const empty = { ...data, projects: [], has_more: false }

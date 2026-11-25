@@ -19,9 +19,8 @@ import { judgingCriteriaSchema } from "@/lib/judging-criteria"
 import { parseProjectsPage } from "@/lib/organizer-projects"
 import { getEventProjects } from "@/lib/organizer-project-data"
 import { getAssignmentOverview } from "@/lib/assignment-data"
-import { assignmentQueryParams, parseAssignmentQuery } from "@/lib/assignments"
 import { getJudgingResults } from "@/lib/judging-results-data"
-import { parseResultsQuery, resultsQueryParams } from "@/lib/judging-results"
+import { parseResultsQuery } from "@/lib/judging-results"
 
 export default async function JudgingPage({
   searchParams,
@@ -32,7 +31,6 @@ export default async function JudgingPage({
   const query = await searchParams
   const { event: slug, projectsPage } = query
   const page = parseProjectsPage(projectsPage)
-  const assignmentFilters = parseAssignmentQuery(query)
   const resultsQuery = parseResultsQuery(query)
   const { data: events, error: eventsError } = await supabase
     .from("events")
@@ -64,7 +62,7 @@ export default async function JudgingPage({
         .order("id"),
       supabase.rpc("admin_judge_roster", { p_event_id: event.id }),
       supabase.rpc("admin_judging_criteria", { p_event_id: event.id }),
-      getAssignmentOverview(event.id, assignmentFilters),
+      getAssignmentOverview(event.id),
       getEventProjects(event.id, { status: "submitted", page: 1 }),
       supabase.rpc("admin_judge_progress", { p_event_id: event.id }),
     ])
@@ -85,11 +83,6 @@ export default async function JudgingPage({
     !isOwner || invalidResultsContext
       ? null
       : await getJudgingResults(event.id, resultsQuery.filters)
-  const resultParams = {
-    ...resultsQueryParams(resultsQuery.filters),
-    ...(resultsQuery.invalidContext ? { resultsTrack: "unavailable" } : {}),
-  }
-  const assignmentParams = assignmentQueryParams(assignmentFilters)
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
@@ -139,13 +132,9 @@ export default async function JudgingPage({
       )}
       <AssignmentsSection
         eventId={event.id}
-        eventSlug={event.slug}
         started={started}
         data={assignments}
         progress={judgeProgress(progress.data)}
-        filters={assignmentFilters}
-        projectsPage={page}
-        resultsQuery={resultParams}
       />
       {isOwner && (
         <ResultsSection
@@ -155,7 +144,6 @@ export default async function JudgingPage({
           data={results}
           invalidContext={invalidResultsContext}
           projectsPage={page}
-          otherQuery={assignmentParams}
         />
       )}
       <p className="text-sm text-muted-foreground">
