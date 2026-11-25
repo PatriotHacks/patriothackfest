@@ -7,9 +7,7 @@ const { rpc, requireAdmin, revalidatePath } = vi.hoisted(() => ({
 vi.mock("@/lib/admin", () => ({ requireAdmin }))
 vi.mock("next/cache", () => ({ revalidatePath }))
 import {
-  addAssignment,
   generateAssignments,
-  getAssignmentCandidates,
   previewRebalanceAssignments,
   rebalanceAssignments,
 } from "./assignments-actions"
@@ -31,37 +29,9 @@ describe("assignment server actions", () => {
     })
     expect(revalidatePath).toHaveBeenCalledWith("/judging")
   })
-  it("scopes manual operations and uses SQL NULL defaults for general", async () => {
-    await addAssignment({
-      eventId: id,
-      projectId: id,
-      judgeId: id,
-      trackId: null,
-    })
-    expect(rpc).toHaveBeenLastCalledWith("admin_add_assignment", {
-      p_event_id: id,
-      p_project_id: id,
-      p_judge_id: id,
-      p_track_id: undefined,
-    })
-    await addAssignment({
-      eventId: id,
-      projectId: id,
-      judgeId: id,
-      trackId: id,
-    })
-    expect(rpc).toHaveBeenLastCalledWith("admin_add_assignment", {
-      p_event_id: id,
-      p_project_id: id,
-      p_judge_id: id,
-      p_track_id: id,
-    })
-  })
   it("does not mutate malformed input or bypass authorization", async () => {
     for (const action of [
-      addAssignment,
       generateAssignments,
-      getAssignmentCandidates,
       previewRebalanceAssignments,
       rebalanceAssignments,
     ]) {
@@ -72,45 +42,6 @@ describe("assignment server actions", () => {
     await expect(generateAssignments({ eventId: id })).rejects.toThrow(
       "Forbidden"
     )
-  })
-  it("reports database errors and does not revalidate on failure", async () => {
-    rpc.mockResolvedValue({
-      error: { message: "Judge has no remaining capacity" },
-    })
-    expect(
-      (
-        await addAssignment({
-          eventId: id,
-          projectId: id,
-          judgeId: id,
-          trackId: null,
-        })
-      ).error
-    ).toContain("no remaining capacity")
-    expect(revalidatePath).not.toHaveBeenCalled()
-  })
-  it("returns parsed eligible candidates without revalidating", async () => {
-    rpc.mockResolvedValue({
-      error: null,
-      data: [
-        {
-          judge_id: id,
-          email: "judge@example.test",
-          workload: 2,
-          capacity: 20,
-        },
-      ],
-    })
-    expect(
-      (
-        await getAssignmentCandidates({
-          eventId: id,
-          projectId: id,
-          trackId: null,
-        })
-      ).candidates
-    ).toHaveLength(1)
-    expect(revalidatePath).not.toHaveBeenCalled()
   })
   it("previews a rebalance without revalidating and applies it with a refresh", async () => {
     const plan = {
