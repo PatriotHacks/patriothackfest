@@ -10,6 +10,7 @@ vi.mock("@/app/(admin)/judging/assignments-actions", () => ({
 }))
 import { AssignmentsSection } from "./assignments"
 import type { AssignmentOverview } from "@/lib/assignments"
+import { judgeProgress } from "@/lib/judge-progress"
 const id = "a0000000-0000-4000-8000-000000000001"
 const data: AssignmentOverview = {
   missing: 2,
@@ -26,13 +27,32 @@ const data: AssignmentOverview = {
     },
   ],
 }
-const render = (started = false, overview = data) =>
+const progress = judgeProgress([
+  {
+    judge_id: id,
+    email: "done@example.test",
+    active: true,
+    completed: 3,
+    in_progress: 0,
+    not_started: 1,
+  },
+  {
+    judge_id: "a0000000-0000-4000-8000-000000000002",
+    email: "slow@example.test",
+    active: false,
+    completed: 1,
+    in_progress: 2,
+    not_started: 4,
+  },
+])
+const render = (started = false, overview = data, judges = progress) =>
   renderToStaticMarkup(
     createElement(AssignmentsSection, {
       eventId: id,
       eventSlug: "event",
       started,
       data: overview,
+      progress: judges,
       filters: { coveragePage: 1 },
       projectsPage: 2,
     })
@@ -86,6 +106,7 @@ describe("organizer assignment coverage", () => {
         eventSlug: "event",
         started: false,
         data,
+        progress,
         filters: {
           coveragePage: 2,
           projectId: id,
@@ -96,5 +117,18 @@ describe("organizer assignment coverage", () => {
     )
     expect(html).toContain(`resultsTrack=${id}&amp;resultsPage=4`)
     expect(html).toContain("Show all projects")
+  })
+  it("lists judge progress, least complete first, with counts", () => {
+    const html = render()
+    expect(html).toContain("Judge progress")
+    expect(html.indexOf("slow@example.test")).toBeLessThan(
+      html.indexOf("done@example.test")
+    )
+    expect(html).toContain("Inactive")
+    expect(html).toMatch(
+      /slow@example\.test.*?<td[^>]*>1<\/td><td[^>]*>2<\/td><td[^>]*>4<\/td><td[^>]*>7<\/td>.*?1 \/ 7/
+    )
+    expect(html).toContain("3 / 4")
+    expect(render(false, data, [])).toContain("No judges have assignments yet")
   })
 })

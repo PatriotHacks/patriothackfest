@@ -13,6 +13,7 @@ import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { hasLevel } from "@/lib/levels"
 import { judgeRosterSchema } from "@/lib/judges"
+import { judgeProgress } from "@/lib/judge-progress"
 import { workloadCapacities } from "@/lib/judge-workload"
 import { judgingCriteriaSchema } from "@/lib/judging-criteria"
 import { parseProjectsPage } from "@/lib/organizer-projects"
@@ -48,7 +49,7 @@ export default async function JudgingPage({
       />
     )
 
-  const [settings, tracks, roster, criteria, assignments, projects] =
+  const [settings, tracks, roster, criteria, assignments, projects, progress] =
     await Promise.all([
       supabase
         .from("event_competition_settings")
@@ -65,11 +66,13 @@ export default async function JudgingPage({
       supabase.rpc("admin_judging_criteria", { p_event_id: event.id }),
       getAssignmentOverview(event.id, assignmentFilters),
       getEventProjects(event.id, { status: "submitted", page: 1 }),
+      supabase.rpc("admin_judge_progress", { p_event_id: event.id }),
     ])
   if (settings.error) throw new Error(settings.error.message)
   if (tracks.error) throw new Error(tracks.error.message)
   if (roster.error) throw new Error(roster.error.message)
   if (criteria.error) throw new Error(criteria.error.message)
+  if (progress.error) throw new Error(progress.error.message)
   const started = Boolean(settings.data?.judging_started_at)
   const judges = judgeRosterSchema.parse(roster.data)
   const invalidResultsContext =
@@ -139,6 +142,7 @@ export default async function JudgingPage({
         eventSlug={event.slug}
         started={started}
         data={assignments}
+        progress={judgeProgress(progress.data)}
         filters={assignmentFilters}
         projectsPage={page}
         resultsQuery={resultParams}
