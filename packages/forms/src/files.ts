@@ -5,6 +5,7 @@ import {
 } from "./schema"
 
 export const APPLICATION_FILES_BUCKET = "application-files"
+export const JUDGE_DOCUMENTS_BUCKET = "judge-documents"
 export const PDF_TYPE = "application/pdf"
 
 export function applicationFilePath(parts: {
