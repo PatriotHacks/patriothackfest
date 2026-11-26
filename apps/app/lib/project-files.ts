@@ -1,4 +1,5 @@
 import { PROJECT_FILES_BUCKET } from "@workspace/forms"
+import { uploadPdf } from "@workspace/supabase/storage"
 
 import * as files from "./storage-files"
 
@@ -7,7 +8,8 @@ export function uploadProjectPdf(
   file: File,
   onProgress: (percent: number) => void
 ) {
-  return files.uploadPdf({
+  return uploadPdf({
+    client: files.browserClient(),
     bucket: PROJECT_FILES_BUCKET,
     path,
     file,

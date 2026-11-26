@@ -3,6 +3,7 @@ import { APPLICATION_FILES_BUCKET } from "@workspace/forms"
 import {
   signedFileUrl as signed,
   signedUrlOrThrow,
+  uploadPdf as upload,
 } from "@workspace/supabase/storage"
 
 import * as files from "./storage-files"
@@ -12,7 +13,8 @@ export function uploadPdf(
   file: File,
   onProgress: (percent: number) => void
 ) {
-  return files.uploadPdf({
+  return upload({
+    client: files.browserClient(),
     bucket: APPLICATION_FILES_BUCKET,
     path,
     file,
