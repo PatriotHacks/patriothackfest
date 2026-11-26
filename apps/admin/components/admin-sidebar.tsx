@@ -34,6 +34,7 @@ import {
 } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 import {
+  AwardIcon,
   ChevronsUpDownIcon,
   CircleUserRoundIcon,
   ClipboardListIcon,
@@ -85,6 +86,12 @@ const NAV: {
     href: "/judging",
     label: "Judging Management",
     icon: TrophyIcon,
+    min: "organizer",
+  },
+  {
+    href: "/post-judging",
+    label: "Post-judging",
+    icon: AwardIcon,
     min: "organizer",
   },
   { href: "/admins", label: "Admins", icon: ShieldIcon, min: "owner" },
