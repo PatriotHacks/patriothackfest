@@ -135,6 +135,7 @@ export default async function JudgingPage({
         started={started}
         data={assignments}
         progress={judgeProgress(progress.data)}
+        judges={judges}
       />
       {isOwner && (
         <ResultsSection
