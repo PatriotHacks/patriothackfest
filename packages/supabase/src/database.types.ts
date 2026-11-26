@@ -1111,6 +1111,14 @@ export type Database = {
         Args: { p_event_id: string; p_question_id: string }
         Returns: undefined
       }
+      admin_assign_remaining_to_judge: {
+        Args: { p_event_id: string; p_judge_id: string }
+        Returns: Json
+      }
+      admin_assign_remaining_to_judge_preview: {
+        Args: { p_event_id: string; p_judge_id: string }
+        Returns: Json
+      }
       admin_assignment_candidates: {
         Args: { p_event_id: string; p_project_id: string; p_track_id?: string }
         Returns: Json
