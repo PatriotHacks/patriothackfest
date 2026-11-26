@@ -5,10 +5,13 @@ vi.mock("@/app/(admin)/judging/assignments-actions", () => ({
   generateAssignments: vi.fn(),
   previewRebalanceAssignments: vi.fn(),
   rebalanceAssignments: vi.fn(),
+  previewAssignRemainingToJudge: vi.fn(),
+  assignRemainingToJudge: vi.fn(),
 }))
 import { AssignmentsSection } from "./assignments"
 import type { AssignmentOverview } from "@/lib/assignments"
 import { judgeProgress } from "@/lib/judge-progress"
+import type { JudgeRosterEntry } from "@/lib/judges"
 const id = "a0000000-0000-4000-8000-000000000001"
 const data: AssignmentOverview = { missing: 2 }
 const progress = judgeProgress([
@@ -29,13 +32,32 @@ const progress = judgeProgress([
     not_started: 4,
   },
 ])
-const render = (started = false, overview = data, judges = progress) =>
+const judge = (active: boolean, guest: boolean): JudgeRosterEntry => ({
+  id,
+  event_id: id,
+  email: "judge@example.test",
+  kind: "general",
+  active,
+  guest,
+  capacity: 5,
+  bound: true,
+  has_assignments: false,
+  workload: 0,
+  scopes: [],
+})
+const render = (
+  started = false,
+  overview = data,
+  judges = progress,
+  roster = [judge(true, false)]
+) =>
   renderToStaticMarkup(
     createElement(AssignmentsSection, {
       eventId: id,
       started,
       data: overview,
       progress: judges,
+      judges: roster,
     })
   )
 describe("organizer assignments", () => {
@@ -53,6 +75,15 @@ describe("organizer assignments", () => {
     const html = render(true)
     expect(html).toContain("Rebalance assignments")
     expect(html).not.toMatch(/disabled=""[^>]*>Rebalance assignments</)
+  })
+  it("offers assigning remaining work to an eligible judge, gated on start", () => {
+    const disabled = /disabled=""[^>]*>Assign remaining to judge</
+    expect(render()).toMatch(disabled)
+    expect(render(true)).toContain("Assign remaining to judge")
+    expect(render(true)).not.toMatch(disabled)
+    expect(
+      render(true, data, progress, [judge(false, false), judge(true, true)])
+    ).toMatch(disabled)
   })
   it("gates generation on start", () => {
     expect(render()).toContain("disabled")
