@@ -22,7 +22,7 @@ export function JudgeDocumentsSection({
             <JudgeDocumentLink
               eventSlug={eventSlug}
               kind="certificate"
-              name="Download certificate"
+              name="Certificate (PDF)"
             />
           ) : (
             <p>Your certificate is not yet available.</p>
@@ -31,7 +31,7 @@ export function JudgeDocumentsSection({
             <JudgeDocumentLink
               eventSlug={eventSlug}
               kind="invitation_letter"
-              name="Download invitation letter"
+              name="Invitation letter (PDF)"
             />
           )}
         </>
