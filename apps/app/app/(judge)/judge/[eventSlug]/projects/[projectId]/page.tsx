@@ -3,10 +3,12 @@ import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { JudgingClosedNotice } from "@/components/judge/judging-closed"
 import { JudgeProjectDetails } from "@/components/judge/project-details"
 import { getJudgeEvent } from "@/lib/judge-access"
 import { getGuestProject } from "@/lib/judge-review-data"
 import { guestProjectRouteSchema } from "@/lib/judge-reviews"
+import { judgingClosed } from "@/lib/judge-status"
 
 export default async function GuestProjectPage({
   params,
@@ -16,6 +18,7 @@ export default async function GuestProjectPage({
   const { eventSlug, projectId } = route.data
   const event = await getJudgeEvent(eventSlug)
   if (!event?.guest) notFound()
+  if (judgingClosed(event)) return <JudgingClosedNotice />
   const detail = await getGuestProject(eventSlug, projectId)
   if (!detail) notFound()
   return (
