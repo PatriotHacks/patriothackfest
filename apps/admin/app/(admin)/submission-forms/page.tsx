@@ -2,6 +2,7 @@ import { Card, CardContent } from "@workspace/ui/components/card"
 import { redirect } from "next/navigation"
 
 import { CompetitionTrackForm } from "@/components/judging/track-form"
+import { GalleryPublishToggle } from "@/components/submission-forms/gallery-toggle"
 import { JudgeVisibilityToggle } from "@/components/submission-forms/judge-visibility"
 import { ProjectQuestions } from "@/components/submission-forms/questions"
 import { SubmissionSettingsForm } from "@/components/submission-forms/settings-form"
@@ -122,6 +123,30 @@ export default async function SubmissionFormsPage({
         ) : (
           <p className="text-sm text-muted-foreground">
             Save event settings before configuring teams.
+          </p>
+        )}
+      </section>
+      <section
+        className="flex flex-col gap-4"
+        aria-labelledby="gallery-heading"
+      >
+        <h2 id="gallery-heading" className="text-xl font-semibold">
+          Public gallery
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Choose which answers are public with Show in gallery on each question,
+          and mark one text question as the Gallery summary shown on project
+          cards. Winners are set in Awards.
+        </p>
+        {settings.data ? (
+          <GalleryPublishToggle
+            key={`gallery-${event.id}`}
+            eventId={event.id}
+            published={settings.data.gallery_published}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Save event settings before publishing the gallery.
           </p>
         )}
       </section>

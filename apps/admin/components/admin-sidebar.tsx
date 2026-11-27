@@ -43,6 +43,7 @@ import {
   InboxIcon,
   LogOutIcon,
   MailIcon,
+  MedalIcon,
   SettingsIcon,
   ShieldIcon,
   TrophyIcon,
@@ -88,6 +89,7 @@ const NAV: {
     icon: TrophyIcon,
     min: "organizer",
   },
+  { href: "/awards", label: "Awards", icon: MedalIcon, min: "organizer" },
   {
     href: "/post-judging",
     label: "Post-judging",

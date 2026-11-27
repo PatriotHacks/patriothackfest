@@ -225,6 +225,49 @@ export type Database = {
           },
         ]
       }
+      awards: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          rank: number
+          track_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          name: string
+          rank: number
+          track_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          name?: string
+          rank?: number
+          track_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "awards_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_competition_settings"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "awards_track_id_event_id_fkey"
+            columns: ["track_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "competition_tracks"
+            referencedColumns: ["id", "event_id"]
+          },
+        ]
+      }
       competition_tracks: {
         Row: {
           active: boolean
@@ -437,6 +480,7 @@ export type Database = {
           created_at: string
           enabled: boolean
           event_id: string
+          gallery_published: boolean
           general_reviews_per_project: number
           judges_see_answers: boolean
           judges_see_team: boolean
@@ -452,6 +496,7 @@ export type Database = {
           created_at?: string
           enabled?: boolean
           event_id: string
+          gallery_published?: boolean
           general_reviews_per_project?: number
           judges_see_answers?: boolean
           judges_see_team?: boolean
@@ -466,6 +511,7 @@ export type Database = {
           created_at?: string
           enabled?: boolean
           event_id?: string
+          gallery_published?: boolean
           general_reviews_per_project?: number
           judges_see_answers?: boolean
           judges_see_team?: boolean
@@ -912,6 +958,40 @@ export type Database = {
         }
         Relationships: []
       }
+      project_awards: {
+        Row: {
+          award_id: string
+          event_id: string
+          project_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          award_id: string
+          event_id: string
+          project_id: string
+        }
+        Update: {
+          award_id?: string
+          event_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_awards_award_id_event_id_fkey"
+            columns: ["award_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "awards"
+            referencedColumns: ["id", "event_id"]
+          },
+          {
+            foreignKeyName: "project_awards_project_id_event_id_fkey"
+            columns: ["project_id", "event_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "event_id"]
+          },
+        ]
+      }
       project_collaborators: {
         Row: {
           created_at: string
@@ -955,6 +1035,8 @@ export type Database = {
           archived_options: Json | null
           created_at: string
           event_id: string
+          gallery_public: boolean
+          gallery_summary: boolean
           help_text: string | null
           id: string
           label: string
@@ -973,6 +1055,8 @@ export type Database = {
           archived_options?: Json | null
           created_at?: string
           event_id: string
+          gallery_public?: boolean
+          gallery_summary?: boolean
           help_text?: string | null
           id?: string
           label: string
@@ -990,6 +1074,8 @@ export type Database = {
           archived_options?: Json | null
           created_at?: string
           event_id?: string
+          gallery_public?: boolean
+          gallery_summary?: boolean
           help_text?: string | null
           id?: string
           label?: string
@@ -1051,6 +1137,7 @@ export type Database = {
           answers: NonNullable<Json>
           created_at: string
           event_id: string
+          gallery_sort_key: number
           id: string
           name: string
           owner_user_id: string
@@ -1064,6 +1151,7 @@ export type Database = {
           answers?: NonNullable<Json>
           created_at?: string
           event_id: string
+          gallery_sort_key?: number
           id?: string
           name?: string
           owner_user_id: string
@@ -1075,6 +1163,7 @@ export type Database = {
           answers?: NonNullable<Json>
           created_at?: string
           event_id?: string
+          gallery_sort_key?: number
           id?: string
           name?: string
           owner_user_id?: string
@@ -1117,6 +1206,10 @@ export type Database = {
         Args: { p_event_id: string; p_question_id: string }
         Returns: undefined
       }
+      admin_assign_award: {
+        Args: { p_award_id: string; p_event_id: string; p_project_id: string }
+        Returns: undefined
+      }
       admin_assign_remaining_to_judge: {
         Args: { p_event_id: string; p_judge_id: string }
         Returns: Json
@@ -1139,6 +1232,7 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_awards: { Args: { p_event_id: string }; Returns: Json }
       admin_broadcast_history: {
         Args: { p_event_id: string }
         Returns: {
@@ -1216,6 +1310,10 @@ export type Database = {
           queued: number
         }[]
       }
+      admin_delete_award: {
+        Args: { p_award_id: string; p_event_id: string }
+        Returns: undefined
+      }
       admin_delete_event_judge: {
         Args: { p_event_id: string; p_judge_id: string }
         Returns: string[]
@@ -1265,6 +1363,8 @@ export type Database = {
           archived_options: Json
           created_at: string
           event_id: string
+          gallery_public: boolean
+          gallery_summary: boolean
           help_text: string
           id: string
           label: string
@@ -1337,6 +1437,16 @@ export type Database = {
         Args: { p_form_id: string }
         Returns: number
       }
+      admin_save_award: {
+        Args: {
+          p_award_id?: string
+          p_event_id: string
+          p_name: string
+          p_rank: number
+          p_track_id?: string
+        }
+        Returns: string
+      }
       admin_save_competition_settings: {
         Args: {
           p_close_at?: string
@@ -1400,6 +1510,10 @@ export type Database = {
         Args: { p_event_id: string; p_guest: boolean; p_judge_id: string }
         Returns: Json
       }
+      admin_set_gallery_published: {
+        Args: { p_event_id: string; p_value: boolean }
+        Returns: undefined
+      }
       admin_set_judge_certificate: {
         Args: { p_event_id: string; p_judge_id: string; p_path?: string }
         Returns: string
@@ -1420,6 +1534,15 @@ export type Database = {
         Args: { p_event_id: string; p_value?: number }
         Returns: undefined
       }
+      admin_set_project_question_gallery: {
+        Args: {
+          p_event_id: string
+          p_public: boolean
+          p_question_id: string
+          p_summary: boolean
+        }
+        Returns: undefined
+      }
       admin_start_judging: { Args: { p_event_id: string }; Returns: undefined }
       admin_submitted_project_detail: {
         Args: { p_event_id: string; p_project_id: string }
@@ -1428,6 +1551,10 @@ export type Database = {
       admin_submitted_projects: {
         Args: { p_event_id: string; p_page?: number }
         Returns: Json
+      }
+      admin_unassign_award: {
+        Args: { p_award_id: string; p_event_id: string; p_project_id: string }
+        Returns: undefined
       }
       admin_withdraw_application: {
         Args: { p_application_id: string }
@@ -1495,6 +1622,7 @@ export type Database = {
           answers: NonNullable<Json>
           created_at: string
           event_id: string
+          gallery_sort_key: number
           id: string
           name: string
           owner_user_id: string
@@ -1565,6 +1693,14 @@ export type Database = {
         Args: { p_count: number; p_unit: string }
         Returns: string
       }
+      gallery_events: { Args: Record<PropertyKey, never>; Returns: Json }
+      gallery_project: {
+        Args: { p_event_slug: string; p_project_id: string }
+        Returns: Json
+      }
+      gallery_project_awards: { Args: { p_project_id: string }; Returns: Json }
+      gallery_project_tracks: { Args: { p_project_id: string }; Returns: Json }
+      gallery_projects: { Args: { p_event_slug: string }; Returns: Json }
       has_admin_level: {
         Args: { min_level: Database["public"]["Enums"]["admin_level"] }
         Returns: boolean
@@ -1649,6 +1785,7 @@ export type Database = {
           answers: NonNullable<Json>
           created_at: string
           event_id: string
+          gallery_sort_key: number
           id: string
           name: string
           owner_user_id: string
@@ -1723,6 +1860,7 @@ export type Database = {
           answers: NonNullable<Json>
           created_at: string
           event_id: string
+          gallery_sort_key: number
           id: string
           name: string
           owner_user_id: string

@@ -6,6 +6,7 @@ import * as z from "zod"
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
 import { saveCompetitionSettingsPatch } from "@/lib/competition-settings"
+import { questionGalleryInput, type QuestionGalleryInput } from "@/lib/gallery"
 import {
   competitionTrackInput,
   projectQuestionInput,
@@ -166,6 +167,42 @@ export async function setMaxTeamSize(
   const { error } = await supabase.rpc("admin_set_max_team_size", {
     p_event_id: input.data.eventId,
     p_value: input.data.value ?? undefined,
+  })
+  if (error) return failure(error)
+  revalidatePath("/submission-forms")
+  return ok
+}
+
+export async function setGalleryPublished(
+  eventId: string,
+  value: boolean
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin("organizer")
+  const input = z
+    .object({ eventId: z.guid(), value: z.boolean() })
+    .safeParse({ eventId, value })
+  if (!input.success) return failure({ message: "Invalid setting" })
+  const { error } = await supabase.rpc("admin_set_gallery_published", {
+    p_event_id: input.data.eventId,
+    p_value: input.data.value,
+  })
+  if (error) return failure(error)
+  revalidatePath("/submission-forms")
+  revalidatePath("/awards")
+  return ok
+}
+
+export async function setQuestionGallery(
+  input: QuestionGalleryInput
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin("organizer")
+  const parsed = questionGalleryInput.safeParse(input)
+  if (!parsed.success) return failure({ message: "Invalid gallery setting" })
+  const { error } = await supabase.rpc("admin_set_project_question_gallery", {
+    p_event_id: parsed.data.eventId,
+    p_question_id: parsed.data.questionId,
+    p_public: parsed.data.public,
+    p_summary: parsed.data.summary,
   })
   if (error) return failure(error)
   revalidatePath("/submission-forms")

@@ -6,6 +6,7 @@ vi.mock("@/app/(admin)/submission-forms/actions", () => ({
   reorderProjectQuestions: vi.fn(),
   saveProjectQuestion: vi.fn(),
   setJudgesSeeAnswers: vi.fn(),
+  setQuestionGallery: vi.fn(),
 }))
 import { JudgeVisibilityToggle } from "./judge-visibility"
 import { ProjectQuestions } from "./questions"
@@ -25,6 +26,8 @@ const question = {
   validation: null,
   archived_options: null,
   answered: false,
+  gallery_public: false,
+  gallery_summary: false,
 }
 
 describe("project question editor", () => {
@@ -109,6 +112,60 @@ describe("project question editor", () => {
     )
     expect(html).toContain("Type locked: this question has answers")
     expect(html).toContain("Participants have already answered this question")
+  })
+  it("keeps gallery controls editable after judging starts", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectQuestions, {
+        eventId,
+        questions: [{ ...question, gallery_public: true }],
+        locked: true,
+      })
+    )
+    expect(html).toContain("Show in gallery")
+    expect(html).toContain("Gallery summary")
+    expect(html).toContain('<input type="checkbox" checked=""/>Show in gallery')
+  })
+  it("never offers the gallery for file questions", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectQuestions, {
+        eventId,
+        questions: [
+          {
+            ...question,
+            type: "file",
+            max_length: null,
+            validation: null,
+          },
+        ],
+        locked: false,
+      })
+    )
+    expect(html).not.toContain("Show in gallery")
+    expect(html).toContain("File answers are never shown in the public gallery")
+  })
+  it("offers the summary only for text questions and locks its type", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProjectQuestions, {
+        eventId,
+        questions: [
+          {
+            ...question,
+            type: "url",
+            max_length: null,
+          },
+          {
+            ...question,
+            id: eventId,
+            gallery_public: true,
+            gallery_summary: true,
+          },
+        ],
+        locked: false,
+      })
+    )
+    expect(html.split("Show in gallery")).toHaveLength(3)
+    expect(html.split("Gallery summary")).toHaveLength(2)
+    expect(html).toContain("Type locked: this question is the gallery summary")
   })
   it("renders the judge visibility switch with its saved value", () => {
     const html = renderToStaticMarkup(

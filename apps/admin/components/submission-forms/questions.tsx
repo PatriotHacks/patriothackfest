@@ -38,6 +38,7 @@ import {
 } from "@/app/(admin)/submission-forms/actions"
 import { ChoiceOptionsEditor } from "@/components/builder/options-editor"
 import { FileSizeInput } from "@/components/builder/validation-editor"
+import { QuestionGalleryControls } from "@/components/submission-forms/question-gallery"
 import { parseMaxSizeMb } from "@/lib/judging"
 
 function QuestionForm({
@@ -72,6 +73,7 @@ function QuestionForm({
   const [message, setMessage] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const typeLocked = question?.answered ?? false
+  const summaryLocked = question?.gallery_summary ?? false
 
   return (
     <form
@@ -162,7 +164,7 @@ function QuestionForm({
             <Select
               value={type}
               onValueChange={(value) => setType(value as ProjectQuestionType)}
-              disabled={pending || locked || typeLocked}
+              disabled={pending || locked || typeLocked || summaryLocked}
             >
               <SelectTrigger id={`${id}-type`} className="w-48">
                 <SelectValue />
@@ -175,11 +177,17 @@ function QuestionForm({
                 ))}
               </SelectContent>
             </Select>
-            {typeLocked && (
+            {typeLocked ? (
               <span className="text-xs text-muted-foreground">
                 Type locked: this question has answers. Archive it and add a new
                 question to change the type.
               </span>
+            ) : (
+              summaryLocked && (
+                <span className="text-xs text-muted-foreground">
+                  Type locked: this question is the gallery summary.
+                </span>
+              )
             )}
           </div>
         </div>
@@ -310,6 +318,9 @@ export function ProjectQuestions({
           className="flex flex-col gap-3 rounded-lg border p-4"
         >
           <QuestionForm eventId={eventId} question={question} locked={locked} />
+          <div className="border-t pt-3">
+            <QuestionGalleryControls eventId={eventId} question={question} />
+          </div>
           {!locked && (
             <div className="flex flex-wrap gap-2 border-t pt-3">
               <Button
