@@ -22,6 +22,10 @@ vi.mock("@/components/submission-forms/judge-visibility", () => ({
   JudgeVisibilityToggle: ({ enabled }: { enabled: boolean }) =>
     `Judge visibility ${enabled}`,
 }))
+vi.mock("@/components/submission-forms/gallery-toggle", () => ({
+  GalleryPublishToggle: ({ published }: { published: boolean }) =>
+    `Gallery published ${published}`,
+}))
 vi.mock("@/components/submission-forms/team-settings", () => ({
   TeamSettings: ({
     maxTeamSize,
@@ -64,6 +68,7 @@ beforeEach(() => {
         judges_see_answers: true,
         judges_see_team: false,
         max_team_size: 4,
+        gallery_published: true,
       },
       error: null,
     },
@@ -135,6 +140,7 @@ describe("organizer submission forms page", () => {
       "Questions editor (1)",
       "Judge visibility true",
       "Team settings 4 false",
+      "Gallery published true",
       "Existing track settings",
     ])
       expect(html).toContain(text)
@@ -150,6 +156,7 @@ describe("organizer submission forms page", () => {
       "Save event settings before choosing whether judges see answers"
     )
     expect(html).toContain("Save event settings before configuring teams")
+    expect(html).toContain("Save event settings before publishing the gallery")
   })
   it("propagates question and event lookup failures", async () => {
     rpc.mockResolvedValue({ data: null, error: { message: "No questions" } })

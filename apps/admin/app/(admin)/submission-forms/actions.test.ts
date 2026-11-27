@@ -18,9 +18,11 @@ import {
   saveCompetitionTrack,
   saveProjectQuestion,
   saveSubmissionSettings,
+  setGalleryPublished,
   setJudgesSeeAnswers,
   setJudgesSeeTeam,
   setMaxTeamSize,
+  setQuestionGallery,
 } from "./actions"
 
 const eventId = "e0000000-0000-4000-8000-000000000001"
@@ -83,7 +85,14 @@ describe("submission form server actions", () => {
     await setJudgesSeeAnswers(eventId, true)
     await setJudgesSeeTeam(eventId, true)
     await setMaxTeamSize(eventId, 4)
-    expect(requireAdmin).toHaveBeenCalledTimes(8)
+    await setGalleryPublished(eventId, true)
+    await setQuestionGallery({
+      eventId,
+      questionId,
+      public: true,
+      summary: false,
+    })
+    expect(requireAdmin).toHaveBeenCalledTimes(10)
     expect(
       requireAdmin.mock.calls.every(([level]) => level === "organizer")
     ).toBe(true)
@@ -201,6 +210,41 @@ describe("submission form server actions", () => {
       p_event_id: eventId,
       p_value: false,
     })
+  })
+
+  it("publishes the gallery and sets question gallery visibility", async () => {
+    expect(await setGalleryPublished(eventId, true)).toEqual({ error: null })
+    expect(rpc).toHaveBeenCalledWith("admin_set_gallery_published", {
+      p_event_id: eventId,
+      p_value: true,
+    })
+    expect(revalidatePath).toHaveBeenCalledWith("/awards")
+    expect(
+      await setQuestionGallery({
+        eventId,
+        questionId,
+        public: true,
+        summary: true,
+      })
+    ).toEqual({ error: null })
+    expect(rpc).toHaveBeenCalledWith("admin_set_project_question_gallery", {
+      p_event_id: eventId,
+      p_question_id: questionId,
+      p_public: true,
+      p_summary: true,
+    })
+  })
+
+  it("rejects a summary hidden from the gallery before the database", async () => {
+    expect(
+      await setQuestionGallery({
+        eventId,
+        questionId,
+        public: false,
+        summary: true,
+      })
+    ).toEqual({ error: "Invalid gallery setting" })
+    expect(rpc).not.toHaveBeenCalled()
   })
 
   it("sets team visibility and the team size limit", async () => {
