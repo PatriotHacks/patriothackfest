@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { GalleryProjectCard } from "@/lib/gallery"
@@ -18,18 +19,19 @@ export function ProjectCard({
       <Link
         href={`/${eventSlug}/${project.id}`}
         className={cn(
-          "ink hatch group flex w-full flex-col gap-3 rounded px-6 pt-6 pb-7 no-underline transition-transform [--fill:var(--color-card)] hover:-translate-y-1",
-          winner && "[--fill:#33245c]"
+          PAPER,
+          "group flex w-full flex-col gap-3 p-6 transition-colors hover:border-[#3A4A2B]/40",
+          winner && "border-[#E3CB8C] bg-[#FDF3DC] hover:border-[#7A5A14]/50"
         )}
       >
         <AwardBadges awards={project.awards} />
-        <h3 className="group-hover:text-cream text-[22px] font-bold break-words">
+        <h3 className="text-xl font-semibold break-words underline-offset-2 group-hover:underline">
           {project.name}
         </h3>
         {project.summary && (
-          <p className="text-base text-muted">{project.summary}</p>
+          <p className="text-[14.5px] text-[#6E6E68]">{project.summary}</p>
         )}
-        <TrackChips tracks={project.tracks} className="mt-auto pt-2" />
+        <TrackChips tracks={project.tracks} className="mt-auto pt-1" />
       </Link>
     </li>
   )

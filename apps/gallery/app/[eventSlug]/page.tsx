@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { PageHero, Sheet } from "@/components/page-hero"
+import { PageHeader } from "@/components/page-header"
 import { ProjectGallery } from "@/components/project-gallery"
 import { getGalleryProjects } from "@/lib/gallery"
 import { truncate } from "@/lib/text"
@@ -35,25 +35,22 @@ export default async function EventPage({ params }: PageProps<"/[eventSlug]">) {
 
   return (
     <>
-      <PageHero eyebrow="Project gallery" title={data.event.name}>
-        <p className="text-[19px]">
-          {count} {count === 1 ? "project" : "projects"}
+      <PageHeader title={data.event.name}>
+        <p className="text-[15px] text-[#6E6E68]">
+          Project gallery &middot; {count}{" "}
+          {count === 1 ? "project" : "projects"}
         </p>
-      </PageHero>
-      <Sheet>
-        <h2 className="sr-only">Projects</h2>
-        <ProjectGallery
-          eventSlug={data.event.slug}
-          tracks={data.tracks}
-          hasWinners={data.projects.some(
-            (project) => project.awards.length > 0
-          )}
-          projects={data.projects.map((project) => ({
-            ...project,
-            summary: project.summary && truncate(project.summary, 180),
-          }))}
-        />
-      </Sheet>
+      </PageHeader>
+      <h2 className="sr-only">Projects</h2>
+      <ProjectGallery
+        eventSlug={data.event.slug}
+        tracks={data.tracks}
+        hasWinners={data.projects.some((project) => project.awards.length > 0)}
+        projects={data.projects.map((project) => ({
+          ...project,
+          summary: project.summary && truncate(project.summary, 180),
+        }))}
+      />
     </>
   )
 }

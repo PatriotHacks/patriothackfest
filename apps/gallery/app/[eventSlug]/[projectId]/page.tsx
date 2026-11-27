@@ -2,9 +2,13 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { Pill } from "@workspace/ui/components/pill"
+import { OUTLINE_PILL, PAPER } from "@workspace/ui/lib/brand"
+import { cn } from "@workspace/ui/lib/utils"
+
 import { AwardBadges, TrackChips } from "@/components/badges"
 import { GalleryAnswer } from "@/components/gallery-answer"
-import { PageHero, Sheet } from "@/components/page-hero"
+import { PageHeader } from "@/components/page-header"
 import { getGalleryProject, getGalleryProjects } from "@/lib/gallery"
 import { memberName, truncate } from "@/lib/text"
 
@@ -48,59 +52,56 @@ export default async function ProjectPage({
   const { event, project, answers, team, tracks, awards } = data
 
   return (
-    <>
-      <PageHero
-        eyebrow={
-          <Link
-            href={`/${event.slug}`}
-            className="hover:text-cream inline-flex min-h-11 items-center gap-2 no-underline"
-          >
-            <span aria-hidden="true">&larr;</span> {event.name} projects
-          </Link>
-        }
-        title={project.name}
+    <div className="flex max-w-3xl flex-col gap-5">
+      <Link
+        href={`/${event.slug}`}
+        className="inline-flex min-h-11 w-fit items-center text-sm underline sm:min-h-0"
       >
-        <AwardBadges awards={awards} />
-        <TrackChips tracks={tracks} />
-      </PageHero>
-      <Sheet>
-        <div className="mx-auto flex max-w-[820px] flex-col gap-10">
-          {team.length > 0 && (
-            <section aria-labelledby="team" className="flex flex-col gap-3">
-              <h2 id="team" className="text-2xl font-bold">
-                Team
-              </h2>
-              <ul className="flex flex-wrap gap-2">
-                {team.map((name, index) => (
-                  <li
-                    key={index}
-                    className="rounded-full bg-card px-4 py-1.5 text-[15px] font-medium"
-                  >
-                    {memberName(name)}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          {answers.map((item) => (
-            <section
-              key={item.question_id}
-              aria-labelledby={`q-${item.question_id}`}
-              className="ink hatch [&_a]:text-cream flex flex-col gap-3 px-6 pt-6 pb-7 [--fill:var(--color-card)] [&_a]:underline-offset-[3px]"
-            >
-              <h2 id={`q-${item.question_id}`} className="text-xl font-bold">
-                {item.label}
-              </h2>
-              <div className="[&_p]:text-text text-muted">
-                <GalleryAnswer item={item} />
-              </div>
-            </section>
-          ))}
-          <Link href={`/${event.slug}`} className="btn self-start">
-            Back to all projects
-          </Link>
+        Back to {event.name} projects
+      </Link>
+      <PageHeader title={project.name}>
+        <p className="text-[15px] text-[#6E6E68]">{event.name}</p>
+      </PageHeader>
+      {(awards.length > 0 || tracks.length > 0) && (
+        <div className="flex flex-col gap-2">
+          <AwardBadges awards={awards} />
+          <TrackChips tracks={tracks} />
         </div>
-      </Sheet>
-    </>
+      )}
+      <article className={cn(PAPER, "flex flex-col gap-5 p-6")}>
+        {team.length > 0 && (
+          <section aria-labelledby="team" className="flex flex-col gap-2">
+            <h2 id="team" className="text-lg font-semibold">
+              Team
+            </h2>
+            <ul className="flex flex-wrap gap-2">
+              {team.map((name, index) => (
+                <li key={index}>
+                  <Pill tone="muted">{memberName(name)}</Pill>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {answers.map((item) => (
+          <section
+            key={item.question_id}
+            aria-labelledby={`q-${item.question_id}`}
+            className="flex flex-col gap-1 border-t border-[#E7E4D9] pt-5 first:border-t-0 first:pt-0"
+          >
+            <h2 id={`q-${item.question_id}`} className="text-lg font-semibold">
+              {item.label}
+            </h2>
+            <GalleryAnswer item={item} />
+          </section>
+        ))}
+      </article>
+      <Link
+        href={`/${event.slug}`}
+        className={cn(OUTLINE_PILL, "inline-flex items-center justify-center")}
+      >
+        Back to all projects
+      </Link>
+    </div>
   )
 }
