@@ -1,6 +1,5 @@
 "use client"
 
-import { Switch } from "@workspace/ui/components/switch"
 import {
   Table,
   TableBody,
@@ -9,12 +8,10 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
-import { useState, useTransition } from "react"
 
 import {
-  saveInvitationLetter,
   saveJudgeCertificate,
-  setJudgeInvitation,
+  saveJudgeInvitationLetter,
 } from "@/app/(admin)/post-judging/actions"
 import { DocumentControl } from "@/components/post-judging/document-control"
 import { TableCard } from "@/components/table-card"
@@ -23,72 +20,6 @@ import {
   invitationLetterPath,
   type PostJudgingJudge,
 } from "@/lib/judge-documents"
-
-export function InvitationLetter({
-  eventId,
-  path,
-}: {
-  eventId: string
-  path: string | null
-}) {
-  return (
-    <section className="flex flex-col gap-2">
-      <h2 className="font-semibold">Invitation letter</h2>
-      <p className="text-sm text-muted-foreground">
-        One PDF for the event, shown only to judges with the invitation letter
-        switch on.
-      </p>
-      <DocumentControl
-        label="Invitation letter"
-        path={path}
-        newPath={() => invitationLetterPath(eventId)}
-        save={(next) => saveInvitationLetter({ eventId, path: next })}
-      />
-    </section>
-  )
-}
-
-function InvitationSwitch({
-  eventId,
-  judge,
-}: {
-  eventId: string
-  judge: PostJudgingJudge
-}) {
-  const [checked, setChecked] = useState(judge.receives_invitation)
-  const [error, setError] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
-
-  return (
-    <div className="flex flex-col gap-1">
-      <Switch
-        checked={checked}
-        disabled={pending}
-        aria-label={`Invitation letter for ${judge.email}`}
-        onCheckedChange={(receives) => {
-          setChecked(receives)
-          setError(null)
-          startTransition(async () => {
-            const result = await setJudgeInvitation({
-              eventId,
-              judgeId: judge.id,
-              receives,
-            })
-            if (result.error) {
-              setChecked(!receives)
-              setError(result.error)
-            }
-          })
-        }}
-      />
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
 
 export function JudgeDocuments({
   eventId,
@@ -128,8 +59,19 @@ export function JudgeDocuments({
                   }
                 />
               </TableCell>
-              <TableCell className="align-top">
-                <InvitationSwitch eventId={eventId} judge={judge} />
+              <TableCell className="align-top whitespace-normal">
+                <DocumentControl
+                  label={`Invitation letter for ${judge.email}`}
+                  path={judge.invitation_letter_path}
+                  newPath={() => invitationLetterPath(eventId, judge.id)}
+                  save={(path) =>
+                    saveJudgeInvitationLetter({
+                      eventId,
+                      judgeId: judge.id,
+                      path,
+                    })
+                  }
+                />
               </TableCell>
             </TableRow>
           ))}

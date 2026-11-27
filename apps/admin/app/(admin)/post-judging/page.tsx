@@ -1,12 +1,8 @@
-import { Card, CardContent } from "@workspace/ui/components/card"
 import { redirect } from "next/navigation"
 
 import { EventTabs } from "@/components/event-tabs"
 import { PageHeader } from "@/components/page-header"
-import {
-  InvitationLetter,
-  JudgeDocuments,
-} from "@/components/post-judging/judge-documents"
+import { JudgeDocuments } from "@/components/post-judging/judge-documents"
 import { getAdmin } from "@/lib/admin"
 import { selectEvent } from "@/lib/events"
 import { postJudgingRosterSchema } from "@/lib/judge-documents"
@@ -36,7 +32,7 @@ export default async function PostJudgingPage({
   const [settings, roster] = await Promise.all([
     supabase
       .from("event_competition_settings")
-      .select("invitation_letter_path")
+      .select("event_id")
       .eq("event_id", event.id)
       .maybeSingle(),
     supabase.rpc("admin_post_judging_roster", { p_event_id: event.id }),
@@ -53,22 +49,11 @@ export default async function PostJudgingPage({
         basePath="/post-judging"
       />
       {settings.data ? (
-        <>
-          <Card>
-            <CardContent>
-              <InvitationLetter
-                key={event.id}
-                eventId={event.id}
-                path={settings.data.invitation_letter_path}
-              />
-            </CardContent>
-          </Card>
-          <JudgeDocuments
-            key={event.id}
-            eventId={event.id}
-            judges={postJudgingRosterSchema.parse(roster.data)}
-          />
-        </>
+        <JudgeDocuments
+          key={event.id}
+          eventId={event.id}
+          judges={postJudgingRosterSchema.parse(roster.data)}
+        />
       ) : (
         <p className="text-sm">
           Save competition settings in Judging Management before uploading judge

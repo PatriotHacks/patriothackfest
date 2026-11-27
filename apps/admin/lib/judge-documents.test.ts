@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   certificatePath,
   invitationLetterPath,
-  judgeCertificateInput,
+  judgeDocumentInput,
   postJudgingRosterSchema,
 } from "./judge-documents"
 
@@ -19,10 +19,12 @@ describe("judge document paths", () => {
     )
     expect(certificatePath(eventId, judgeId)).not.toBe(path)
   })
-  it("builds a fresh invitation letter path for the event", () => {
-    expect(invitationLetterPath(eventId)).toMatch(
-      new RegExp(`^${eventId}/invitation-letter/${uuid}\\.pdf$`)
+  it("builds a fresh invitation letter path in the judge's slot", () => {
+    const path = invitationLetterPath(eventId, judgeId)
+    expect(path).toMatch(
+      new RegExp(`^${eventId}/invitation-letters/${judgeId}/${uuid}\\.pdf$`)
     )
+    expect(invitationLetterPath(eventId, judgeId)).not.toBe(path)
   })
 })
 
@@ -30,13 +32,13 @@ describe("judge document schemas", () => {
   it("accepts a path or null and rejects blanks", () => {
     const input = { eventId, judgeId }
     expect(
-      judgeCertificateInput.safeParse({ ...input, path: null }).success
+      judgeDocumentInput.safeParse({ ...input, path: null }).success
     ).toBe(true)
     expect(
-      judgeCertificateInput.safeParse({ ...input, path: "" }).success
+      judgeDocumentInput.safeParse({ ...input, path: "" }).success
     ).toBe(false)
     expect(
-      judgeCertificateInput.safeParse({ ...input, path: "x", extra: 1 }).success
+      judgeDocumentInput.safeParse({ ...input, path: "x", extra: 1 }).success
     ).toBe(false)
   })
   it("parses the post-judging roster", () => {
@@ -44,8 +46,8 @@ describe("judge document schemas", () => {
       id: judgeId,
       email: "judge@example.com",
       guest: false,
-      receives_invitation: true,
       certificate_path: null,
+      invitation_letter_path: null,
     }
     expect(postJudgingRosterSchema.parse([judge])).toEqual([judge])
   })

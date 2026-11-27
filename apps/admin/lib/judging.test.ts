@@ -170,7 +170,6 @@ describe("split settings forms", () => {
       judging_started_at: null,
       judging_close_at: "2026-11-21T05:00:00Z",
       general_reviews_per_project: 3,
-      invitation_letter_path: null,
       judges_see_answers: false,
       judges_see_team: false,
       max_team_size: null,
