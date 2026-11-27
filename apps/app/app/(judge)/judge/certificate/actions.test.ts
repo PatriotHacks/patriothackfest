@@ -16,7 +16,7 @@ vi.mock("server-only", () => ({}))
 import { judgeDocumentUrl } from "./actions"
 
 const certificate = "a/certificates/b/c.pdf"
-const letter = "a/invitation-letter/c.pdf"
+const letter = "a/invitation-letters/b/c.pdf"
 beforeEach(() => {
   vi.clearAllMocks()
   from.mockReturnValue({ createSignedUrl })
