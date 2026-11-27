@@ -31,12 +31,12 @@ describe("judge document paths", () => {
 describe("judge document schemas", () => {
   it("accepts a path or null and rejects blanks", () => {
     const input = { eventId, judgeId }
-    expect(
-      judgeDocumentInput.safeParse({ ...input, path: null }).success
-    ).toBe(true)
-    expect(
-      judgeDocumentInput.safeParse({ ...input, path: "" }).success
-    ).toBe(false)
+    expect(judgeDocumentInput.safeParse({ ...input, path: null }).success).toBe(
+      true
+    )
+    expect(judgeDocumentInput.safeParse({ ...input, path: "" }).success).toBe(
+      false
+    )
     expect(
       judgeDocumentInput.safeParse({ ...input, path: "x", extra: 1 }).success
     ).toBe(false)

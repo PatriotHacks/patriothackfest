@@ -34,9 +34,7 @@ describe("judge documents table", () => {
     expect(html).toContain('aria-label="Judge documents"')
     for (const label of ["Certificate", "Invitation letter"]) {
       expect(html).toContain(`aria-label="View ${label} for one@example.com"`)
-      expect(html).toContain(
-        `aria-label="Remove ${label} for one@example.com"`
-      )
+      expect(html).toContain(`aria-label="Remove ${label} for one@example.com"`)
       expect(html).toContain(`Replace ${label} for one@example.com`)
       expect(html).toContain(`Upload ${label} for two@example.com`)
       expect(html).not.toContain(`Remove ${label} for two@example.com`)
