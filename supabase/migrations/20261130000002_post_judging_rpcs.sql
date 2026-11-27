@@ -65,7 +65,7 @@ begin
 end;
 $$;
 
--- The caller's documents for one event, only once judging has closed. Null when
+-- The caller's documents for one event, only once judging has started and closed. Null when
 -- the caller is not an active judge of the event.
 create function public.judge_documents(p_event_slug text)
 returns jsonb language sql stable security definer set search_path = '' as $$
@@ -75,7 +75,7 @@ returns jsonb language sql stable security definer set search_path = '' as $$
   from public.events e
   join public.event_competition_settings s on s.event_id=e.id
   join public.event_judges j on j.id=public.current_event_judge_id(e.id)
-  cross join lateral (select s.judging_close_at<=clock_timestamp() closed) c
+  cross join lateral (select s.judging_started_at is not null and s.judging_close_at<=clock_timestamp() closed) c
   where e.slug=p_event_slug;
 $$;
 

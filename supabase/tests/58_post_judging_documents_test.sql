@@ -45,7 +45,7 @@ insert into public.event_judges(id,event_id,email,user_id)
 select ('b5800000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'e5800000-0000-4000-8000-000000000001',
   'docs-'||n||'@example.test',('d5800000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid from generate_series(2,3)n;
 
-select plan(33);
+select plan(35);
 
 -- Writes: organizers only, into valid slots.
 select pg_temp.login(2);
@@ -85,6 +85,14 @@ select is(pg_temp.documents(),jsonb_build_object('certificate_path',null,'invita
 reset role;
 
 update public.event_competition_settings set judging_close_at=now()-interval '1 minute'
+where event_id='e5800000-0000-4000-8000-000000000001';
+
+select pg_temp.login(2);
+select is(pg_temp.signable(pg_temp.cert(2,1)),0::bigint,'judge cannot read when close passed but judging never started');
+select is(pg_temp.documents(),jsonb_build_object('certificate_path',null,'invitation_letter_path',null),'no documents when judging never started');
+reset role;
+
+update public.event_competition_settings set judging_started_at=now()-interval '1 hour'
 where event_id='e5800000-0000-4000-8000-000000000001';
 
 select pg_temp.login(2);

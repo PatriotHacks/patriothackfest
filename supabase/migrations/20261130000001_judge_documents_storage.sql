@@ -39,7 +39,7 @@ returns boolean language sql stable security definer set search_path = '' as $$
     and not exists (select 1 from public.event_competition_settings s where s.invitation_letter_path = p_name);
 $$;
 
--- Organizers see every file. Once judging closes, a judge sees their own recorded
+-- Organizers see every file. Once judging has started and closed, a judge sees their own recorded
 -- certificate and, if chosen for one, the event's recorded invitation letter.
 create function public.judge_document_readable(p_name text)
 returns boolean language sql stable security definer set search_path = '' as $$
@@ -49,7 +49,7 @@ returns boolean language sql stable security definer set search_path = '' as $$
     join public.event_competition_settings s on s.event_id::text = m.parts[1]
     where public.has_admin_level('organizer')
       or (
-        s.judging_close_at <= clock_timestamp()
+        s.judging_started_at is not null and s.judging_close_at <= clock_timestamp()
         and exists (
           select 1 from public.event_judges j
           where j.id = public.current_event_judge_id(s.event_id)
