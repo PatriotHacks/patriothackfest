@@ -12,9 +12,8 @@ vi.mock("@/lib/admin", () => ({ requireAdmin }))
 vi.mock("next/cache", () => ({ revalidatePath }))
 import {
   judgeDocumentUrl,
-  saveInvitationLetter,
   saveJudgeCertificate,
-  setJudgeInvitation,
+  saveJudgeInvitationLetter,
 } from "./actions"
 
 const eventId = "a0000000-0000-4000-8000-000000000001"
@@ -99,42 +98,48 @@ describe("certificate actions", () => {
 })
 
 describe("invitation letter actions", () => {
-  const letter = `${eventId}/invitation-letter/c0000000-0000-4000-8000-000000000003.pdf`
-  it("records the event letter", async () => {
-    expect(await saveInvitationLetter({ eventId, path: letter })).toEqual({
-      error: null,
-    })
-    expect(requireAdmin).toHaveBeenCalledWith("organizer")
-    expect(rpc).toHaveBeenCalledWith("admin_set_invitation_letter", {
-      p_event_id: eventId,
-      p_path: letter,
-    })
-    expect(revalidatePath).toHaveBeenCalledWith("/post-judging")
-  })
-  it("sets whether a judge receives the letter", async () => {
+  const letter = `${eventId}/invitation-letters/${judgeId}/c0000000-0000-4000-8000-000000000003.pdf`
+  it("records the judge's letter and deletes the file it replaced", async () => {
+    rpc.mockResolvedValue({ data: previous, error: null })
     expect(
-      await setJudgeInvitation({ eventId, judgeId, receives: true })
+      await saveJudgeInvitationLetter({ eventId, judgeId, path: letter })
     ).toEqual({ error: null })
-    expect(rpc).toHaveBeenCalledWith("admin_set_judge_invitation", {
+    expect(requireAdmin).toHaveBeenCalledWith("organizer")
+    expect(rpc).toHaveBeenCalledWith("admin_set_judge_invitation_letter", {
       p_event_id: eventId,
       p_judge_id: judgeId,
-      p_receives: true,
+      p_path: letter,
     })
+    expect(remove).toHaveBeenCalledWith([previous])
     expect(revalidatePath).toHaveBeenCalledWith("/post-judging")
   })
-  it("rejects invalid toggles and surfaces errors", async () => {
+  it("clears the record when the path is null", async () => {
     expect(
-      (await setJudgeInvitation({ eventId, judgeId, receives: "yes" })).error
-    ).toBeTruthy()
-    expect(rpc).not.toHaveBeenCalled()
+      await saveJudgeInvitationLetter({ eventId, judgeId, path: null })
+    ).toEqual({ error: null })
+    expect(rpc).toHaveBeenCalledWith("admin_set_judge_invitation_letter", {
+      p_event_id: eventId,
+      p_judge_id: judgeId,
+      p_path: undefined,
+    })
+    expect(remove).not.toHaveBeenCalled()
+  })
+  it("removes the new upload when recording fails", async () => {
     rpc.mockResolvedValue({
       data: null,
-      error: { message: "Judge not found for this event" },
+      error: { message: "Upload the file again" },
     })
     expect(
-      await setJudgeInvitation({ eventId, judgeId, receives: false })
-    ).toEqual({ error: "Judge not found for this event" })
+      await saveJudgeInvitationLetter({ eventId, judgeId, path: letter })
+    ).toEqual({ error: "Upload the file again" })
+    expect(remove).toHaveBeenCalledWith([letter])
     expect(revalidatePath).not.toHaveBeenCalled()
+  })
+  it("never writes for invalid input", async () => {
+    expect(
+      (await saveJudgeInvitationLetter({ eventId, path: letter })).error
+    ).toBeTruthy()
+    expect(rpc).not.toHaveBeenCalled()
   })
 })
 

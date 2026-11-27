@@ -75,16 +75,16 @@ export async function deleteEventJudge(input: unknown): Promise<ActionResult> {
   const { supabase } = await requireAdmin("organizer")
   const parsed = eventJudgeRefInput.safeParse(input)
   if (!parsed.success) return failure({ message: "Invalid judge" })
-  const { data: certificate, error } = await supabase.rpc(
+  const { data: documents, error } = await supabase.rpc(
     "admin_delete_event_judge",
     { p_event_id: parsed.data.eventId, p_judge_id: parsed.data.judgeId }
   )
   if (error) return failure(error)
   revalidatePath("/judging")
   revalidatePath("/post-judging")
-  if (!certificate) return ok
+  if (documents.length === 0) return ok
   const removed = await supabase.storage
     .from(JUDGE_DOCUMENTS_BUCKET)
-    .remove([certificate])
+    .remove(documents)
   return removed.error ? failure(removed.error) : ok
 }

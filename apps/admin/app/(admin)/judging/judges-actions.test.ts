@@ -82,7 +82,7 @@ describe("judge admin action", () => {
 describe("delete judge action", () => {
   const judgeId = "a0000000-0000-4000-8000-000000000002"
   it("requires organizer access and deletes the event judge", async () => {
-    rpc.mockResolvedValue({ data: null, error: null })
+    rpc.mockResolvedValue({ data: [], error: null })
     expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({
       error: null,
     })
@@ -94,14 +94,17 @@ describe("delete judge action", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/judging")
     expect(remove).not.toHaveBeenCalled()
   })
-  it("deletes the removed judge's certificate file", async () => {
-    const certificate = `${id}/certificates/${judgeId}/c0000000-0000-4000-8000-000000000001.pdf`
-    rpc.mockResolvedValue({ data: certificate, error: null })
+  it("deletes the removed judge's document files", async () => {
+    const documents = [
+      `${id}/certificates/${judgeId}/c0000000-0000-4000-8000-000000000001.pdf`,
+      `${id}/invitation-letters/${judgeId}/c0000000-0000-4000-8000-000000000002.pdf`,
+    ]
+    rpc.mockResolvedValue({ data: documents, error: null })
     expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({
       error: null,
     })
     expect(from).toHaveBeenCalledWith("judge-documents")
-    expect(remove).toHaveBeenCalledWith([certificate])
+    expect(remove).toHaveBeenCalledWith(documents)
     expect(revalidatePath).toHaveBeenCalledWith("/post-judging")
     remove.mockResolvedValue({ data: null, error: { message: "Denied" } })
     expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({

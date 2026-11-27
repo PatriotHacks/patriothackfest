@@ -8,11 +8,7 @@ import * as z from "zod"
 
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
-import {
-  invitationLetterInput,
-  judgeCertificateInput,
-  judgeInvitationInput,
-} from "@/lib/judge-documents"
+import { judgeDocumentInput } from "@/lib/judge-documents"
 
 async function recordDocument(
   supabase: ServerClient,
@@ -38,7 +34,7 @@ export async function saveJudgeCertificate(
   input: unknown
 ): Promise<ActionResult> {
   const { supabase } = await requireAdmin("organizer")
-  const parsed = judgeCertificateInput.safeParse(input)
+  const parsed = judgeDocumentInput.safeParse(input)
   if (!parsed.success) return failure({ message: "Invalid certificate" })
   const { eventId, judgeId, path } = parsed.data
   return recordDocument(
@@ -52,37 +48,22 @@ export async function saveJudgeCertificate(
   )
 }
 
-export async function saveInvitationLetter(
+export async function saveJudgeInvitationLetter(
   input: unknown
 ): Promise<ActionResult> {
   const { supabase } = await requireAdmin("organizer")
-  const parsed = invitationLetterInput.safeParse(input)
+  const parsed = judgeDocumentInput.safeParse(input)
   if (!parsed.success) return failure({ message: "Invalid invitation letter" })
-  const { eventId, path } = parsed.data
+  const { eventId, judgeId, path } = parsed.data
   return recordDocument(
     supabase,
     path,
-    supabase.rpc("admin_set_invitation_letter", {
+    supabase.rpc("admin_set_judge_invitation_letter", {
       p_event_id: eventId,
+      p_judge_id: judgeId,
       p_path: path ?? undefined,
     })
   )
-}
-
-export async function setJudgeInvitation(
-  input: unknown
-): Promise<ActionResult> {
-  const { supabase } = await requireAdmin("organizer")
-  const parsed = judgeInvitationInput.safeParse(input)
-  if (!parsed.success) return failure({ message: "Invalid judge" })
-  const { error } = await supabase.rpc("admin_set_judge_invitation", {
-    p_event_id: parsed.data.eventId,
-    p_judge_id: parsed.data.judgeId,
-    p_receives: parsed.data.receives,
-  })
-  if (error) return failure(error)
-  revalidatePath("/post-judging")
-  return ok
 }
 
 export async function judgeDocumentUrl(

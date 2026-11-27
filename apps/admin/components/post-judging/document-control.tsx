@@ -9,7 +9,7 @@ import { signedUrlOrThrow, uploadPdf } from "@workspace/supabase/storage"
 import { Button } from "@workspace/ui/components/button"
 import { Progress } from "@workspace/ui/components/progress"
 import { SignedFileLink } from "@workspace/ui/components/signed-file-link"
-import { useId, useRef, useState, useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 
 import { judgeDocumentUrl } from "@/app/(admin)/post-judging/actions"
 import type { ActionResult } from "@/lib/action-result"
@@ -27,7 +27,6 @@ export function DocumentControl({
   newPath: () => string
   save: (path: string | null) => Promise<ActionResult>
 }) {
-  const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const [progress, setProgress] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -91,16 +90,23 @@ export function DocumentControl({
           <span className="text-muted-foreground">Not uploaded</span>
         )}
       </div>
-      <label htmlFor={inputId} className="sr-only">
-        {path ? `Replace ${label}` : `Upload ${label}`}
-      </label>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="self-start"
+        disabled={busy}
+        onClick={() => inputRef.current?.click()}
+        aria-label={`${path ? "Replace" : "Upload"} ${label}`}
+      >
+        {path ? "Replace" : "Upload"}
+      </Button>
       <input
         ref={inputRef}
-        id={inputId}
         type="file"
         accept={PDF_TYPE}
         disabled={busy}
-        className="text-sm"
+        hidden
         onChange={(e) => {
           const file = e.target.files?.[0]
           if (file) void upload(file)

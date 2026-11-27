@@ -438,7 +438,6 @@ export type Database = {
           enabled: boolean
           event_id: string
           general_reviews_per_project: number
-          invitation_letter_path: string | null
           judges_see_answers: boolean
           judges_see_team: boolean
           judging_close_at: string | null
@@ -454,7 +453,6 @@ export type Database = {
           enabled?: boolean
           event_id: string
           general_reviews_per_project?: number
-          invitation_letter_path?: string | null
           judges_see_answers?: boolean
           judges_see_team?: boolean
           judging_close_at?: string | null
@@ -469,7 +467,6 @@ export type Database = {
           enabled?: boolean
           event_id?: string
           general_reviews_per_project?: number
-          invitation_letter_path?: string | null
           judges_see_answers?: boolean
           judges_see_team?: boolean
           judging_close_at?: string | null
@@ -500,8 +497,8 @@ export type Database = {
           event_id: string
           guest: boolean
           id: string
+          invitation_letter_path: string | null
           kind: string
-          receives_invitation: boolean
           updated_at: string
           user_id: string | null
         }
@@ -516,8 +513,8 @@ export type Database = {
           event_id: string
           guest?: boolean
           id?: string
+          invitation_letter_path?: string | null
           kind?: string
-          receives_invitation?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -531,8 +528,8 @@ export type Database = {
           event_id?: string
           guest?: boolean
           id?: string
+          invitation_letter_path?: string | null
           kind?: string
-          receives_invitation?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -1221,7 +1218,7 @@ export type Database = {
       }
       admin_delete_event_judge: {
         Args: { p_event_id: string; p_judge_id: string }
-        Returns: string
+        Returns: string[]
       }
       admin_delete_judging_criterion: {
         Args: { p_criterion_id: string; p_event_id: string }
@@ -1403,17 +1400,13 @@ export type Database = {
         Args: { p_event_id: string; p_guest: boolean; p_judge_id: string }
         Returns: Json
       }
-      admin_set_invitation_letter: {
-        Args: { p_event_id: string; p_path?: string }
-        Returns: string
-      }
       admin_set_judge_certificate: {
         Args: { p_event_id: string; p_judge_id: string; p_path?: string }
         Returns: string
       }
-      admin_set_judge_invitation: {
-        Args: { p_event_id: string; p_judge_id: string; p_receives: boolean }
-        Returns: undefined
+      admin_set_judge_invitation_letter: {
+        Args: { p_event_id: string; p_judge_id: string; p_path?: string }
+        Returns: string
       }
       admin_set_judges_see_answers: {
         Args: { p_event_id: string; p_value: boolean }
@@ -1590,7 +1583,12 @@ export type Database = {
       judge_document_parts: { Args: { p_name: string }; Returns: string[] }
       judge_document_readable: { Args: { p_name: string }; Returns: boolean }
       judge_document_uploaded: {
-        Args: { p_event_id: string; p_judge_id: string; p_path: string }
+        Args: {
+          p_event_id: string
+          p_judge_id: string
+          p_path: string
+          p_slot: string
+        }
         Returns: boolean
       }
       judge_document_writable: { Args: { p_name: string }; Returns: boolean }

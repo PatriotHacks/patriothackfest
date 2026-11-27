@@ -6,8 +6,8 @@ export function certificatePath(eventId: string, judgeId: string) {
   return `${eventId}/certificates/${judgeId}/${crypto.randomUUID()}.pdf`
 }
 
-export function invitationLetterPath(eventId: string) {
-  return `${eventId}/invitation-letter/${crypto.randomUUID()}.pdf`
+export function invitationLetterPath(eventId: string, judgeId: string) {
+  return `${eventId}/invitation-letters/${judgeId}/${crypto.randomUUID()}.pdf`
 }
 
 export const postJudgingRosterSchema = z.array(
@@ -15,23 +15,17 @@ export const postJudgingRosterSchema = z.array(
     id: z.guid(),
     email: z.string(),
     guest: z.boolean(),
-    receives_invitation: z.boolean(),
     certificate_path: z.string().nullable(),
+    invitation_letter_path: z.string().nullable(),
   })
 )
 
-const path = z.string().min(1).nullable()
-
-export const judgeInvitationInput = z
-  .object({ eventId: z.guid(), judgeId: z.guid(), receives: z.boolean() })
-  .strict()
-
-export const judgeCertificateInput = z
-  .object({ eventId: z.guid(), judgeId: z.guid(), path })
-  .strict()
-
-export const invitationLetterInput = z
-  .object({ eventId: z.guid(), path })
+export const judgeDocumentInput = z
+  .object({
+    eventId: z.guid(),
+    judgeId: z.guid(),
+    path: z.string().min(1).nullable(),
+  })
   .strict()
 
 export type PostJudgingJudge = z.infer<typeof postJudgingRosterSchema>[number]

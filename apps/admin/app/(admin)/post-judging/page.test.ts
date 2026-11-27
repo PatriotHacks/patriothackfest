@@ -13,9 +13,8 @@ vi.mock("@/lib/admin", () => ({ getAdmin }))
 vi.mock("next/navigation", () => ({ redirect }))
 vi.mock("@/app/(admin)/post-judging/actions", () => ({
   judgeDocumentUrl: vi.fn(),
-  saveInvitationLetter: vi.fn(),
   saveJudgeCertificate: vi.fn(),
-  setJudgeInvitation: vi.fn(),
+  saveJudgeInvitationLetter: vi.fn(),
 }))
 import PostJudgingPage from "./page"
 
@@ -31,8 +30,8 @@ const judge = {
   id: "b0000000-0000-4000-8000-000000000001",
   email: "judge@example.com",
   guest: false,
-  receives_invitation: false,
   certificate_path: null,
+  invitation_letter_path: null,
 }
 let responses: Record<
   string,
@@ -49,7 +48,7 @@ beforeEach(() => {
   responses = {
     events: { data: [event], error: null },
     event_competition_settings: {
-      data: { invitation_letter_path: null },
+      data: { event_id: id },
       error: null,
     },
   }
@@ -81,15 +80,16 @@ describe("post-judging page", () => {
     expect(redirect).toHaveBeenCalledWith("/forms")
     expect(from).not.toHaveBeenCalled()
   })
-  it("renders the invitation letter and the active judge roster", async () => {
+  it("renders per-judge document controls for the active roster", async () => {
     const html = renderToStaticMarkup(await page({ event: event.slug }))
     expect(rpc).toHaveBeenCalledWith("admin_post_judging_roster", {
       p_event_id: id,
     })
     expect(html).toContain("Post-judging")
     expect(html).toContain('href="/post-judging?event=fall-2026"')
-    expect(html).toContain("Upload Invitation letter")
     expect(html).toContain("judge@example.com")
+    expect(html).toContain("Upload Certificate for judge@example.com")
+    expect(html).toContain("Upload Invitation letter for judge@example.com")
   })
   it("asks for competition settings before uploads", async () => {
     responses.event_competition_settings = { data: null, error: null }
