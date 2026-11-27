@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { PageHero, Sheet } from "@/components/page-hero"
 import { getGalleryEvents } from "@/lib/gallery"
 
-export const revalidate = 300
+export const dynamic = "force-dynamic"
 
 const dateFormat = new Intl.DateTimeFormat("en-US", {
   month: "long",

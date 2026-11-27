@@ -1,5 +1,6 @@
 import "server-only"
 
+import { unstable_cache } from "next/cache"
 import { cache } from "react"
 import * as z from "zod"
 
@@ -54,11 +55,15 @@ export type GalleryAward = z.infer<typeof awardSchema>
 export type GalleryProject = z.infer<typeof galleryProjectSchema>
 export type GalleryAnswer = GalleryProject["answers"][number]
 
-export const getGalleryEvents = cache(async () => {
-  const { data, error } = await createPublicClient().rpc("gallery_events")
-  if (error) throw new Error(error.message)
-  return galleryEventsSchema.parse(data)
-})
+export const getGalleryEvents = unstable_cache(
+  async () => {
+    const { data, error } = await createPublicClient().rpc("gallery_events")
+    if (error) throw new Error(error.message)
+    return galleryEventsSchema.parse(data)
+  },
+  ["gallery-events"],
+  { revalidate: 300 }
+)
 
 export const getGalleryProjects = cache(async (eventSlug: string) => {
   if (!eventSlugSchema.safeParse(eventSlug).success) return null
