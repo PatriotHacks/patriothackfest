@@ -35,12 +35,14 @@ describe("judge documents section", () => {
     expect(html).toContain('aria-label="View Certificate (PDF)"')
     expect(html).toContain('aria-label="View Invitation letter (PDF)"')
   })
-  it("says the certificate is not ready and hides a missing letter", () => {
+  it("explains a missing certificate and hides a missing letter", () => {
     const html = render({
       certificate_path: null,
       invitation_letter_path: null,
     })
-    expect(html).toContain("Your certificate is not yet available.")
+    expect(html).toContain(
+      "Thank you for your willingness to judge! Unfortunately, you didn&#x27;t complete your judging assignments, so you won&#x27;t be receiving a certificate at this time. However, we hope you&#x27;ll join us for judging in the Spring!"
+    )
     expect(html).not.toContain("Invitation letter")
   })
 })

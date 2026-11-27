@@ -25,7 +25,12 @@ export function JudgeDocumentsSection({
               name="Certificate (PDF)"
             />
           ) : (
-            <p>Your certificate is not yet available.</p>
+            <p>
+              Thank you for your willingness to judge! Unfortunately, you
+              didn&apos;t complete your judging assignments, so you won&apos;t
+              be receiving a certificate at this time. However, we hope
+              you&apos;ll join us for judging in the Spring!
+            </p>
           )}
           {documents.invitation_letter_path && (
             <JudgeDocumentLink
