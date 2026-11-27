@@ -63,7 +63,18 @@ describe("participant layout routing", () => {
     getSubmittedApplications.mockResolvedValue([application])
     const nav = await sidebar()
     expect(nav.type).toBe(JudgeSidebar)
-    expect(nav.props).toMatchObject({ applicationId: "app-1" })
+    expect(nav.props).toMatchObject({
+      applicationId: "app-1",
+      judgingClosed: false,
+    })
+  })
+  it("tells the judge shell once every event's judging has closed", async () => {
+    getJudgeEvents.mockResolvedValue([
+      { slug: "fall-2026", judging_close_at: "2026-01-01T00:00:00Z" },
+    ])
+    getSubmittedApplications.mockResolvedValue([application])
+    const nav = await sidebar()
+    expect(nav.props).toMatchObject({ judgingClosed: true })
   })
   it("sends judges without a submitted application to the judging portal", async () => {
     getJudgeEvents.mockResolvedValue([{ slug: "fall-2026" }])
