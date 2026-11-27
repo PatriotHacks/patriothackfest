@@ -3,6 +3,10 @@
 import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 
+import { AuthInput, AuthLabel } from "@workspace/ui/components/auth-fields"
+import { Button } from "@workspace/ui/components/button"
+import { pillVariants } from "@workspace/ui/components/pill"
+import { OUTLINE_PILL, PAPER } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
 import {
@@ -66,17 +70,18 @@ function GalleryView({
   return (
     <>
       <search className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5 text-[15px] font-medium">
-          Search projects
-          <input
+        <div className="flex max-w-md flex-col gap-[6.5px]">
+          <AuthLabel htmlFor="gallery-search">Search projects</AuthLabel>
+          <AuthInput
+            id="gallery-search"
             type="search"
             value={filters.query}
             disabled={disabled}
             onChange={(event) => set({ query: event.target.value })}
             placeholder="Project name"
-            className="border-ink bg-text text-ink placeholder:text-ink/50 focus:outline-blue w-full max-w-md rounded-lg border-2 px-3.5 py-3 text-base focus:outline-3 focus:outline-offset-1"
+            className="h-11"
           />
-        </label>
+        </div>
         {(tracks.length > 0 || hasWinners) && (
           <div
             role="group"
@@ -115,14 +120,14 @@ function GalleryView({
         )}
       </search>
 
-      <p aria-live="polite" className="mt-8 mb-6 text-[15px] text-muted">
+      <p aria-live="polite" className="-mb-1 text-sm text-[#6E6E68]">
         {shown.length === projects.length
           ? `${projects.length} ${projects.length === 1 ? "project" : "projects"}`
           : `Showing ${shown.length} of ${projects.length} projects`}
       </p>
 
       {shown.length > 0 ? (
-        <ul className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map((project) => (
             <ProjectCard
               key={project.id}
@@ -132,15 +137,16 @@ function GalleryView({
           ))}
         </ul>
       ) : (
-        <div className="ink ink--dash flex flex-col items-start gap-4 px-6 py-8 [--fill:rgba(184,174,242,0.05)]">
-          <p className="text-muted">No projects match these filters.</p>
-          <button
+        <div className={cn(PAPER, "flex flex-col items-start gap-4 p-6")}>
+          <p>No projects match these filters.</p>
+          <Button
             type="button"
-            className="btn cursor-pointer"
+            variant="outline"
+            className={OUTLINE_PILL}
             onClick={() => onChange?.(NO_FILTERS)}
           >
             Clear filters
-          </button>
+          </Button>
         </div>
       )}
     </>
@@ -150,6 +156,7 @@ function GalleryView({
 function Chip({
   pressed,
   winner,
+  className,
   ...props
 }: React.ComponentProps<"button"> & { pressed: boolean; winner?: boolean }) {
   return (
@@ -157,12 +164,13 @@ function Chip({
       type="button"
       aria-pressed={pressed}
       className={cn(
-        "cursor-pointer rounded-full border-2 px-3.5 py-1.5 text-sm leading-none font-medium transition-colors disabled:cursor-default",
-        pressed
-          ? "border-ink bg-blue text-ink"
-          : "border-lav/50 text-lav hover:border-lav hover:text-text",
-        winner && pressed && "bg-yellow",
-        winner && !pressed && "border-yellow/60 text-yellow"
+        pillVariants({
+          tone: pressed ? "olive" : winner ? "amber" : "outline",
+        }),
+        "cursor-pointer py-[6px] transition-colors disabled:cursor-default",
+        !pressed && "hover:bg-[#3A4A2B]/5",
+        winner && !pressed && "font-semibold hover:bg-[#EFDDB0]",
+        className
       )}
       {...props}
     />
