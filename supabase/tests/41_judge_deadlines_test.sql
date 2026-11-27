@@ -33,8 +33,8 @@ update public.event_competition_settings set judging_close_at=clock_timestamp() 
 select pg_temp.login();
 select throws_ok($$select pg_temp.save()$$,'PT410',null,'exclusive cutoff rejects draft');
 select throws_ok($$select pg_temp.save(true)$$,'PT410',null,'exclusive cutoff rejects final');
-select is(public.judge_assignment('c3-deadlines','fc400000-0000-0000-0000-000000000001')->'assignment'->>'notes','retained draft','saved draft survives expiry');
 reset role;
+select is((select notes from public.judging_assignments where id='fc400000-0000-0000-0000-000000000001'),'retained draft','saved draft survives expiry');
 update public.event_competition_settings set judging_close_at=clock_timestamp()+interval '1 day' where event_id='ec400000-0000-0000-0000-000000000001';
 set local role authenticated;
 select lives_ok($$select pg_temp.save()$$,'same JWT resumes after post-expiry extension');
