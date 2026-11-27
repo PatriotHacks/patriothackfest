@@ -30,7 +30,7 @@ select pg_temp.reviewer();
 select throws_ok($$select public.admin_delete_event_judge('ef500000-0000-0000-0000-000000000001','d5000000-0000-0000-0000-000000000002')$$,'42501','Not authorized','reviewers cannot delete judges');
 select pg_temp.organizer();
 select throws_ok($$select public.admin_delete_event_judge('ef500000-0000-0000-0000-000000000002','d5000000-0000-0000-0000-000000000002')$$,'PT404','Judge not found for this event','judge must belong to the event');
-select lives_ok($$select public.admin_delete_event_judge('ef500000-0000-0000-0000-000000000001','d5000000-0000-0000-0000-000000000001')$$,'sponsor judge with track scopes is deleted');
+select is(public.admin_delete_event_judge('ef500000-0000-0000-0000-000000000001','d5000000-0000-0000-0000-000000000001'),'{}'::text[],'sponsor judge with track scopes is deleted and has no documents');
 select throws_ok($$select public.admin_delete_event_judge('ef500000-0000-0000-0000-000000000001','d5000000-0000-0000-0000-000000000001')$$,'PT404','Judge not found for this event','deleted judge is gone');
 reset role;
 select is((select count(*) from public.judge_track_scopes where judge_id='d5000000-0000-0000-0000-000000000001'),0::bigint,'track scopes are removed');
