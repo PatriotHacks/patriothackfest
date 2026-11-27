@@ -1450,6 +1450,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      assign_remaining_to_judge: {
+        Args: { p_event_id: string; p_judge_id: string }
+        Returns: Json
+      }
       assignment_candidates: {
         Args: { p_event_id: string; p_project_id: string; p_track_id: string }
         Returns: {
@@ -1458,6 +1462,10 @@ export type Database = {
           judge_id: string
           workload: number
         }[]
+      }
+      assignment_ineligibility: {
+        Args: { p_judge_id: string; p_project_id: string; p_track_id: string }
+        Returns: string
       }
       assignment_targets: {
         Args: { p_event_id: string }
@@ -1490,7 +1498,17 @@ export type Database = {
       current_event_judge_id: { Args: { p_event_id: string }; Returns: string }
       current_guest_projects: {
         Args: { p_event_id: string }
-        Returns: Database["public"]["Tables"]["projects"]["Row"][]
+        Returns: {
+          answers: NonNullable<Json>
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          owner_user_id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+        }[]
         SetofOptions: {
           from: "*"
           to: "projects"
@@ -1819,6 +1837,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      rebalance_judge_assignments: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
       save_application_answers: {
         Args: { p_answers: Json; p_application_id: string }
         Returns: string
@@ -1837,6 +1859,10 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: undefined
       }
+      transfer_judge_assignments: {
+        Args: { p_event_id: string; p_judge_id: string }
+        Returns: Json
+      }
       under_18: {
         Args: {
           p_application: Omit<
@@ -1845,10 +1871,6 @@ export type Database = {
           >
         }
         Returns: boolean
-      }
-      transfer_judge_assignments: {
-        Args: { p_event_id: string; p_judge_id: string }
-        Returns: Json
       }
       update_basic_info: {
         Args: {
