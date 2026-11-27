@@ -45,7 +45,9 @@ export default async function EventPage({ params }: PageProps<"/[eventSlug]">) {
         <ProjectGallery
           eventSlug={data.event.slug}
           tracks={data.tracks}
-          hasWinners={data.awards.length > 0}
+          hasWinners={data.projects.some(
+            (project) => project.awards.length > 0
+          )}
           projects={data.projects.map((project) => ({
             ...project,
             summary: project.summary && truncate(project.summary, 180),
