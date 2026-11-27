@@ -4,9 +4,12 @@ import { revalidatePath } from "next/cache"
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
 import {
+  assignRemainingInput,
+  assignRemainingPlan,
   assignmentEventInput,
   generationSummary,
   rebalancePlan,
+  type AssignRemainingPlan,
   type GenerationSummary,
   type RebalancePlan,
 } from "@/lib/assignments"
@@ -51,6 +54,36 @@ export async function rebalanceAssignments(
   })
   if (error) return failure(error)
   const plan = rebalancePlan.parse(data)
+  revalidatePath("/judging")
+  return { error: null, plan }
+}
+
+export async function previewAssignRemainingToJudge(
+  input: unknown
+): Promise<ActionResult & { plan?: AssignRemainingPlan }> {
+  const { supabase } = await requireAdmin("organizer")
+  const parsed = assignRemainingInput.safeParse(input)
+  if (!parsed.success) return failure({ message: "Invalid judge" })
+  const { data, error } = await supabase.rpc(
+    "admin_assign_remaining_to_judge_preview",
+    { p_event_id: parsed.data.eventId, p_judge_id: parsed.data.judgeId }
+  )
+  if (error) return failure(error)
+  return { error: null, plan: assignRemainingPlan.parse(data) }
+}
+
+export async function assignRemainingToJudge(
+  input: unknown
+): Promise<ActionResult & { plan?: AssignRemainingPlan }> {
+  const { supabase } = await requireAdmin("organizer")
+  const parsed = assignRemainingInput.safeParse(input)
+  if (!parsed.success) return failure({ message: "Invalid judge" })
+  const { data, error } = await supabase.rpc(
+    "admin_assign_remaining_to_judge",
+    { p_event_id: parsed.data.eventId, p_judge_id: parsed.data.judgeId }
+  )
+  if (error) return failure(error)
+  const plan = assignRemainingPlan.parse(data)
   revalidatePath("/judging")
   return { error: null, plan }
 }

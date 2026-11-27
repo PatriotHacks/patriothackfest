@@ -1,19 +1,23 @@
 import type { AssignmentOverview } from "@/lib/assignments"
 import { GenerateAssignments } from "./generate-assignments"
 import { RebalanceAssignments } from "./rebalance-assignments"
+import { AssignRemainingToJudge } from "./assign-remaining-to-judge"
 import { JudgeProgressTable } from "./judge-progress"
 import type { JudgeProgress } from "@/lib/judge-progress"
+import type { JudgeRosterEntry } from "@/lib/judges"
 
 export function AssignmentsSection({
   eventId,
   started,
   data,
   progress,
+  judges,
 }: {
   eventId: string
   started: boolean
   data: AssignmentOverview
   progress: JudgeProgress[]
+  judges: JudgeRosterEntry[]
 }) {
   return (
     <section
@@ -32,6 +36,11 @@ export function AssignmentsSection({
       <div className="flex flex-wrap items-start gap-3">
         <GenerateAssignments eventId={eventId} started={started} />
         <RebalanceAssignments eventId={eventId} started={started} />
+        <AssignRemainingToJudge
+          eventId={eventId}
+          started={started}
+          judges={judges}
+        />
       </div>
       <p className="font-medium">
         {data.missing} missing review slots across this event
