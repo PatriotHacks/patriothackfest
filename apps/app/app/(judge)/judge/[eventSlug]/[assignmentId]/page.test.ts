@@ -21,6 +21,7 @@ vi.mock("@/lib/project-file-actions", () => ({ projectFileUrl: vi.fn() }))
 vi.mock("@/components/judge/scorecard", () => ({
   JudgeScorecardForm: () => null,
 }))
+import { JudgingClosedNotice } from "@/components/judge/judging-closed"
 import JudgeAssignmentPage from "./page"
 const id = "a0000000-0000-4000-8000-000000000001"
 const props = {
@@ -54,6 +55,18 @@ describe("judge assignment route", () => {
     await expect(JudgeAssignmentPage(props)).rejects.toThrow("Redirect")
     expect(redirect).toHaveBeenCalledWith("/judge?briefing=fall-2026")
     expect(getJudgeAssignment).not.toHaveBeenCalled()
+  })
+  it("shows the closed notice instead of the review after judging closes", async () => {
+    getJudgeEvent.mockResolvedValue({
+      name: "Fall",
+      briefing_acknowledged_at: null,
+      judging_close_at: "2026-01-01T00:00:00Z",
+    })
+    const page = await JudgeAssignmentPage(props)
+    expect(page.type).toBe(JudgingClosedNotice)
+    expect(redirect).not.toHaveBeenCalled()
+    expect(getJudgeAssignment).not.toHaveBeenCalled()
+    expect(getJudgeQueue).not.toHaveBeenCalled()
   })
   it("rejects malformed assignment IDs before any data reads", async () => {
     notFound.mockImplementation(() => {

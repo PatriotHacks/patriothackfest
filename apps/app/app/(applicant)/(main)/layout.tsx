@@ -11,11 +11,13 @@ import { JudgeSidebar } from "@/components/judge-sidebar"
 import { LogoLockup } from "@/components/logo-lockup"
 import { getNamedApplicant, getSubmittedApplications } from "@/lib/applicant"
 import { getJudgeEvents } from "@/lib/judge-access"
+import { allJudgingClosed } from "@/lib/judge-status"
 import { participantView } from "@/lib/participant-view"
 
 // Judging takes priority: judges keep the judge shell while viewing their application.
 export default async function MainLayout({ children }: LayoutProps<"/">) {
-  const judging = (await getJudgeEvents()).length > 0
+  const events = await getJudgeEvents()
+  const judging = events.length > 0
   const applications = await getSubmittedApplications()
   const latest = applications[0]
   if (!latest) redirect(judging ? "/judge" : "/start")
@@ -26,7 +28,11 @@ export default async function MainLayout({ children }: LayoutProps<"/">) {
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
       {view === "judging" ? (
-        <JudgeSidebar applicationId={latest.id} email={email} />
+        <JudgeSidebar
+          applicationId={latest.id}
+          email={email}
+          judgingClosed={allJudgingClosed(events)}
+        />
       ) : (
         <ApplicantSidebar applicationId={latest.id} email={email} view={view} />
       )}

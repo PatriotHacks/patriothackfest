@@ -3,6 +3,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 
+import { JudgingClosedNotice } from "@/components/judge/judging-closed"
 import { JudgeProjectDetails } from "@/components/judge/project-details"
 import { JudgeScorecardForm } from "@/components/judge/scorecard"
 import { getJudgeEvent } from "@/lib/judge-access"
@@ -13,6 +14,7 @@ import {
   queuePosition,
   reviewContext,
 } from "@/lib/judge-reviews"
+import { judgingClosed } from "@/lib/judge-status"
 
 export default async function JudgeAssignmentPage({
   params,
@@ -21,6 +23,7 @@ export default async function JudgeAssignmentPage({
   if (!route.success) notFound()
   const { eventSlug, assignmentId } = route.data
   const event = await getJudgeEvent(eventSlug)
+  if (event && judgingClosed(event)) return <JudgingClosedNotice />
   if (event && !event.briefing_acknowledged_at)
     redirect(judgeBriefingHref(eventSlug))
   const [detail, queue] = event

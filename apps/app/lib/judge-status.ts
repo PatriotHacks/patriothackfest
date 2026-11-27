@@ -14,6 +14,23 @@ export function judgeWindowStatus(
   return "started"
 }
 
+// Mirrors public.judging_closed: judges lose review access once the deadline passes.
+export function judgingClosed(
+  event: { judging_close_at: string | null },
+  now = Date.now()
+) {
+  return (
+    event.judging_close_at !== null && now >= Date.parse(event.judging_close_at)
+  )
+}
+
+export function allJudgingClosed(
+  events: { judging_close_at: string | null }[],
+  now = Date.now()
+) {
+  return events.length > 0 && events.every((event) => judgingClosed(event, now))
+}
+
 export function submissionsStillOpen(closeAt: string, now = Date.now()) {
   return now < Date.parse(closeAt)
 }

@@ -1,10 +1,12 @@
 import { PAPER, SERIF } from "@workspace/ui/lib/brand"
 import { cn } from "@workspace/ui/lib/utils"
 
+import { JudgingClosedNotice } from "@/components/judge/judging-closed"
 import { JudgeScenario } from "@/components/judge/scenario"
 import { getJudgeEvent, getJudgeEvents } from "@/lib/judge-access"
 import { getJudgeCriteria } from "@/lib/judge-review-data"
 import { formatScore, SCORE_MAX, SCORE_MIN } from "@/lib/judge-reviews"
+import { judgingClosed } from "@/lib/judge-status"
 
 export default async function JudgeRubricPage() {
   const events = await getJudgeEvents()
@@ -24,6 +26,8 @@ export default async function JudgeRubricPage() {
 async function EventCriteria({ slug }: { slug: string }) {
   const event = await getJudgeEvent(slug)
   if (!event) return null
+  if (judgingClosed(event))
+    return <JudgingClosedNotice title={`${event.name} scoring criteria`} />
   const criteria = event.judging_started_at
     ? await getJudgeCriteria(slug)
     : null

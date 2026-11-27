@@ -7,6 +7,7 @@ import {
   GuestJudgeDetails,
   GuestProjectList,
 } from "@/components/judge/guest-projects"
+import { JudgingClosedNotice } from "@/components/judge/judging-closed"
 import { JudgeQueueList } from "@/components/judge/queue"
 import { JudgeScenario } from "@/components/judge/scenario"
 import {
@@ -19,6 +20,7 @@ import { judgeBriefingHref, judgeContinuation } from "@/lib/judge-reviews"
 import {
   formatSubmissionDeadline,
   judgeWindowStatus,
+  judgingClosed,
   submissionsStillOpen,
 } from "@/lib/judge-status"
 
@@ -61,6 +63,13 @@ async function JudgeEventSection({
         Judge access unavailable. Your roster may have changed; contact an
         organizer.
       </p>
+    )
+  if (judgingClosed(event))
+    return (
+      <section className="flex flex-col gap-5">
+        <h1 className={cn(SERIF, "text-4xl")}>{event.name}</h1>
+        <JudgingClosedNotice />
+      </section>
     )
   const [closeAt, queue, projects] = await Promise.all([
     getProjectSubmissionsCloseAt(event.event_id),

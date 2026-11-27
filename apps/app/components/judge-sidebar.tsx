@@ -12,9 +12,11 @@ import { AppSidebar } from "@/components/app-sidebar"
 export function JudgeSidebar({
   applicationId,
   email,
+  judgingClosed,
 }: {
   applicationId?: string
   email: string
+  judgingClosed: boolean
 }) {
   const nav = [
     {
@@ -24,7 +26,9 @@ export function JudgeSidebar({
       match: (path: string) =>
         /^\/judge(\/[^/]+(\/projects)?\/[^/]+)?$/.test(path),
     },
-    { href: "/judge/rubric", label: "Rubric", icon: ListChecksIcon },
+    ...(judgingClosed
+      ? []
+      : [{ href: "/judge/rubric", label: "Rubric", icon: ListChecksIcon }]),
     { href: "/judge/certificate", label: "Certificate", icon: AwardIcon },
     ...(applicationId
       ? [

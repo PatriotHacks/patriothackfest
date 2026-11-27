@@ -1634,6 +1634,7 @@ export type Database = {
         }
         Returns: Json
       }
+      judging_closed: { Args: { p_event_id: string }; Returns: boolean }
       lock_assignment_event: {
         Args: { p_event_id: string }
         Returns: undefined

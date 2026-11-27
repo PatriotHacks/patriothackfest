@@ -152,6 +152,8 @@ update public.event_competition_settings set judging_close_at=now()-interval '1 
 select pg_temp.login(1,'oauth');
 select lives_ok($$select public.admin_set_judges_see_answers('e4300000-0000-0000-0000-000000000001',true)$$,'switch editable after judging starts and ends');
 reset role;
+-- Judges see nothing once judging closes, so reopen it for the judge reads below.
+update public.event_competition_settings set judging_close_at=now()+interval '1 day' where event_id='e4300000-0000-0000-0000-000000000001';
 select pg_temp.login(4,'otp');
 select is((select jsonb_agg(x-'question_id'-'type'-'options' order by n) from jsonb_array_elements(pg_temp.judge()->'answers') with ordinality a(x,n)),jsonb_build_array(
   jsonb_build_object('label','Question 2','answer','Short'),

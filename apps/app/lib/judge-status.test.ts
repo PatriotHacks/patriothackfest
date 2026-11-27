@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 import {
   formatSubmissionDeadline,
   judgeWindowStatus,
+  allJudgingClosed,
+  judgingClosed,
   submissionsStillOpen,
 } from "./judge-status"
 describe("judge landing status", () => {
@@ -58,6 +60,29 @@ describe("judge landing status", () => {
         now
       )
     ).toBe("started")
+  })
+})
+describe("judging closed gate", () => {
+  const close = "2026-11-21T05:00:00Z"
+  it("closes at the exclusive deadline", () => {
+    expect(
+      judgingClosed({ judging_close_at: close }, Date.parse(close) - 1)
+    ).toBe(false)
+    expect(judgingClosed({ judging_close_at: close }, Date.parse(close))).toBe(
+      true
+    )
+  })
+  it("stays open without a deadline", () => {
+    expect(judgingClosed({ judging_close_at: null })).toBe(false)
+  })
+  it("treats the judge as done only when every event has closed", () => {
+    const now = Date.parse(close)
+    const open = { judging_close_at: "2026-11-22T05:00:00Z" }
+    expect(allJudgingClosed([{ judging_close_at: close }], now)).toBe(true)
+    expect(allJudgingClosed([{ judging_close_at: close }, open], now)).toBe(
+      false
+    )
+    expect(allJudgingClosed([], now)).toBe(false)
   })
 })
 describe("submission period gate", () => {

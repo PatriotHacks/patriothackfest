@@ -74,13 +74,13 @@ reset role;
 update public.event_judges set active=true where id='bc200000-0000-0000-0000-000000000002';
 update public.event_competition_settings set judging_close_at=now()-interval '1 hour' where event_id='ec200000-0000-0000-0000-000000000001';
 select pg_temp.login(2);
-select is(public.judge_queue('c2-reads')->>'total','1','expired queue still readable');
-select isnt(pg_temp.detail(),null::jsonb,'expired saved scorecard still readable');
+select is(public.judge_queue('c2-reads'),null::jsonb,'expired queue hidden');
+select is(pg_temp.detail(),null::jsonb,'expired saved scorecard hidden');
 reset role;
 -- Temporarily unfreeze only this transactional fixture to install a conflict.
 update public.event_competition_settings set judging_started_at=null where event_id='ec200000-0000-0000-0000-000000000001';
 insert into public.project_collaborators(project_id,event_id,user_id) values('ac200000-0000-0000-0000-000000000001','ec200000-0000-0000-0000-000000000001','dc200000-0000-0000-0000-000000000002');
-update public.event_competition_settings set judging_started_at=now() where event_id='ec200000-0000-0000-0000-000000000001';
+update public.event_competition_settings set judging_started_at=now(),judging_close_at=now()+interval '1 day' where event_id='ec200000-0000-0000-0000-000000000001';
 select pg_temp.login(2);
 select is(public.judge_queue('c2-reads')->>'total','0','collaborator conflict denied');
 reset role;

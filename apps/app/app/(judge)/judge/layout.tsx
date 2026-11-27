@@ -8,6 +8,8 @@ import { cookies } from "next/headers"
 import { JudgeSidebar } from "@/components/judge-sidebar"
 import { LogoLockup } from "@/components/logo-lockup"
 import { getApplicant, getSubmittedApplications } from "@/lib/applicant"
+import { getJudgeEvents } from "@/lib/judge-access"
+import { allJudgingClosed } from "@/lib/judge-status"
 
 export default async function JudgeLayout({
   children,
@@ -16,11 +18,18 @@ export default async function JudgeLayout({
 }) {
   // Authentication only: judges do not need an application or profile name.
   const { email } = await getApplicant()
-  const applications = await getSubmittedApplications()
+  const [applications, events] = await Promise.all([
+    getSubmittedApplications(),
+    getJudgeEvents(),
+  ])
   const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false"
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
-      <JudgeSidebar applicationId={applications[0]?.id} email={email} />
+      <JudgeSidebar
+        applicationId={applications[0]?.id}
+        email={email}
+        judgingClosed={allJudgingClosed(events)}
+      />
       <SidebarInset className="bg-white text-[#3A4A2B]">
         <header className="flex items-center gap-3 border-b border-[#E7E4D9] px-4 py-2 md:hidden">
           <SidebarTrigger />
