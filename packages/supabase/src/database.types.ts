@@ -438,6 +438,7 @@ export type Database = {
           enabled: boolean
           event_id: string
           general_reviews_per_project: number
+          invitation_letter_path: string | null
           judges_see_answers: boolean
           judges_see_team: boolean
           judging_close_at: string | null
@@ -453,6 +454,7 @@ export type Database = {
           enabled?: boolean
           event_id: string
           general_reviews_per_project?: number
+          invitation_letter_path?: string | null
           judges_see_answers?: boolean
           judges_see_team?: boolean
           judging_close_at?: string | null
@@ -467,6 +469,7 @@ export type Database = {
           enabled?: boolean
           event_id?: string
           general_reviews_per_project?: number
+          invitation_letter_path?: string | null
           judges_see_answers?: boolean
           judges_see_team?: boolean
           judging_close_at?: string | null
@@ -491,12 +494,14 @@ export type Database = {
           active: boolean
           briefing_acknowledged_at: string | null
           capacity: number
+          certificate_path: string | null
           created_at: string
           email: string
           event_id: string
           guest: boolean
           id: string
           kind: string
+          receives_invitation: boolean
           updated_at: string
           user_id: string | null
         }
@@ -505,12 +510,14 @@ export type Database = {
           active?: boolean
           briefing_acknowledged_at?: string | null
           capacity?: number
+          certificate_path?: string | null
           created_at?: string
           email: string
           event_id: string
           guest?: boolean
           id?: string
           kind?: string
+          receives_invitation?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -518,12 +525,14 @@ export type Database = {
           active?: boolean
           briefing_acknowledged_at?: string | null
           capacity?: number
+          certificate_path?: string | null
           created_at?: string
           email?: string
           event_id?: string
           guest?: boolean
           id?: string
           kind?: string
+          receives_invitation?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -1212,7 +1221,7 @@ export type Database = {
       }
       admin_delete_event_judge: {
         Args: { p_event_id: string; p_judge_id: string }
-        Returns: undefined
+        Returns: string
       }
       admin_delete_judging_criterion: {
         Args: { p_criterion_id: string; p_event_id: string }
@@ -1246,6 +1255,7 @@ export type Database = {
         Args: { p_event_id: string; p_page?: number; p_track_id?: string }
         Returns: Json
       }
+      admin_post_judging_roster: { Args: { p_event_id: string }; Returns: Json }
       admin_project_detail: {
         Args: { p_event_id: string; p_project_id: string }
         Returns: Json
@@ -1393,6 +1403,18 @@ export type Database = {
         Args: { p_event_id: string; p_guest: boolean; p_judge_id: string }
         Returns: Json
       }
+      admin_set_invitation_letter: {
+        Args: { p_event_id: string; p_path?: string }
+        Returns: string
+      }
+      admin_set_judge_certificate: {
+        Args: { p_event_id: string; p_judge_id: string; p_path?: string }
+        Returns: string
+      }
+      admin_set_judge_invitation: {
+        Args: { p_event_id: string; p_judge_id: string; p_receives: boolean }
+        Returns: undefined
+      }
       admin_set_judges_see_answers: {
         Args: { p_event_id: string; p_value: boolean }
         Returns: undefined
@@ -1428,6 +1450,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      assign_remaining_to_judge: {
+        Args: { p_event_id: string; p_judge_id: string }
+        Returns: Json
+      }
       assignment_candidates: {
         Args: { p_event_id: string; p_project_id: string; p_track_id: string }
         Returns: {
@@ -1436,6 +1462,10 @@ export type Database = {
           judge_id: string
           workload: number
         }[]
+      }
+      assignment_ineligibility: {
+        Args: { p_judge_id: string; p_project_id: string; p_track_id: string }
+        Returns: string
       }
       assignment_targets: {
         Args: { p_event_id: string }
@@ -1468,7 +1498,17 @@ export type Database = {
       current_event_judge_id: { Args: { p_event_id: string }; Returns: string }
       current_guest_projects: {
         Args: { p_event_id: string }
-        Returns: Database["public"]["Tables"]["projects"]["Row"][]
+        Returns: {
+          answers: NonNullable<Json>
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          owner_user_id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+        }[]
         SetofOptions: {
           from: "*"
           to: "projects"
@@ -1546,6 +1586,15 @@ export type Database = {
         Returns: Json
       }
       judge_criteria: { Args: { p_event_slug: string }; Returns: Json }
+      judge_document_deletable: { Args: { p_name: string }; Returns: boolean }
+      judge_document_parts: { Args: { p_name: string }; Returns: string[] }
+      judge_document_readable: { Args: { p_name: string }; Returns: boolean }
+      judge_document_uploaded: {
+        Args: { p_event_id: string; p_judge_id: string; p_path: string }
+        Returns: boolean
+      }
+      judge_document_writable: { Args: { p_name: string }; Returns: boolean }
+      judge_documents: { Args: { p_event_slug: string }; Returns: Json }
       judge_event_access: { Args: { p_event_slug: string }; Returns: Json }
       judge_event_summary: { Args: { p_judge_id: string }; Returns: Json }
       judge_events: { Args: Record<PropertyKey, never>; Returns: Json }
@@ -1788,6 +1837,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      rebalance_judge_assignments: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
       save_application_answers: {
         Args: { p_answers: Json; p_application_id: string }
         Returns: string
@@ -1806,6 +1859,10 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: undefined
       }
+      transfer_judge_assignments: {
+        Args: { p_event_id: string; p_judge_id: string }
+        Returns: Json
+      }
       under_18: {
         Args: {
           p_application: Omit<
@@ -1814,10 +1871,6 @@ export type Database = {
           >
         }
         Returns: boolean
-      }
-      transfer_judge_assignments: {
-        Args: { p_event_id: string; p_judge_id: string }
-        Returns: Json
       }
       update_basic_info: {
         Args: {

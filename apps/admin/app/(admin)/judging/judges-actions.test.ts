@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-const { rpc, requireAdmin, revalidatePath } = vi.hoisted(() => ({
+const { rpc, remove, from, requireAdmin, revalidatePath } = vi.hoisted(() => ({
   rpc: vi.fn(),
+  remove: vi.fn(),
+  from: vi.fn(),
   requireAdmin: vi.fn(),
   revalidatePath: vi.fn(),
 }))
@@ -23,7 +25,9 @@ const input = {
 }
 beforeEach(() => {
   vi.clearAllMocks()
-  requireAdmin.mockResolvedValue({ supabase: { rpc } })
+  from.mockReturnValue({ remove })
+  remove.mockResolvedValue({ data: [], error: null })
+  requireAdmin.mockResolvedValue({ supabase: { rpc, storage: { from } } })
   rpc.mockResolvedValue({ data: { id, transfer: null }, error: null })
 })
 describe("judge admin action", () => {
@@ -78,6 +82,7 @@ describe("judge admin action", () => {
 describe("delete judge action", () => {
   const judgeId = "a0000000-0000-4000-8000-000000000002"
   it("requires organizer access and deletes the event judge", async () => {
+    rpc.mockResolvedValue({ data: null, error: null })
     expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({
       error: null,
     })
@@ -87,6 +92,21 @@ describe("delete judge action", () => {
       p_judge_id: judgeId,
     })
     expect(revalidatePath).toHaveBeenCalledWith("/judging")
+    expect(remove).not.toHaveBeenCalled()
+  })
+  it("deletes the removed judge's certificate file", async () => {
+    const certificate = `${id}/certificates/${judgeId}/c0000000-0000-4000-8000-000000000001.pdf`
+    rpc.mockResolvedValue({ data: certificate, error: null })
+    expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({
+      error: null,
+    })
+    expect(from).toHaveBeenCalledWith("judge-documents")
+    expect(remove).toHaveBeenCalledWith([certificate])
+    expect(revalidatePath).toHaveBeenCalledWith("/post-judging")
+    remove.mockResolvedValue({ data: null, error: { message: "Denied" } })
+    expect(await deleteEventJudge({ eventId: id, judgeId })).toEqual({
+      error: "Denied",
+    })
   })
   it("never writes for invalid input", async () => {
     expect(
