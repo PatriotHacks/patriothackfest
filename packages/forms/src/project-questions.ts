@@ -64,6 +64,8 @@ export type ProjectQuestion = z.infer<typeof projectQuestionSchema>
 export const adminProjectQuestionSchema = projectQuestionSchema.extend({
   archived_options: z.array(choiceOptionSchema).nullable(),
   answered: z.boolean(),
+  gallery_public: z.boolean(),
+  gallery_summary: z.boolean(),
 })
 export type AdminProjectQuestion = z.infer<typeof adminProjectQuestionSchema>
 

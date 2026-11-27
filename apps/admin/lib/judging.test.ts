@@ -355,6 +355,8 @@ describe("admin project questions", () => {
         created_at: "2026-11-15T05:00:00Z",
         updated_at: "2026-11-15T05:00:00Z",
         answered: true,
+        gallery_public: false,
+        gallery_summary: false,
       },
     ])
     expect(parsed).toMatchObject({ type: "file", answered: true })

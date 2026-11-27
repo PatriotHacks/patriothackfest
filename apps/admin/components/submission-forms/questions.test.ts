@@ -25,6 +25,8 @@ const question = {
   validation: null,
   archived_options: null,
   answered: false,
+  gallery_public: false,
+  gallery_summary: false,
 }
 
 describe("project question editor", () => {

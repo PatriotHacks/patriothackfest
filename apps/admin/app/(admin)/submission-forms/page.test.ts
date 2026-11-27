@@ -109,6 +109,8 @@ beforeEach(() => {
         created_at: "2026-11-15T05:00:00Z",
         updated_at: "2026-11-15T05:00:00Z",
         answered: false,
+        gallery_public: false,
+        gallery_summary: false,
       },
     ],
     error: null,
