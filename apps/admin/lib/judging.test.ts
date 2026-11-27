@@ -173,6 +173,7 @@ describe("split settings forms", () => {
       judges_see_answers: false,
       judges_see_team: false,
       max_team_size: null,
+      gallery_published: false,
       created_at: "2026-11-01T00:00:00Z",
       updated_at: "2026-11-01T00:00:00Z",
     })
