@@ -44,8 +44,10 @@ values('e5800000-0000-4000-8000-000000000001',now()+interval '1 day');
 insert into public.event_judges(id,event_id,email,user_id)
 select ('b5800000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'e5800000-0000-4000-8000-000000000001',
   'docs-'||n||'@example.test',('d5800000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid from generate_series(2,3)n;
+insert into public.event_judges(id,event_id,email)
+values('b5800000-0000-4000-8000-000000000005','e5800000-0000-4000-8000-000000000001','docs-5@example.test');
 
-select plan(35);
+select plan(37);
 
 -- Writes: organizers only, into valid slots.
 select pg_temp.login(2);
@@ -76,6 +78,11 @@ select is(public.admin_post_judging_roster('e5800000-0000-4000-8000-000000000001
   'receives_invitation',true,'certificate_path',pg_temp.cert(2,1)),'roster shows documents and the toggle');
 select ok(not public.judge_document_deletable(pg_temp.cert(2,1)),'recorded certificate cannot be deleted');
 select is(pg_temp.signable(pg_temp.cert(3,2)),1::bigint,'organizer can sign any document');
+select pg_temp.upload(pg_temp.cert(5,7));
+select pg_temp.set_cert(5,pg_temp.cert(5,7));
+select is(public.admin_delete_event_judge('e5800000-0000-4000-8000-000000000001','b5800000-0000-4000-8000-000000000005'),
+  pg_temp.cert(5,7),'deleting a judge returns their certificate path');
+select ok(public.judge_document_deletable(pg_temp.cert(5,7)),'deleted judge''s certificate can be deleted');
 reset role;
 
 -- Before judging closes judges see nothing.
