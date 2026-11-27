@@ -49,6 +49,7 @@ export function DocumentControl({
         bucket: JUDGE_DOCUMENTS_BUCKET,
         path: next,
         file,
+        contentType: PDF_TYPE,
         forbidden: "Only organizers can upload judge documents",
         onProgress: setProgress,
       })

@@ -1,6 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { PDF_TYPE } from "@workspace/forms"
-import * as z from "zod"
 
 export const SIGNED_URL_SECONDS = 60
 
@@ -23,16 +21,24 @@ export async function signedUrlOrThrow(
   return result.url
 }
 
-const storageError = z.object({ message: z.string() })
+function storageMessage(text: string) {
+  try {
+    const body: unknown = JSON.parse(text)
+    return typeof body === "object" &&
+      body !== null &&
+      "message" in body &&
+      typeof body.message === "string"
+      ? body.message
+      : null
+  } catch {
+    return null
+  }
+}
 
 function uploadError(xhr: XMLHttpRequest, forbidden: string) {
   if (xhr.status === 403) return forbidden
   if (xhr.status === 413) return "This file is too large"
-  try {
-    return storageError.parse(JSON.parse(xhr.responseText)).message
-  } catch {
-    return "Upload failed"
-  }
+  return storageMessage(xhr.responseText) ?? "Upload failed"
 }
 
 export async function uploadPdf({
@@ -40,6 +46,7 @@ export async function uploadPdf({
   bucket,
   path,
   file,
+  contentType,
   forbidden,
   onProgress,
 }: {
@@ -47,6 +54,7 @@ export async function uploadPdf({
   bucket: string
   path: string
   file: File
+  contentType: string
   forbidden: string
   onProgress: (percent: number) => void
 }) {
@@ -66,7 +74,7 @@ export async function uploadPdf({
       "apikey",
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     )
-    xhr.setRequestHeader("content-type", PDF_TYPE)
+    xhr.setRequestHeader("content-type", contentType)
     xhr.setRequestHeader("x-upsert", "false")
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))

@@ -1,4 +1,4 @@
-import { APPLICATION_FILES_BUCKET } from "@workspace/forms"
+import { APPLICATION_FILES_BUCKET, PDF_TYPE } from "@workspace/forms"
 
 import {
   signedFileUrl as signed,
@@ -18,6 +18,7 @@ export function uploadPdf(
     bucket: APPLICATION_FILES_BUCKET,
     path,
     file,
+    contentType: PDF_TYPE,
     forbidden: "This application no longer accepts file uploads",
     onProgress,
   })
