@@ -1213,7 +1213,7 @@ export type Database = {
       }
       admin_delete_event_judge: {
         Args: { p_event_id: string; p_judge_id: string }
-        Returns: undefined
+        Returns: string
       }
       admin_delete_judging_criterion: {
         Args: { p_criterion_id: string; p_event_id: string }

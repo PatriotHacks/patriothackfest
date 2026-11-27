@@ -31,10 +31,14 @@ returns boolean language sql stable security definer set search_path = '' as $$
   );
 $$;
 
--- Recorded files stay until the record is replaced or cleared.
+-- Organizers delete any file that is not recorded, including those of deleted judges.
 create function public.judge_document_deletable(p_name text)
 returns boolean language sql stable security definer set search_path = '' as $$
-  select public.judge_document_writable(p_name)
+  select auth.uid() is not null and public.has_admin_level('organizer')
+    and exists (
+      select 1 from public.judge_document_parts(p_name) m (parts)
+      join public.event_competition_settings s on s.event_id::text = m.parts[1]
+    )
     and not exists (select 1 from public.event_judges j where j.certificate_path = p_name)
     and not exists (select 1 from public.event_competition_settings s where s.invitation_letter_path = p_name);
 $$;
