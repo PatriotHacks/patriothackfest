@@ -1,5 +1,6 @@
 "use server"
 
+import { JUDGE_DOCUMENTS_BUCKET } from "@workspace/forms"
 import { revalidatePath } from "next/cache"
 import { failure, ok, type ActionResult } from "@/lib/action-result"
 import { requireAdmin } from "@/lib/admin"
@@ -74,11 +75,16 @@ export async function deleteEventJudge(input: unknown): Promise<ActionResult> {
   const { supabase } = await requireAdmin("organizer")
   const parsed = eventJudgeRefInput.safeParse(input)
   if (!parsed.success) return failure({ message: "Invalid judge" })
-  const { error } = await supabase.rpc("admin_delete_event_judge", {
-    p_event_id: parsed.data.eventId,
-    p_judge_id: parsed.data.judgeId,
-  })
+  const { data: certificate, error } = await supabase.rpc(
+    "admin_delete_event_judge",
+    { p_event_id: parsed.data.eventId, p_judge_id: parsed.data.judgeId }
+  )
   if (error) return failure(error)
   revalidatePath("/judging")
-  return ok
+  revalidatePath("/post-judging")
+  if (!certificate) return ok
+  const removed = await supabase.storage
+    .from(JUDGE_DOCUMENTS_BUCKET)
+    .remove([certificate])
+  return removed.error ? failure(removed.error) : ok
 }
